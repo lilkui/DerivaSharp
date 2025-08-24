@@ -63,7 +63,7 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
     protected override double CalculateValue(TOption option, PricingContext context)
     {
         SolvePde(option, context);
-        return LinearInterpolation.InterpolateSorted(PriceVector, ValueMatrixSpan.GetRowSpan(0), context.AssetPrice);
+        return LinearInterpolation.InterpolateSorted(context.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
     protected virtual void InitializeCoefficients(TOption option, PricingContext context)
