@@ -43,13 +43,4 @@ public class McSnowballEngineTest
         PricingContext ctx = _ctx with { AssetPrice = 1.05, ValuationDate = new DateOnly(2022, 4, 6) };
         Assert.Equal(expected, _engine.Value(_option, ctx), precision);
     }
-
-    [Fact]
-    public void ImpliedCouponRate_IsAccurate()
-    {
-        const double expected = 0.085;
-        const int precision = 2;
-        double actual = _engine.ImpliedCouponRate(_option, _ctx, 0.05, 0.2, 1e-4);
-        Assert.Equal(expected, actual, precision);
-    }
 }

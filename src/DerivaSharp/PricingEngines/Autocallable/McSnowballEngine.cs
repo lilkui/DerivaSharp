@@ -1,8 +1,6 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Time;
-using MathNet.Numerics;
-using MathNet.Numerics.RootFinding;
 using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
@@ -72,34 +70,6 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         gammaTensor[^1] = (valueTensor[^1] - 2 * valueTensor[^2] + valueTensor[^3]) / (ds * ds);
 
         return gammaTensor.cpu().data<double>().ToArray();
-    }
-
-    public double ImpliedCouponRate(
-        SnowballOption option,
-        PricingContext context,
-        double lowerBound = 0.001,
-        double upperBound = 1.0,
-        double accuracy = 1e-5)
-    {
-        (torch.Tensor timeGrid, torch.Tensor dtVector, torch.Tensor obsIdx, int stepCount) = PrepareSimulationParameters(option, context);
-
-        using RandomNumberSource source = new(pathCount, stepCount, Device);
-        using torch.Tensor priceMatrix = CreatePriceMatrix(context, dtVector, source);
-
-        try
-        {
-            return Bisection.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
-        }
-        catch (NonConvergenceException)
-        {
-            return double.NaN;
-        }
-
-        double ObjectiveFunction(double coupon)
-        {
-            SnowballOption o = option with { KnockOutCouponRate = coupon, MaturityCouponRate = coupon };
-            return CalculateAveragePayoff(o, context, priceMatrix, timeGrid, obsIdx);
-        }
     }
 
     protected override double CalculateValue(SnowballOption option, PricingContext context)
