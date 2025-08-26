@@ -120,7 +120,8 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         double timeFromEffectiveToValuation = (context.ValuationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
         Tensor couponAccrualTime = timeToKo + timeFromEffectiveToValuation;
 
-        Tensor discountedKoPayoff = option.KnockOutCouponRate * couponAccrualTime * torch.exp(-r * timeToKo);
+        Tensor pathKoCouponRate = parameters.KoCouponRates.index_select(0, firstKoIdx);
+        Tensor discountedKoPayoff = pathKoCouponRate * couponAccrualTime * torch.exp(-r * timeToKo);
 
         // Maturity payoff calculation
         Tensor hasKnockedInOnFuturePath = (priceMatrix < option.KnockInPrice).any(1);
@@ -151,7 +152,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
-            return option.KnockOutCouponRate * t;
+            return option.KnockOutCouponRates[^1] * t;
         }
 
         if (context.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
@@ -174,6 +175,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
                 torch.empty(0, torch.float64, Device),
                 torch.empty(0, torch.float64, Device),
                 torch.empty(0, torch.int64, Device),
+                torch.empty(0, torch.float64, Device),
                 torch.empty(0, torch.float64, Device),
                 0);
         }
@@ -198,14 +200,17 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
 
         DateOnly[] futureObsDates = option.KnockOutObservationDates.Where(d => d >= valuationDate).ToArray();
 
-        Dictionary<DateOnly, double> koPriceMap = new(option.KnockOutObservationDates.Length);
+        Dictionary<DateOnly, (double, double)> koMap = new(option.KnockOutObservationDates.Length);
         for (int i = 0; i < option.KnockOutObservationDates.Length; i++)
         {
-            koPriceMap[option.KnockOutObservationDates[i]] = option.KnockOutPrices[i];
+            koMap[option.KnockOutObservationDates[i]] = (option.KnockOutPrices[i], option.KnockOutCouponRates[i]);
         }
 
-        int[] obsIdxArray = new int[futureObsDates.Length];
-        double[] koPricesArray = new double[futureObsDates.Length];
+        int n = futureObsDates.Length;
+        int[] obsIdxArray = new int[n];
+        double[] koPricesArray = new double[n];
+        double[] koCouponRatesArray = new double[n];
+
         for (int i = 0; i < futureObsDates.Length; i++)
         {
             int index = Array.BinarySearch(futureTradingDays, futureObsDates[i]);
@@ -215,14 +220,17 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
             }
 
             obsIdxArray[i] = index;
-            koPricesArray[i] = koPriceMap[futureObsDates[i]];
+            (double price, double rate) = koMap[futureObsDates[i]];
+            koPricesArray[i] = price;
+            koCouponRatesArray[i] = rate;
         }
 
         Tensor obsIdx = torch.tensor(obsIdxArray, torch.int64, Device);
         Tensor koPrices = torch.tensor(koPricesArray, torch.float64, Device);
+        Tensor koCouponRates = torch.tensor(koCouponRatesArray, torch.float64, Device);
 
-        return new SimulationParameters(timeGrid, dtVector, obsIdx, koPrices, stepCount);
+        return new SimulationParameters(timeGrid, dtVector, obsIdx, koPrices, koCouponRates, stepCount);
     }
 
-    private readonly record struct SimulationParameters(Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, int StepCount);
+    private readonly record struct SimulationParameters(Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, Tensor KoCouponRates, int StepCount);
 }

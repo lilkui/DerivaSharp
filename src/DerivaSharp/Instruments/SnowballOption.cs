@@ -3,7 +3,7 @@ namespace DerivaSharp.Instruments;
 public sealed record SnowballOption : Option
 {
     public SnowballOption(
-        double knockOutCouponRate,
+        double[] knockOutCouponRates,
         double maturityCouponRate,
         double initialPrice,
         double knockInPrice,
@@ -15,7 +15,7 @@ public sealed record SnowballOption : Option
         DateOnly expirationDate)
         : base(effectiveDate, expirationDate)
     {
-        KnockOutCouponRate = knockOutCouponRate;
+        KnockOutCouponRates = knockOutCouponRates;
         MaturityCouponRate = maturityCouponRate;
         KnockInPrice = knockInPrice;
         KnockOutPrices = knockOutPrices;
@@ -25,7 +25,7 @@ public sealed record SnowballOption : Option
         BarrierTouchStatus = barrierTouchStatus;
     }
 
-    public double KnockOutCouponRate { get; init; }
+    public double[] KnockOutCouponRates { get; init; }
 
     public double MaturityCouponRate { get; init; }
 
@@ -49,18 +49,21 @@ public sealed record SnowballOption : Option
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
         DateOnly effectiveDate,
-        DateOnly expirationDate) =>
-        new(
-            couponRate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        return new SnowballOption(
+            Enumerable.Repeat(couponRate, n).ToArray(),
             couponRate,
             initialPrice,
             initialPrice * knockInLevel,
-            Enumerable.Repeat(initialPrice * knockOutLevel, knockOutObservationDates.Length).ToArray(),
+            Enumerable.Repeat(initialPrice * knockOutLevel, n).ToArray(),
             initialPrice,
             knockOutObservationDates,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
+    }
 
     public static SnowballOption CreateStepDownSnowball(
         double couponRate,
@@ -77,7 +80,7 @@ public sealed record SnowballOption : Option
             .Select((_, i) => initialPrice * (knockOutLevelStart - i * knockOutLevelStep))
             .ToArray();
         return new SnowballOption(
-            couponRate,
+            Enumerable.Repeat(couponRate, knockOutObservationDates.Length).ToArray(),
             couponRate,
             initialPrice,
             initialPrice * knockInLevel,
