@@ -91,4 +91,38 @@ public sealed record SnowballOption : Option
             effectiveDate,
             expirationDate);
     }
+
+    public static SnowballOption CreateBothDownSnowball(
+        double koCouponRateStart,
+        double koCouponRateStep,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevelStart,
+        double knockOutLevelStep,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        double[] koCouponRates = new double[n];
+        double[] knockOutPrices = new double[n];
+        for (int i = 0; i < knockOutObservationDates.Length; i++)
+        {
+            koCouponRates[i] = koCouponRateStart - i * koCouponRateStep;
+            knockOutPrices[i] = initialPrice * (knockOutLevelStart - i * knockOutLevelStep);
+        }
+
+        return new SnowballOption(
+            koCouponRates,
+            koCouponRates[^1],
+            initialPrice,
+            initialPrice * knockInLevel,
+            knockOutPrices,
+            initialPrice,
+            knockOutObservationDates,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
 }

@@ -63,7 +63,27 @@ public class McSnowballEngineTest
     public void StepDownSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStepDownSnowball(
-            0.075,
+            0.0755,
+            1.0,
+            0.8,
+            1.03,
+            0.02,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        const int precision = 3;
+        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+    }
+
+    [Fact]
+    public void BothDownSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateBothDownSnowball(
+            0.094,
+            0.005,
             1.0,
             0.8,
             1.03,
