@@ -44,8 +44,8 @@ public sealed record SnowballOption : Option
     public static SnowballOption CreateStandardSnowball(
         double couponRate,
         double initialPrice,
-        double knockInPrice,
-        double knockOutPrice,
+        double knockInLevel,
+        double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
         DateOnly effectiveDate,
@@ -54,11 +54,38 @@ public sealed record SnowballOption : Option
             couponRate,
             couponRate,
             initialPrice,
-            knockInPrice,
-            Enumerable.Repeat(knockOutPrice, knockOutObservationDates.Length).ToArray(),
+            initialPrice * knockInLevel,
+            Enumerable.Repeat(initialPrice * knockOutLevel, knockOutObservationDates.Length).ToArray(),
             initialPrice,
             knockOutObservationDates,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
+
+    public static SnowballOption CreateStepDownSnowball(
+        double couponRate,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevelStart,
+        double knockOutLevelStep,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        double[] knockOutPrices = knockOutObservationDates
+            .Select((_, i) => initialPrice * (knockOutLevelStart - i * knockOutLevelStep))
+            .ToArray();
+        return new SnowballOption(
+            couponRate,
+            couponRate,
+            initialPrice,
+            initialPrice * knockInLevel,
+            knockOutPrices,
+            initialPrice,
+            knockOutObservationDates,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
 }

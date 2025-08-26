@@ -25,7 +25,7 @@ public class McSnowballEngineTest
     public void StandardSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.085,
+            0.0845,
             1.0,
             0.8,
             1.03,
@@ -43,7 +43,7 @@ public class McSnowballEngineTest
     public void StandardSnowballValue_KnockOutOnObservationDate_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.085,
+            0.0845,
             1.0,
             0.8,
             1.03,
@@ -54,8 +54,27 @@ public class McSnowballEngineTest
 
         PricingContext ctx = _ctx with { AssetPrice = 1.05, ValuationDate = new DateOnly(2022, 4, 6) };
 
-        const double expected = 0.021192;
+        const double expected = 0.021067;
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
+    }
+
+    [Fact]
+    public void StepDownSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateStepDownSnowball(
+            0.075,
+            1.0,
+            0.8,
+            1.03,
+            0.02,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        const int precision = 3;
+        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
     }
 }
