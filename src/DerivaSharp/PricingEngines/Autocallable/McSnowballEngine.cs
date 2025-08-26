@@ -20,20 +20,20 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
 
         using DisposeScope scope = torch.NewDisposeScope();
 
-        (Tensor timeGrid, Tensor dtVector, Tensor obsIdx, Tensor koPrices, int stepCount) = PrepareSimulationParameters(option, context);
+        SimulationParameters parameters = PrepareSimulationParameters(option, context);
 
-        if (stepCount <= 0)
+        if (parameters.StepCount <= 0)
         {
             return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
         }
 
-        using RandomNumberSource source = new(pathCount, stepCount, Device);
+        using RandomNumberSource source = new(pathCount, parameters.StepCount, Device);
 
         double[] values = new double[count];
         for (int i = 0; i < count; i++)
         {
-            using Tensor priceMatrix = CreatePriceMatrix(context with { AssetPrice = assetPrices[i] }, dtVector, source);
-            values[i] = CalculateAveragePayoff(option, context, priceMatrix, timeGrid, obsIdx, koPrices);
+            using Tensor priceMatrix = CreatePriceMatrix(context with { AssetPrice = assetPrices[i] }, parameters.DtVector, source);
+            values[i] = CalculateAveragePayoff(option, context, priceMatrix, parameters);
         }
 
         return values;
@@ -82,17 +82,17 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
 
         using DisposeScope scope = torch.NewDisposeScope();
 
-        (Tensor timeGrid, Tensor dtVector, Tensor obsIdx, Tensor koPrices, int stepCount) = PrepareSimulationParameters(option, context);
+        SimulationParameters parameters = PrepareSimulationParameters(option, context);
 
-        if (stepCount <= 0)
+        if (parameters.StepCount <= 0)
         {
             return CalculateTerminalPayoff(option, context);
         }
 
-        using RandomNumberSource source = new(pathCount, stepCount, Device);
-        Tensor priceMatrix = CreatePriceMatrix(context, dtVector, source);
+        using RandomNumberSource source = new(pathCount, parameters.StepCount, Device);
+        Tensor priceMatrix = CreatePriceMatrix(context, parameters.DtVector, source);
 
-        return CalculateAveragePayoff(option, context, priceMatrix, timeGrid, obsIdx, koPrices);
+        return CalculateAveragePayoff(option, context, priceMatrix, parameters);
     }
 
     private static Tensor CreatePriceMatrix(PricingContext context, Tensor dtVector, RandomNumberSource source) =>
@@ -102,23 +102,21 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         SnowballOption option,
         PricingContext context,
         Tensor priceMatrix,
-        Tensor timeGrid,
-        Tensor obsIdx,
-        Tensor koPrices)
+        in SimulationParameters parameters)
     {
         using DisposeScope scope = torch.NewDisposeScope();
 
         double r = context.RiskFreeRate;
 
         // Knock-out payoff calculation
-        Tensor obsPrices = priceMatrix.index_select(1, obsIdx);
-        Tensor koPriceRow = koPrices.unsqueeze(0);
+        Tensor obsPrices = priceMatrix.index_select(1, parameters.ObsIdx);
+        Tensor koPriceRow = parameters.KoPrices.unsqueeze(0);
         Tensor koMatrix = obsPrices >= koPriceRow;
         Tensor hasKnockedOut = koMatrix.any(1);
         Tensor firstKoIdx = koMatrix.@long().argmax(1);
-        Tensor koStepIdx = obsIdx.index_select(0, firstKoIdx);
+        Tensor koStepIdx = parameters.ObsIdx.index_select(0, firstKoIdx);
 
-        Tensor timeToKo = timeGrid.index_select(0, koStepIdx);
+        Tensor timeToKo = parameters.TimeGrid.index_select(0, koStepIdx);
         double timeFromEffectiveToValuation = (context.ValuationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
         Tensor couponAccrualTime = timeToKo + timeFromEffectiveToValuation;
 
@@ -130,7 +128,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
             ? torch.ones_like(hasKnockedInOnFuturePath)
             : hasKnockedInOnFuturePath;
 
-        double timeToMaturity = timeGrid[-1].item<double>();
+        double timeToMaturity = parameters.TimeGrid[-1].item<double>();
         double dfFinal = Math.Exp(-r * timeToMaturity);
         double maturityCouponPayoff = option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
 
@@ -164,7 +162,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         return option.MaturityCouponRate * t;
     }
 
-    private (Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, int StepCount) PrepareSimulationParameters(SnowballOption option, PricingContext context)
+    private SimulationParameters PrepareSimulationParameters(SnowballOption option, PricingContext context)
     {
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
@@ -172,7 +170,8 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         DateOnly[] futureTradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
         if (futureTradingDays.Length <= 1)
         {
-            return (torch.empty(0, torch.float64, Device),
+            return new SimulationParameters(
+                torch.empty(0, torch.float64, Device),
                 torch.empty(0, torch.float64, Device),
                 torch.empty(0, torch.int64, Device),
                 torch.empty(0, torch.float64, Device),
@@ -222,6 +221,8 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         Tensor obsIdx = torch.tensor(obsIdxArray, torch.int64, Device);
         Tensor koPrices = torch.tensor(koPricesArray, torch.float64, Device);
 
-        return (timeGrid, dtVector, obsIdx, koPrices, stepCount);
+        return new SimulationParameters(timeGrid, dtVector, obsIdx, koPrices, stepCount);
     }
+
+    private readonly record struct SimulationParameters(Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, int StepCount);
 }
