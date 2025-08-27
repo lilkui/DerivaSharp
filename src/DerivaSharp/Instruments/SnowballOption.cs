@@ -41,6 +41,7 @@ public sealed record SnowballOption : Option
 
     public BarrierTouchStatus BarrierTouchStatus { get; init; }
 
+    // Æ½ÇÃ
     public static SnowballOption CreateStandardSnowball(
         double couponRate,
         double initialPrice,
@@ -65,6 +66,7 @@ public sealed record SnowballOption : Option
             expirationDate);
     }
 
+    // ½µÇÃ
     public static SnowballOption CreateStepDownSnowball(
         double couponRate,
         double initialPrice,
@@ -92,9 +94,10 @@ public sealed record SnowballOption : Option
             expirationDate);
     }
 
+    // Ë«½µ
     public static SnowballOption CreateBothDownSnowball(
-        double koCouponRateStart,
-        double koCouponRateStep,
+        double knockOutCouponRateStart,
+        double knockOutCouponRateStep,
         double initialPrice,
         double knockInLevel,
         double knockOutLevelStart,
@@ -105,21 +108,101 @@ public sealed record SnowballOption : Option
         DateOnly expirationDate)
     {
         int n = knockOutObservationDates.Length;
-        double[] koCouponRates = new double[n];
+        double[] knockOutCouponRates = new double[n];
         double[] knockOutPrices = new double[n];
         for (int i = 0; i < knockOutObservationDates.Length; i++)
         {
-            koCouponRates[i] = koCouponRateStart - i * koCouponRateStep;
+            knockOutCouponRates[i] = knockOutCouponRateStart - i * knockOutCouponRateStep;
             knockOutPrices[i] = initialPrice * (knockOutLevelStart - i * knockOutLevelStep);
         }
 
         return new SnowballOption(
-            koCouponRates,
-            koCouponRates[^1],
+            knockOutCouponRates,
+            knockOutCouponRates[^1],
             initialPrice,
             initialPrice * knockInLevel,
             knockOutPrices,
             initialPrice,
+            knockOutObservationDates,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
+
+    // ºìÀû
+    public static SnowballOption CreateDualCouponSnowball(
+        double knockOutCouponRate,
+        double maturityCouponRate,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevel,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        return new SnowballOption(
+            Enumerable.Repeat(knockOutCouponRate, n).ToArray(),
+            maturityCouponRate,
+            initialPrice,
+            initialPrice * knockInLevel,
+            Enumerable.Repeat(initialPrice * knockOutLevel, n).ToArray(),
+            initialPrice,
+            knockOutObservationDates,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
+
+    // ½µÂäÉ¡
+    public static SnowballOption CreateParachuteSnowball(
+        double couponRate,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevel,
+        double finalKnockOutLevel,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        double[] knockOutPrices = Enumerable.Repeat(initialPrice * knockInLevel, n).ToArray();
+        knockOutPrices[^1] = initialPrice * finalKnockOutLevel;
+        return new SnowballOption(
+            Enumerable.Repeat(couponRate, n).ToArray(),
+            couponRate,
+            initialPrice,
+            initialPrice * knockInLevel,
+            knockOutPrices,
+            initialPrice,
+            knockOutObservationDates,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
+
+    // OTM
+    public static SnowballOption CreateOtmSnowball(
+        double couponRate,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevel,
+        double strikeLevel,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        return new SnowballOption(
+            Enumerable.Repeat(couponRate, n).ToArray(),
+            couponRate,
+            initialPrice,
+            initialPrice * knockInLevel,
+            Enumerable.Repeat(initialPrice * knockOutLevel, n).ToArray(),
+            initialPrice * strikeLevel,
             knockOutObservationDates,
             barrierTouchStatus,
             effectiveDate,
