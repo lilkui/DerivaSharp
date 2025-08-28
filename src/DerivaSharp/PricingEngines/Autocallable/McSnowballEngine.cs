@@ -134,7 +134,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         double maturityCouponPayoff = option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
 
         Tensor finalSpot = priceMatrix.select(1, -1);
-        Tensor loss = torch.minimum(finalSpot - option.StrikePrice, 0).div_(option.InitialPrice);
+        Tensor loss = torch.clamp_(finalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
         Tensor discountedMaturityPayoff = torch.where(hasKnockedIn.logical_not(), maturityCouponPayoff, loss) * dfFinal;
 
         // Combine payoffs
@@ -148,7 +148,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);
 
         double t = (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
-        double loss = Math.Min(context.AssetPrice - option.StrikePrice, 0) / option.InitialPrice;
+        double loss = Math.Clamp(context.AssetPrice - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0) / option.InitialPrice;
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {

@@ -97,4 +97,23 @@ public class McSnowballEngineTest
         const int precision = 3;
         Assert.Equal(expected, _engine.Value(option, _ctx), precision);
     }
+
+    [Fact]
+    public void LossCappedSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateLossCappedSnowball(
+            0.071,
+            1.0,
+            0.8,
+            1.03,
+            0.8,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        const int precision = 3;
+        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+    }
 }
