@@ -62,7 +62,7 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
                     ValueMatrixSpan[i, ^1] = 0.0;
                     break;
                 default:
-                    ThrowHelper.ThrowArgumentException("Invalid option type.");
+                    ThrowHelper.ThrowArgumentException(ExceptionMessages.InvalidOptionType);
                     break;
             }
         }

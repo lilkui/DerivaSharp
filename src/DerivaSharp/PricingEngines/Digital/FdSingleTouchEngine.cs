@@ -31,7 +31,7 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
     {
         if (option.TouchType is TouchType.NoTouchUp or TouchType.NoTouchDown)
         {
-            ThrowHelper.ThrowInvalidOperationException("Use cash parity for no-touch options.");
+            ThrowHelper.ThrowInvalidOperationException(ExceptionMessages.UseCashParityForNoTouch);
         }
 
         switch (option.TouchType)

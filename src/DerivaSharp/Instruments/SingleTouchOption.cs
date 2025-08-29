@@ -19,7 +19,7 @@ public sealed record SingleTouchOption : CashOrNothingBarrierOption
                 TouchType.OneTouchDown => BarrierType.DownAndIn,
                 TouchType.NoTouchUp => BarrierType.UpAndOut,
                 TouchType.NoTouchDown => BarrierType.DownAndOut,
-                _ => ThrowHelper.ThrowArgumentOutOfRangeException<BarrierType>(nameof(touchType), "Invalid touch type"),
+                _ => ThrowHelper.ThrowArgumentOutOfRangeException<BarrierType>(nameof(touchType), ExceptionMessages.InvalidTouchType),
             },
             rebatePaymentType,
             null,

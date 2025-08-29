@@ -37,7 +37,7 @@ public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOpt
             {
                 BarrierType.UpAndIn or BarrierType.UpAndOut => h * Exp(Beta * vol * Sqrt(dt)),
                 BarrierType.DownAndIn or BarrierType.DownAndOut => h * Exp(-Beta * vol * Sqrt(dt)),
-                _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type."),
+                _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
             };
         }
 
@@ -290,7 +290,7 @@ public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOpt
                 break;
         }
 
-        return ThrowHelper.ThrowArgumentException<double>("Unsupported binary barrier option");
+        return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBinaryBarrierOption);
 
         Factors CommonFactors(double eta, double phi)
         {
@@ -324,21 +324,21 @@ public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOpt
                     OptionType.Call => s > x,
                     OptionType.Put => s < x,
                     null => true,
-                    _ => ThrowHelper.ThrowArgumentException<bool>("Invalid option type"),
+                    _ => ThrowHelper.ThrowArgumentException<bool>(ExceptionMessages.InvalidOptionType),
                 };
 
                 bool hit = con.BarrierType switch
                 {
                     BarrierType.UpAndIn or BarrierType.UpAndOut => s >= h,
                     BarrierType.DownAndIn or BarrierType.DownAndOut => s <= h,
-                    _ => ThrowHelper.ThrowArgumentException<bool>("Invalid barrier type"),
+                    _ => ThrowHelper.ThrowArgumentException<bool>(ExceptionMessages.InvalidBarrierType),
                 };
 
                 return con.BarrierType switch
                 {
                     BarrierType.UpAndIn or BarrierType.DownAndIn => hit && inTheMoney ? k : 0,
                     BarrierType.UpAndOut or BarrierType.DownAndOut => hit ? 0 : inTheMoney ? k : 0,
-                    _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type"),
+                    _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
                 };
             }
 
@@ -349,26 +349,26 @@ public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOpt
                     OptionType.Call => s > x,
                     OptionType.Put => s < x,
                     null => true,
-                    _ => ThrowHelper.ThrowArgumentException<bool>("Invalid option type"),
+                    _ => ThrowHelper.ThrowArgumentException<bool>(ExceptionMessages.InvalidOptionType),
                 };
 
                 bool hit = aon.BarrierType switch
                 {
                     BarrierType.UpAndIn or BarrierType.UpAndOut => s >= h,
                     BarrierType.DownAndIn or BarrierType.DownAndOut => s <= h,
-                    _ => ThrowHelper.ThrowArgumentException<bool>("Invalid barrier type"),
+                    _ => ThrowHelper.ThrowArgumentException<bool>(ExceptionMessages.InvalidBarrierType),
                 };
 
                 return aon.BarrierType switch
                 {
                     BarrierType.UpAndIn or BarrierType.DownAndIn => hit && inTheMoney ? s : 0,
                     BarrierType.UpAndOut or BarrierType.DownAndOut => hit ? 0 : inTheMoney ? s : 0,
-                    _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type"),
+                    _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
                 };
             }
 
             default:
-                return ThrowHelper.ThrowArgumentException<double>("Unsupported binary barrier option");
+                return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBinaryBarrierOption);
         }
     }
 

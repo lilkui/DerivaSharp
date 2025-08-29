@@ -24,7 +24,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 BarrierType.DownAndIn => s <= h ? intrinsic : k,
                 BarrierType.UpAndOut => s >= h ? k : intrinsic,
                 BarrierType.DownAndOut => s <= h ? k : intrinsic,
-                _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type."),
+                _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
             };
         }
 
@@ -54,7 +54,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     {
         if (option.BarrierType is BarrierType.UpAndIn or BarrierType.DownAndIn)
         {
-            ThrowHelper.ThrowInvalidOperationException("Use in-out parity for knock-in options.");
+            ThrowHelper.ThrowInvalidOperationException(ExceptionMessages.UseInOutParityForKnockIn);
         }
 
         if (option.ObservationInterval == 0) // continuous observation
@@ -151,7 +151,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                         ValueMatrixSpan[i, ^1] = 0.0;
                         break;
                     default:
-                        ThrowHelper.ThrowArgumentException("Invalid option type.");
+                        ThrowHelper.ThrowArgumentException(ExceptionMessages.InvalidOptionType);
                         break;
                 }
             }

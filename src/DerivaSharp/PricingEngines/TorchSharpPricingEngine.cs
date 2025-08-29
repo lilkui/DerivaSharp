@@ -11,7 +11,7 @@ public abstract class TorchSharpPricingEngine<TOption> : PricingEngine<TOption>
     {
         if (useCuda && !torch.cuda.is_available())
         {
-            ThrowHelper.ThrowInvalidOperationException("CUDA is not available on this system.");
+            ThrowHelper.ThrowInvalidOperationException(ExceptionMessages.CudaUnavailable);
         }
 
         Device = useCuda ? torch.CUDA : torch.CPU;

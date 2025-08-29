@@ -22,7 +22,7 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
 
         if (Lower.Length != n || Upper.Length != n || vector.Length != n || result.Length != n)
         {
-            ThrowHelper.ThrowArgumentException("All spans must have the same length.");
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.SpanLengthsMustMatch);
         }
 
         if (n > 1)
@@ -51,7 +51,7 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
 
         if (Lower.Length != n || Upper.Length != n || rhs.Length != n || result.Length != n)
         {
-            ThrowHelper.ThrowArgumentException("All spans must have the same length.");
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.SpanLengthsMustMatch);
         }
 
         using SpanOwner<double> upperPrimeBuffer = SpanOwner<double>.Allocate(n);

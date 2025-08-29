@@ -86,7 +86,7 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
             FiniteDifferenceScheme.ExplicitEuler => 0.0,
             FiniteDifferenceScheme.ImplicitEuler => 1.0,
             FiniteDifferenceScheme.CrankNicolson => 0.5,
-            _ => ThrowHelper.ThrowArgumentException<double>("Invalid finite difference scheme."),
+            _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidFiniteDifferenceScheme),
         };
 
         if (Scheme == FiniteDifferenceScheme.ExplicitEuler)
@@ -94,8 +94,7 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
             double maxDiffusionSquare = v * v * MaxPrice * MaxPrice / ds / ds;
             if (dt * (maxDiffusionSquare + r) > 1.0)
             {
-                const string msg = "The explicit scheme is unstable with the current parameters. Reduce the time step or increase the price step.";
-                ThrowHelper.ThrowArgumentException(msg);
+                ThrowHelper.ThrowArgumentException(ExceptionMessages.ExplicitSchemeUnstable);
             }
         }
 

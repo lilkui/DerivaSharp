@@ -31,7 +31,7 @@ public sealed class AnalyticBarrierEngine : PricingEngine<BarrierOption>
                 BarrierType.DownAndIn => s <= h ? intrinsic : k,
                 BarrierType.UpAndOut => s >= h ? k : intrinsic,
                 BarrierType.DownAndOut => s <= h ? k : intrinsic,
-                _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type."),
+                _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
             };
         }
 
@@ -46,7 +46,7 @@ public sealed class AnalyticBarrierEngine : PricingEngine<BarrierOption>
             {
                 BarrierType.UpAndIn or BarrierType.UpAndOut => h * Exp(Beta * vol * Sqrt(dt)),
                 BarrierType.DownAndIn or BarrierType.DownAndOut => h * Exp(-Beta * vol * Sqrt(dt)),
-                _ => ThrowHelper.ThrowArgumentException<double>("Invalid barrier type."),
+                _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType),
             };
         }
 
@@ -103,7 +103,7 @@ public sealed class AnalyticBarrierEngine : PricingEngine<BarrierOption>
                     }
 
                     default:
-                        return ThrowHelper.ThrowArgumentException<double>("Invalid barrier type.");
+                        return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType);
                 }
             }
 
@@ -136,12 +136,12 @@ public sealed class AnalyticBarrierEngine : PricingEngine<BarrierOption>
                     }
 
                     default:
-                        return ThrowHelper.ThrowArgumentException<double>("Invalid barrier type.");
+                        return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBarrierType);
                 }
             }
 
             default:
-                return ThrowHelper.ThrowArgumentException<double>("Invalid option type.");
+                return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidOptionType);
         }
     }
 

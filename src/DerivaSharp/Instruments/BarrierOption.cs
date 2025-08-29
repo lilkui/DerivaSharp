@@ -21,7 +21,7 @@ public sealed record BarrierOption : StrikedTypePayoffOption
 
         if (barrierType is BarrierType.UpAndIn or BarrierType.DownAndIn && rebatePaymentType is PaymentType.PayAtHit)
         {
-            ThrowHelper.ThrowArgumentException("Rebate payment type 'PayAtHit' is not valid for knock-in options.");
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.PayAtHitNotValidForKnockIn);
         }
 
         BarrierType = barrierType;

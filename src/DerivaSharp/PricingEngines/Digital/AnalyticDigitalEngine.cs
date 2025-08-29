@@ -23,7 +23,7 @@ public sealed class AnalyticDigitalEngine : PricingEngine<DigitalOption>
             {
                 CashOrNothingOption con => inTheMoney ? con.Rebate : 0.0,
                 AssetOrNothingOption _ => inTheMoney ? s : 0.0,
-                _ => ThrowHelper.ThrowArgumentException<double>("Unknown digital option type."),
+                _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidDigitalOption),
             };
         }
 
@@ -43,7 +43,7 @@ public sealed class AnalyticDigitalEngine : PricingEngine<DigitalOption>
             }
 
             default:
-                return ThrowHelper.ThrowArgumentException<double>("Unknown digital option type.");
+                return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidDigitalOption);
         }
     }
 }
