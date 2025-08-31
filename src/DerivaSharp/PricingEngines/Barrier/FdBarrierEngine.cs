@@ -7,6 +7,8 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifferencePricingEngine<BarrierOption>(scheme, priceStepCount, timeStepCount)
 {
+    private bool[]? _isObservationTime;
+
     protected override double CalculateValue(BarrierOption option, PricingContext context)
     {
         if (context.ValuationDate == option.ExpirationDate)
@@ -83,6 +85,15 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
 
         base.InitializeCoefficients(option, context);
+
+        if (option.ObservationInterval > 0)
+        {
+            BuildObservationSchedule(option);
+        }
+        else
+        {
+            _isObservationTime = null;
+        }
     }
 
     protected override void SetTerminalCondition(BarrierOption option)
@@ -158,10 +169,16 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    // Note: For simplicity, this implementation assumes every time step is an observation date.
     protected override void ApplyStepConditions(int i, BarrierOption option, PricingContext context)
     {
+        // Continuous observation: nothing to do (already handled by boundary conditions)
         if (option.ObservationInterval == 0)
+        {
+            return;
+        }
+
+        Debug.Assert(_isObservationTime is not null);
+        if (!_isObservationTime[i])
         {
             return;
         }
@@ -200,5 +217,29 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 Debug.Assert(false);
                 break;
         }
+    }
+
+    private void BuildObservationSchedule(BarrierOption option)
+    {
+        double interval = option.ObservationInterval;
+        Debug.Assert(interval > 0);
+
+        _isObservationTime = new bool[TimeVector.Length];
+
+        const double eps = 1e-10;
+        double next = 0.0;
+
+        for (int i = 0; i < TimeVector.Length; i++)
+        {
+            double t = TimeVector[i];
+
+            if (t + eps >= next)
+            {
+                _isObservationTime[i] = true;
+                next += interval;
+            }
+        }
+
+        _isObservationTime[^1] = true;
     }
 }
