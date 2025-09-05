@@ -46,8 +46,10 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
                 break;
             case TouchType.NoTouchUp:
             case TouchType.NoTouchDown:
+                Debug.Fail(ExceptionMessages.UseCashParityForNoTouch);
+                break;
             default:
-                Debug.Assert(false);
+                Debug.Fail(ExceptionMessages.InvalidTouchType);
                 break;
         }
 
@@ -78,8 +80,12 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
                 case TouchType.OneTouchDown:
                     ValueMatrixSpan[i, 0] = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * dfr;
                     break;
+                case TouchType.NoTouchUp:
+                case TouchType.NoTouchDown:
+                    Debug.Fail(ExceptionMessages.UseCashParityForNoTouch);
+                    break;
                 default:
-                    Debug.Assert(false);
+                    Debug.Fail(ExceptionMessages.InvalidBarrierType);
                     break;
             }
         }

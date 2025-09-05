@@ -73,8 +73,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                     break;
                 case BarrierType.UpAndIn:
                 case BarrierType.DownAndIn:
+                    Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
+                    break;
                 default:
-                    Debug.Assert(false);
+                    Debug.Fail(ExceptionMessages.InvalidBarrierType);
                     break;
             }
         }
@@ -137,8 +139,12 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                         ValueMatrixSpan[i, 0] = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * dfr;
                         ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
+                    case BarrierType.UpAndIn:
+                    case BarrierType.DownAndIn:
+                        Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
+                        break;
                     default:
-                        Debug.Assert(false);
+                        Debug.Fail(ExceptionMessages.InvalidBarrierType);
                         break;
                 }
             }
@@ -213,8 +219,12 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
                 break;
 
+            case BarrierType.UpAndIn:
+            case BarrierType.DownAndIn:
+                Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
+                break;
             default:
-                Debug.Assert(false);
+                Debug.Fail(ExceptionMessages.InvalidBarrierType);
                 break;
         }
     }
