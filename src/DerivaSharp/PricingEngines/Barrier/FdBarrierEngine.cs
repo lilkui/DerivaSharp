@@ -269,10 +269,11 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         double interval = option.ObservationInterval;
         Debug.Assert(interval > 0);
 
-        _isObservationTime = new bool[TimeVector.Length];
+        _isObservationTime ??= new bool[TimeVector.Length];
+        _isObservationTime.AsSpan().Clear();
 
         const double eps = 1e-10;
-        double next = 0.0;
+        double next = interval;
 
         for (int i = 0; i < TimeVector.Length; i++)
         {
