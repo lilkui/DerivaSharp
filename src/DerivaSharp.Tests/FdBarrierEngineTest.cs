@@ -48,4 +48,40 @@ public class FdBarrierEngineTest
         double tolerance = Math.Abs(expected) * 0.0001;
         Assert.Equal(expected, actual, tolerance);
     }
+
+    [Fact]
+    public void InOutParity_IsSatisfied()
+    {
+        const double strike = 100;
+        const double barrier = 105;
+        const double rebate = 10;
+        DateOnly effectiveDate = new(2025, 1, 6);
+        DateOnly expirationDate = effectiveDate.AddDays(365);
+
+        BarrierOption kiOption = new(
+            OptionType.Call,
+            BarrierType.UpAndIn,
+            strike,
+            barrier,
+            rebate,
+            PaymentType.PayAtExpiry,
+            0,
+            effectiveDate,
+            expirationDate);
+
+        BarrierOption koOption = kiOption with { BarrierType = BarrierType.UpAndOut };
+        EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
+
+        const double assetPrice = 100;
+        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+
+        double kiValue = _fdEngine.Value(kiOption, ctx);
+        double koValue = _fdEngine.Value(koOption, ctx);
+        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
+        double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
+        double pvRebate = koOption.Rebate * Math.Exp(-ctx.RiskFreeRate * tau);
+
+        const int precision = 4;
+        Assert.Equal(0, kiValue + koValue - eurValue - pvRebate, precision);
+    }
 }
