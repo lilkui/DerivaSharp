@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using MathNet.Numerics.Distributions;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -30,51 +31,27 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             };
         }
 
-        if (option.BarrierType is BarrierType.UpAndIn or BarrierType.DownAndIn)
-        {
-            EuropeanOption eurOption = new(option.OptionType, option.StrikePrice, option.EffectiveDate, option.ExpirationDate);
-            AnalyticEuropeanEngine eurEngine = new();
-            double eurValue = eurEngine.Value(eurOption, context);
-
-            BarrierType koType = option.BarrierType == BarrierType.UpAndIn ? BarrierType.UpAndOut : BarrierType.DownAndOut;
-            BarrierOption koOption = option with { BarrierType = koType };
-            double koValue = base.CalculateValue(koOption, context);
-
-            double r = context.RiskFreeRate;
-            double tau = GetYearsToExpiration(option, context);
-            double pvRebate = option.Rebate * Math.Exp(-r * tau);
-
-            Debug.Assert(option.RebatePaymentType == PaymentType.PayAtExpiry);
-
-            return eurValue + pvRebate - koValue;
-        }
-
         return base.CalculateValue(option, context);
     }
 
     protected override void InitializeCoefficients(BarrierOption option, PricingContext context)
     {
-        if (option.BarrierType is BarrierType.UpAndIn or BarrierType.DownAndIn)
-        {
-            ThrowHelper.ThrowInvalidOperationException(ExceptionMessages.UseInOutParityForKnockIn);
-        }
-
         if (option.ObservationInterval == 0) // continuous observation
         {
             switch (option.BarrierType)
             {
                 case BarrierType.UpAndOut:
+                case BarrierType.UpAndIn:
                     MinPrice = 0;
                     MaxPrice = option.BarrierPrice;
                     break;
+
                 case BarrierType.DownAndOut:
+                case BarrierType.DownAndIn:
                     MinPrice = option.BarrierPrice;
                     MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
                     break;
-                case BarrierType.UpAndIn:
-                case BarrierType.DownAndIn:
-                    Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
-                    break;
+
                 default:
                     Debug.Fail(ExceptionMessages.InvalidBarrierType);
                     break;
@@ -101,11 +78,22 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     protected override void SetTerminalCondition(BarrierOption option)
     {
         double x = option.StrikePrice;
+        double k = option.Rebate;
         int z = (int)option.OptionType;
 
-        for (int j = 0; j < PriceVector.Length; j++)
+        if (option.BarrierType is BarrierType.UpAndOut or BarrierType.DownAndOut)
         {
-            ValueMatrixSpan[^1, j] = Math.Max(z * (PriceVector[j] - x), 0);
+            for (int j = 0; j < PriceVector.Length; j++)
+            {
+                ValueMatrixSpan[^1, j] = Math.Max(z * (PriceVector[j] - x), 0);
+            }
+        }
+        else // knock-in
+        {
+            for (int j = 0; j < PriceVector.Length; j++)
+            {
+                ValueMatrixSpan[^1, j] = k;
+            }
         }
     }
 
@@ -140,8 +128,12 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                         ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
                     case BarrierType.UpAndIn:
+                        ValueMatrixSpan[i, 0] = Math.Max(z * (minPrice * dfq - x * dfr), 0);
+                        ValueMatrixSpan[i, ^1] = EuropeanValue(option, context with { AssetPrice = maxPrice }, tau);
+                        break;
                     case BarrierType.DownAndIn:
-                        Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
+                        ValueMatrixSpan[i, 0] = EuropeanValue(option, context with { AssetPrice = minPrice }, tau);
+                        ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
                     default:
                         Debug.Fail(ExceptionMessages.InvalidBarrierType);
@@ -220,12 +212,55 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 break;
 
             case BarrierType.UpAndIn:
-            case BarrierType.DownAndIn:
-                Debug.Fail(ExceptionMessages.UseInOutParityForKnockIn);
+                for (int j = 0; j < PriceVector.Length; j++)
+                {
+                    if (PriceVector[j] >= barrier)
+                    {
+                        currentValues[j] = EuropeanValue(option, context with { AssetPrice = PriceVector[j] }, tau);
+                    }
+                }
+
                 break;
+
+            case BarrierType.DownAndIn:
+                for (int j = 0; j < PriceVector.Length; j++)
+                {
+                    if (PriceVector[j] <= barrier)
+                    {
+                        currentValues[j] = EuropeanValue(option, context with { AssetPrice = PriceVector[j] }, tau);
+                    }
+                }
+
+                break;
+
             default:
                 Debug.Fail(ExceptionMessages.InvalidBarrierType);
                 break;
+        }
+    }
+
+    private static double EuropeanValue(BarrierOption option, PricingContext context, double tau)
+    {
+        double x = option.StrikePrice;
+        int z = (int)option.OptionType;
+        double s = context.AssetPrice;
+        double vol = context.Volatility;
+        double r = context.RiskFreeRate;
+        double q = context.DividendYield;
+
+        if (tau == 0)
+        {
+            return Math.Max(z * (s - x), 0);
+        }
+
+        double d1 = (Math.Log(s / x) + (r - q + vol * vol / 2) * tau) / (vol * Math.Sqrt(tau));
+        double d2 = d1 - vol * Math.Sqrt(tau);
+
+        return z * (s * Math.Exp(-q * tau) * StdNormCdf(z * d1) - x * Math.Exp(-r * tau) * StdNormCdf(z * d2));
+
+        static double StdNormCdf(double x)
+        {
+            return Normal.CDF(0, 1, x);
         }
     }
 

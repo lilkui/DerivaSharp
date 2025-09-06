@@ -13,5 +13,4 @@ internal static class ExceptionMessages
     internal const string PayAtHitNotValidForKnockIn = "Rebate payment type 'PayAtHit' is not valid for knock-in options.";
     internal const string SpanLengthsMustMatch = "All spans must have the same length.";
     internal const string UseCashParityForNoTouch = "Use cash parity for no-touch options.";
-    internal const string UseInOutParityForKnockIn = "Use in-out parity for knock-in options.";
 }
