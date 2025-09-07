@@ -160,8 +160,10 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
+            ApplyStepConditions(i + 1, option, context);
             SolveSingleStep(i, _rhs, _result);
-            ApplyStepConditions(i, option, context);
         }
+
+        ApplyStepConditions(0, option, context);
     }
 }
