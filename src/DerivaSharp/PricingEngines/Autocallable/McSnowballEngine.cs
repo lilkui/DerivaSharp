@@ -213,10 +213,10 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : Torc
 
         for (int i = 0; i < futureObsDates.Length; i++)
         {
-            int index = Array.BinarySearch(futureTradingDays, futureObsDates[i]);
+            int index = futureTradingDays.AsSpan().BinarySearch(futureObsDates[i]);
             if (index < 0)
             {
-                ThrowHelper.ThrowArgumentException($"Observation date {futureObsDates[i]} is not a trading day.");
+                ThrowHelper.ThrowInvalidOperationException($"Observation date {futureObsDates[i]} is not a trading day.");
             }
 
             obsIdxArray[i] = index;
