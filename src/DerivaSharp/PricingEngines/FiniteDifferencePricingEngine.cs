@@ -25,8 +25,8 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
 
     protected FiniteDifferencePricingEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
-        Guard.IsGreaterThan(priceStepCount, 0);
-        Guard.IsGreaterThan(timeStepCount, 0);
+        Guard.IsGreaterThanOrEqualTo(priceStepCount, 2);
+        Guard.IsGreaterThanOrEqualTo(timeStepCount, 2);
 
         Scheme = scheme;
         PriceStepCount = priceStepCount;
