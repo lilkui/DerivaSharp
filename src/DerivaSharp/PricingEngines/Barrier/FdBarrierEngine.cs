@@ -116,15 +116,16 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 double tau = maxTime - TimeVector[i];
                 double dfq = Math.Exp(-q * tau);
                 double dfr = Math.Exp(-r * tau);
+                double pvRebate = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * dfr;
 
                 switch (option.BarrierType)
                 {
                     case BarrierType.UpAndOut:
                         ValueMatrixSpan[i, 0] = Math.Max(z * (minPrice * dfq - x * dfr), 0);
-                        ValueMatrixSpan[i, ^1] = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * dfr;
+                        ValueMatrixSpan[i, ^1] = pvRebate;
                         break;
                     case BarrierType.DownAndOut:
-                        ValueMatrixSpan[i, 0] = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * dfr;
+                        ValueMatrixSpan[i, 0] = pvRebate;
                         ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
                     case BarrierType.UpAndIn:
@@ -269,20 +270,20 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         double interval = option.ObservationInterval;
         Debug.Assert(interval > 0);
 
-        _isObservationTime = new bool[TimeVector.Length];
+        int nTimes = TimeVector.Length;
+        Debug.Assert(nTimes >= 2);
 
-        const double eps = 1e-10;
-        double next = 0.0;
+        _isObservationTime = new bool[nTimes];
 
-        for (int i = 0; i < TimeVector.Length; i++)
+        double tau = TimeVector[^1];
+        double dt = TimeVector[1] - TimeVector[0];
+
+        int maxObs = (int)Math.Floor((tau + 1e-12) / interval);
+        for (int obs = 1; obs <= maxObs; obs++)
         {
-            double t = TimeVector[i];
-
-            if (t + eps >= next)
-            {
-                _isObservationTime[i] = true;
-                next += interval;
-            }
+            int gridIndex = (int)Math.Round(obs * interval / dt);
+            gridIndex = Math.Clamp(gridIndex, 0, nTimes - 1);
+            _isObservationTime[gridIndex] = true;
         }
 
         _isObservationTime[^1] = true;
