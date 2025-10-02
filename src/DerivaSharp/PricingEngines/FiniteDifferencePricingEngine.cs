@@ -157,13 +157,12 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
         InitializeCoefficients(option, context);
         SetTerminalCondition(option);
         SetBoundaryConditions(option, context);
+        ApplyStepConditions(TimeStepCount, option, context);
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
-            ApplyStepConditions(i + 1, option, context);
             SolveSingleStep(i, _rhs, _result);
+            ApplyStepConditions(i, option, context);
         }
-
-        ApplyStepConditions(0, option, context);
     }
 }
