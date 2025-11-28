@@ -1,3 +1,4 @@
+using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
 
 namespace DerivaSharp.PricingEngines;
@@ -5,15 +6,15 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifferencePricingEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
 {
+    private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
+    private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
     private bool _isSolvingKnockedIn;
-    private double[,]? _knockedInValues;
     private double[]? _observationTimes;
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
     private double _maturityPayoff;
     private double _lossAtZero;
-    private int[]? _stepToObservationIndex;
 
     protected override double CalculateValue(SnowballOption option, PricingContext context)
     {
@@ -33,7 +34,8 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         // First pass: calculate value assuming the barrier has already been breached (knocked-in).
         _isSolvingKnockedIn = true;
         base.CalculateValue(option, context);
-        _knockedInValues = ValueMatrixSpan.ToArray();
+
+        ValueMatrixSpan.CopyTo(_knockedInValues);
 
         // Second pass: calculate value assuming the barrier has NOT been breached yet.
         // If the price hits the barrier during this pass, we switch to the value from the first pass.
@@ -107,7 +109,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     protected override void ApplyStepConditions(int i, SnowballOption option, PricingContext context)
     {
         // Check for knock-out event at observation dates.
-        int obsIdx = _stepToObservationIndex![i];
+        int obsIdx = _stepToObservationIndex[i];
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
@@ -126,11 +128,12 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         if (!_isSolvingKnockedIn)
         {
             double kiPrice = option.KnockInPrice;
+            ReadOnlySpan2D<double> knockedInSpan = _knockedInValues.AsSpan2D(TimeStepCount + 1, PriceStepCount + 1);
             for (int j = 0; j <= PriceStepCount; j++)
             {
                 if (PriceVector[j] < kiPrice)
                 {
-                    ValueMatrixSpan[i, j] = _knockedInValues![i, j];
+                    ValueMatrixSpan[i, j] = knockedInSpan[i, j];
                 }
             }
         }
@@ -164,8 +167,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
         double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
         double dt = tMax / TimeStepCount;
-        _stepToObservationIndex = new int[TimeStepCount + 1];
-        Array.Fill(_stepToObservationIndex, -1);
+        _stepToObservationIndex.AsSpan().Fill(-1);
 
         for (int k = 0; k < n; k++)
         {
