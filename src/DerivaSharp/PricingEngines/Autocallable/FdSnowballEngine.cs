@@ -79,36 +79,31 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             double t = TimeVector[i];
             double df = Math.Exp(-r * (maturity - t));
 
+            // Lower Boundary: The loss is guaranteed and realized at maturity.
             ValueMatrixSpan[i, 0] = _lossAtZero * df;
 
-            if (_isSolvingKnockedIn)
+            // Upper Boundary: A Knock-Out is guaranteed at the next observation opportunity.
+            // Note: We use < t - 1e-6 to ensure that if t is exactly an observation date, we use it.
+            while (nextObsIdx < nObs && _observationTimes[nextObsIdx] < t - 1e-6)
             {
-                ValueMatrixSpan[i, PriceStepCount] = 0.0;
+                nextObsIdx++;
+            }
+
+            if (nextObsIdx < nObs)
+            {
+                double obsTime = _observationTimes[nextObsIdx];
+                double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
+                ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
             }
             else
             {
-                while (nextObsIdx < nObs && _observationTimes[nextObsIdx] <= t + 1e-6)
-                {
-                    nextObsIdx++;
-                }
-
-                if (nextObsIdx < nObs)
-                {
-                    double obsTime = _observationTimes[nextObsIdx];
-                    double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
-                    ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
-                }
-                else
-                {
-                    ValueMatrixSpan[i, PriceStepCount] = _maturityPayoff * df;
-                }
+                ValueMatrixSpan[i, PriceStepCount] = _maturityPayoff * df;
             }
         }
     }
 
     protected override void ApplyStepConditions(int i, SnowballOption option, PricingContext context)
     {
-        // Check for knock-out event at observation dates.
         int obsIdx = _stepToObservationIndex[i];
         if (obsIdx != -1)
         {
@@ -124,7 +119,6 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             }
         }
 
-        // Check for knock-in event: if price drops below barrier, use the pre-calculated knock-in value.
         if (!_isSolvingKnockedIn)
         {
             double kiPrice = option.KnockInPrice;
