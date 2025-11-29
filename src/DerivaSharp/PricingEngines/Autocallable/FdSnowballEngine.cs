@@ -1,5 +1,7 @@
+using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
+using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -15,6 +17,66 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double[]? _observationAccruedTimes;
     private double _maturityPayoff;
     private double _lossAtZero;
+
+    public double[] Values(SnowballOption option, PricingContext context, double[] assetPrices)
+    {
+        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
+        {
+            return new double[assetPrices.Length];
+        }
+
+        int count = assetPrices.Length;
+        Guard.IsGreaterThanOrEqualTo(count, 3);
+
+        CalculateValue(option, context);
+
+        double[] values = new double[count];
+        ReadOnlySpan<double> priceSpan = PriceVector;
+        ReadOnlySpan<double> valueSpan = ValueMatrixSpan.GetRowSpan(0);
+
+        for (int i = 0; i < count; i++)
+        {
+            values[i] = LinearInterpolation.InterpolateSorted(assetPrices[i], priceSpan, valueSpan);
+        }
+
+        return values;
+    }
+
+    public double[] Deltas(SnowballOption option, PricingContext context, double[] assetPrices)
+    {
+        double[] values = Values(option, context, assetPrices);
+        double[] deltas = new double[values.Length];
+
+        double ds = assetPrices[1] - assetPrices[0];
+
+        for (int i = 1; i < values.Length - 1; i++)
+        {
+            deltas[i] = (values[i + 1] - values[i - 1]) / (2 * ds);
+        }
+
+        deltas[0] = (values[1] - values[0]) / ds;
+        deltas[^1] = (values[^1] - values[^2]) / ds;
+
+        return deltas;
+    }
+
+    public double[] Gammas(SnowballOption option, PricingContext context, double[] assetPrices)
+    {
+        double[] values = Values(option, context, assetPrices);
+        double[] gammas = new double[values.Length];
+
+        double ds = assetPrices[1] - assetPrices[0];
+
+        for (int i = 1; i < values.Length - 1; i++)
+        {
+            gammas[i] = (values[i + 1] - 2 * values[i] + values[i - 1]) / (ds * ds);
+        }
+
+        gammas[0] = (values[2] - 2 * values[1] + values[0]) / (ds * ds);
+        gammas[^1] = (values[^1] - 2 * values[^2] + values[^3]) / (ds * ds);
+
+        return gammas;
+    }
 
     protected override double CalculateValue(SnowballOption option, PricingContext context)
     {
@@ -122,7 +184,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         if (!_isSolvingKnockedIn)
         {
             double kiPrice = option.KnockInPrice;
-            ReadOnlySpan2D<double> knockedInSpan = _knockedInValues.AsSpan2D(TimeStepCount + 1, PriceStepCount + 1);
+            ReadOnlySpan2D<double> knockedInSpan = new(_knockedInValues, TimeStepCount + 1, PriceStepCount + 1);
             for (int j = 0; j <= PriceStepCount; j++)
             {
                 if (PriceVector[j] < kiPrice)

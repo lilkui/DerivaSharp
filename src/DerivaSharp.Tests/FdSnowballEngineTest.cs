@@ -18,14 +18,14 @@ public class FdSnowballEngineTest
         _expirationDate = new DateOnly(2023, 1, 5);
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         _ctx = new PricingContext(1, _effectiveDate, 0.16, 0.02, 0.04);
-        _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 400, 200);
+        _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
     }
 
     [Fact]
     public void StandardSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.083,
+            0.086,
             1.0,
             0.8,
             1.03,
@@ -102,7 +102,7 @@ public class FdSnowballEngineTest
     public void LossCappedSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateLossCappedSnowball(
-            0.068,
+            0.071,
             1.0,
             0.8,
             1.03,
