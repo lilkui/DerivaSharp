@@ -219,7 +219,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
         MinPrice = 0.0;
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
-        MaxPrice = Math.Max(option.InitialPrice * 3.0, maxBarrier * 1.5);
+        MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
 
         double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
         double dt = tMax / TimeStepCount;
