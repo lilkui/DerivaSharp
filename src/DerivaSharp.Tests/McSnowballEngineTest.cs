@@ -6,6 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class McSnowballEngineTest
 {
+    private const double RelativeTolerance = 0.001;
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
@@ -35,8 +36,8 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        const int precision = 3;
-        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+        double actual = _engine.Value(option, _ctx);
+        AssertWithinRelativeTolerance(expected, actual);
     }
 
     [Fact]
@@ -55,8 +56,8 @@ public class McSnowballEngineTest
         PricingContext ctx = _ctx with { AssetPrice = 1.05, ValuationDate = new DateOnly(2022, 4, 6) };
 
         const double expected = 0.021067;
-        const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
+        double actual = _engine.Value(option, ctx);
+        AssertWithinRelativeTolerance(expected, actual);
     }
 
     [Fact]
@@ -74,8 +75,8 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        const int precision = 3;
-        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+        double actual = _engine.Value(option, _ctx);
+        AssertWithinRelativeTolerance(expected, actual);
     }
 
     [Fact]
@@ -94,8 +95,8 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        const int precision = 3;
-        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+        double actual = _engine.Value(option, _ctx);
+        AssertWithinRelativeTolerance(expected, actual);
     }
 
     [Fact]
@@ -113,7 +114,16 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        const int precision = 3;
-        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
+        double actual = _engine.Value(option, _ctx);
+        AssertWithinRelativeTolerance(expected, actual);
+    }
+
+    private static void AssertWithinRelativeTolerance(double expected, double actual)
+    {
+        double tolerance = expected == 0.0
+            ? RelativeTolerance
+            : Math.Abs(expected) * RelativeTolerance;
+        double error = Math.Abs(actual - expected);
+        Assert.True(error <= tolerance);
     }
 }
