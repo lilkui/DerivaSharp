@@ -93,14 +93,15 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             return base.CalculateValue(option, context);
         }
 
-        // First pass: calculate value assuming the barrier has already been breached (knocked-in).
+        // First pass: compute the fully knocked-in surface so it can be referenced when
+        // the second pass detects an endogenous knock-in event.
         _isSolvingKnockedIn = true;
         base.CalculateValue(option, context);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
-        // Second pass: calculate value assuming the barrier has NOT been breached yet.
-        // If the price hits the barrier during this pass, we switch to the value from the first pass.
+        // Second pass: solve the non-knocked-in scenario, substituting the stored knocked-in surface
+        // wherever the price process breaches the knock-in barrier.
         _isSolvingKnockedIn = false;
         return base.CalculateValue(option, context);
     }
@@ -141,11 +142,8 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             double t = TimeVector[i];
             double df = Math.Exp(-r * (maturity - t));
 
-            // Lower Boundary: The loss is guaranteed and realized at maturity.
             ValueMatrixSpan[i, 0] = _lossAtZero * df;
 
-            // Upper Boundary: A Knock-Out is guaranteed at the next observation opportunity.
-            // Note: We use < t - 1e-6 to ensure that if t is exactly an observation date, we use it.
             while (nextObsIdx < nObs && _observationTimes[nextObsIdx] < t - 1e-6)
             {
                 nextObsIdx++;
