@@ -25,7 +25,7 @@ public class FdSnowballEngineTest
     public void StandardSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.087,
+            0.0885,
             1.0,
             0.8,
             1.03,
@@ -82,7 +82,7 @@ public class FdSnowballEngineTest
     public void BothDownSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateBothDownSnowball(
-            0.094,
+            0.0957,
             0.005,
             1.0,
             0.8,
@@ -114,6 +114,44 @@ public class FdSnowballEngineTest
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
+        AssertWithinRelativeTolerance(expected, actual);
+    }
+
+    [Fact]
+    public void ImpliedKnockOutCouponRate_StandardSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateStandardSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0885;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
+        AssertWithinRelativeTolerance(expected, actual);
+    }
+
+    [Fact]
+    public void ImpliedKnockOutCouponRate_BothDownSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateBothDownSnowball(
+            0.1,
+            0.005,
+            1.0,
+            0.8,
+            1.03,
+            0.02,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0957;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
         AssertWithinRelativeTolerance(expected, actual);
     }
 
