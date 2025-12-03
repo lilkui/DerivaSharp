@@ -6,7 +6,6 @@ namespace DerivaSharp.Tests;
 
 public class McSnowballEngineTest
 {
-    private const double RelativeTolerance = 0.001;
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
@@ -118,11 +117,11 @@ public class McSnowballEngineTest
         AssertWithinRelativeTolerance(expected, actual);
     }
 
-    private static void AssertWithinRelativeTolerance(double expected, double actual)
+    private static void AssertWithinRelativeTolerance(double expected, double actual, double relativeTolerance = 0.001)
     {
         double tolerance = expected == 0.0
-            ? RelativeTolerance
-            : Math.Abs(expected) * RelativeTolerance;
+            ? relativeTolerance
+            : Math.Abs(expected) * relativeTolerance;
         double error = Math.Abs(actual - expected);
         Assert.True(error <= tolerance);
     }
