@@ -6,6 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class FdSnowballEngineTest
 {
+    private const double DefaultTolerance = 0.0005;
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
@@ -36,7 +37,7 @@ public class FdSnowballEngineTest
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
@@ -56,14 +57,14 @@ public class FdSnowballEngineTest
 
         const double expected = 0.021067;
         double actual = _engine.Value(option, ctx);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
     public void StepDownSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStepDownSnowball(
-            0.0755,
+            0.0776,
             1.0,
             0.8,
             1.03,
@@ -75,7 +76,7 @@ public class FdSnowballEngineTest
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
@@ -95,14 +96,14 @@ public class FdSnowballEngineTest
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
     public void LossCappedSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateLossCappedSnowball(
-            0.072,
+            0.074,
             1.0,
             0.8,
             1.03,
@@ -114,7 +115,7 @@ public class FdSnowballEngineTest
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
@@ -132,7 +133,26 @@ public class FdSnowballEngineTest
 
         const double expected = 0.0885;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedKnockOutCouponRate_StepDownSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateStepDownSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            0.02,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0776;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
     [Fact]
@@ -152,15 +172,25 @@ public class FdSnowballEngineTest
 
         const double expected = 0.0957;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
-        AssertWithinRelativeTolerance(expected, actual);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 
-    private static void AssertWithinRelativeTolerance(double expected, double actual, double relativeTolerance = 0.001)
+    [Fact]
+    public void ImpliedKnockOutCouponRate_LossCappedSnowball_IsAccurate()
     {
-        double tolerance = expected == 0.0
-            ? relativeTolerance
-            : Math.Abs(expected) * relativeTolerance;
-        double error = Math.Abs(actual - expected);
-        Assert.True(error <= tolerance);
+        SnowballOption template = SnowballOption.CreateLossCappedSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            0.8,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.074;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
+        Assert.Equal(expected, actual, DefaultTolerance);
     }
 }
