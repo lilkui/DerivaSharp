@@ -11,14 +11,14 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 {
     private bool[]? _isObservationTime;
 
-    protected override double CalculateValue(BarrierOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(BarrierOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        if (context.ValuationDate == option.ExpirationDate)
+        if (valuationDate == option.ExpirationDate)
         {
             double x = option.StrikePrice;
             double h = option.BarrierPrice;
             double k = option.Rebate;
-            double s = market.AssetPrice;
+            double s = assetPrice;
             int z = (int)option.OptionType;
             double intrinsic = Math.Max(z * (s - x), 0);
 
@@ -32,10 +32,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             };
         }
 
-        return base.CalculateValue(option, model, market, context);
+        return base.CalculateValue(option, model, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(BarrierOption option, BsmModel model, PricingContext context)
+    protected override void InitializeCoefficients(BarrierOption option, BsmModel model, DateOnly valuationDate)
     {
         if (option.ObservationInterval == 0) // continuous observation
         {
@@ -64,7 +64,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
         }
 
-        base.InitializeCoefficients(option, model, context);
+        base.InitializeCoefficients(option, model, valuationDate);
 
         if (option.ObservationInterval > 0)
         {

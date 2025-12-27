@@ -9,8 +9,7 @@ public class AnalyticEuropeanEngineTest
     private readonly EuropeanOption _call;
     private readonly EuropeanOption _put;
     private readonly BsmModel _model;
-    private readonly MarketData _market;
-    private readonly PricingContext _ctx;
+    private readonly PricingContext<BsmModel> _ctx;
     private readonly AnalyticEuropeanEngine _engine;
 
     public AnalyticEuropeanEngineTest()
@@ -20,8 +19,7 @@ public class AnalyticEuropeanEngineTest
         _call = new EuropeanOption(OptionType.Call, 100, effectiveDate, expirationDate);
         _put = new EuropeanOption(OptionType.Put, 100, effectiveDate, expirationDate);
         _model = new BsmModel(0.3, 0.04, 0.01);
-        _market = new MarketData(100);
-        _ctx = new PricingContext(effectiveDate);
+        _ctx = new PricingContext<BsmModel>(_model, 100, effectiveDate);
         _engine = new AnalyticEuropeanEngine();
     }
 
@@ -53,7 +51,7 @@ public class AnalyticEuropeanEngineTest
     {
         const int precision = 6;
         EuropeanOption option = optionType == OptionType.Call ? _call : _put;
-        Assert.Equal(expected, _engine.Value(option, _model, _market, _ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, _ctx), precision);
     }
 
     [Theory]
@@ -64,14 +62,14 @@ public class AnalyticEuropeanEngineTest
         EuropeanOption option = optionType == OptionType.Call ? _call : _put;
         double actual = greek switch
         {
-            "Delta" => _engine.Delta(option, _model, _market, _ctx),
-            "Gamma" => _engine.Gamma(option, _model, _market, _ctx),
-            "Speed" => _engine.Speed(option, _model, _market, _ctx),
-            "Theta" => _engine.Theta(option, _model, _market, _ctx),
-            "Vega" => _engine.Vega(option, _model, _market, _ctx),
-            "Vanna" => _engine.Vanna(option, _model, _market, _ctx),
-            "Zomma" => _engine.Zomma(option, _model, _market, _ctx),
-            "Rho" => _engine.Rho(option, _model, _market, _ctx),
+            "Delta" => _engine.Delta(option, _ctx),
+            "Gamma" => _engine.Gamma(option, _ctx),
+            "Speed" => _engine.Speed(option, _ctx),
+            "Theta" => _engine.Theta(option, _ctx),
+            "Vega" => _engine.Vega(option, _ctx),
+            "Vanna" => _engine.Vanna(option, _ctx),
+            "Zomma" => _engine.Zomma(option, _ctx),
+            "Rho" => _engine.Rho(option, _ctx),
             _ => throw new ArgumentException("Invalid Greek"),
         };
         Assert.Equal(expected, actual, precision);
@@ -84,17 +82,16 @@ public class AnalyticEuropeanEngineTest
     public void ImpliedVolatility_IsAccurate(double price, double expected)
     {
         const int precision = 4;
-        Assert.Equal(expected, _engine.ImpliedVolatility(_call, _model, _market, _ctx, price), precision);
+        Assert.Equal(expected, _engine.ImpliedVolatility(_call, _ctx, price), precision);
     }
 
     [Fact]
     public void Value_AtExpiry_ReturnsIntrinsicValue()
     {
         const int precision = 6;
-        PricingContext ctx = _ctx with { ValuationDate = _call.ExpirationDate };
-        MarketData market = _market with { AssetPrice = 110 };
-        Assert.Equal(10, _engine.Value(_call, _model, market, ctx), precision);
-        Assert.Equal(0, _engine.Value(_put, _model, market, ctx), precision);
+        PricingContext<BsmModel> ctx = _ctx with { ValuationDate = _call.ExpirationDate, AssetPrice = 110 };
+        Assert.Equal(10, _engine.Value(_call, ctx), precision);
+        Assert.Equal(0, _engine.Value(_put, ctx), precision);
     }
 
     [Theory]
@@ -107,29 +104,29 @@ public class AnalyticEuropeanEngineTest
 
         // Numerical Greeks
         _engine.UseNumericalGreeks = true;
-        double deltaN = _engine.Delta(option, _model, _market, _ctx);
-        double gammaN = _engine.Gamma(option, _model, _market, _ctx);
-        double speedN = _engine.Speed(option, _model, _market, _ctx);
-        double thetaN = _engine.Theta(option, _model, _market, _ctx);
-        double charmN = _engine.Charm(option, _model, _market, _ctx);
-        double colorN = _engine.Color(option, _model, _market, _ctx);
-        double vegaN = _engine.Vega(option, _model, _market, _ctx);
-        double vannaN = _engine.Vanna(option, _model, _market, _ctx);
-        double zommaN = _engine.Zomma(option, _model, _market, _ctx);
-        double rhoN = _engine.Rho(option, _model, _market, _ctx);
+        double deltaN = _engine.Delta(option, _ctx);
+        double gammaN = _engine.Gamma(option, _ctx);
+        double speedN = _engine.Speed(option, _ctx);
+        double thetaN = _engine.Theta(option, _ctx);
+        double charmN = _engine.Charm(option, _ctx);
+        double colorN = _engine.Color(option, _ctx);
+        double vegaN = _engine.Vega(option, _ctx);
+        double vannaN = _engine.Vanna(option, _ctx);
+        double zommaN = _engine.Zomma(option, _ctx);
+        double rhoN = _engine.Rho(option, _ctx);
 
         // Analytical Greeks
         _engine.UseNumericalGreeks = false;
-        double deltaA = _engine.Delta(option, _model, _market, _ctx);
-        double gammaA = _engine.Gamma(option, _model, _market, _ctx);
-        double speedA = _engine.Speed(option, _model, _market, _ctx);
-        double thetaA = _engine.Theta(option, _model, _market, _ctx);
-        double charmA = _engine.Charm(option, _model, _market, _ctx);
-        double colorA = _engine.Color(option, _model, _market, _ctx);
-        double vegaA = _engine.Vega(option, _model, _market, _ctx);
-        double vannaA = _engine.Vanna(option, _model, _market, _ctx);
-        double zommaA = _engine.Zomma(option, _model, _market, _ctx);
-        double rhoA = _engine.Rho(option, _model, _market, _ctx);
+        double deltaA = _engine.Delta(option, _ctx);
+        double gammaA = _engine.Gamma(option, _ctx);
+        double speedA = _engine.Speed(option, _ctx);
+        double thetaA = _engine.Theta(option, _ctx);
+        double charmA = _engine.Charm(option, _ctx);
+        double colorA = _engine.Color(option, _ctx);
+        double vegaA = _engine.Vega(option, _ctx);
+        double vannaA = _engine.Vanna(option, _ctx);
+        double zommaA = _engine.Zomma(option, _ctx);
+        double rhoA = _engine.Rho(option, _ctx);
 
         Assert.Equal(deltaA, deltaN, precision);
         Assert.Equal(gammaA, gammaN, precision);

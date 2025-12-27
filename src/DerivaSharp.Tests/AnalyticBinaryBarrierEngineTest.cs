@@ -64,10 +64,9 @@ public class AnalyticBinaryBarrierEngineTest
             "AssetOrNothing" => new AssetOrNothingBarrierOption(barrierType, paymentType, optionType, strike, barrierPrice, rebate, 0, effectiveDate, expirationDate),
             _ => throw new ArgumentException("Invalid option kind"),
         };
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

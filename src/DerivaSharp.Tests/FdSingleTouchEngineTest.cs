@@ -39,11 +39,10 @@ public class FdSingleTouchEngineTest
             expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
-        double actual = _fdEngine.Value(option, _model, market, ctx);
-        double expected = _analyticEngine.Value(option, _model, market, ctx);
+        double actual = _fdEngine.Value(option, ctx);
+        double expected = _analyticEngine.Value(option, ctx);
         double tolerance = Math.Abs(expected) * 0.0003;
         Assert.Equal(expected, actual, tolerance);
     }

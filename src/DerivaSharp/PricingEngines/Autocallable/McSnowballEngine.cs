@@ -11,7 +11,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
 {
     private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
 
-    public double[] Values(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Values(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -27,7 +27,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
 
         if (parameters.StepCount <= 0)
         {
-            return assetPrices.Select(s => CalculateTerminalPayoff(option, market with { AssetPrice = s }, context)).ToArray();
+            return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
         }
 
         using RandomNumberSource source = new(pathCount, parameters.StepCount, _device);
@@ -35,16 +35,17 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         double[] values = new double[count];
         for (int i = 0; i < count; i++)
         {
-            using Tensor priceMatrix = CreatePriceMatrix(model, market with { AssetPrice = assetPrices[i] }, context, parameters.DtVector, source);
-            values[i] = CalculateAveragePayoff(option, model, context, priceMatrix, parameters);
+            PricingContext<BsmModel> assetContext = context with { AssetPrice = assetPrices[i] };
+            using Tensor priceMatrix = CreatePriceMatrix(assetContext, parameters.DtVector, source);
+            values[i] = CalculateAveragePayoff(option, assetContext, priceMatrix, parameters);
         }
 
         return values;
     }
 
-    public double[] Deltas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Deltas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
-        double[] values = Values(option, model, market, context, assetPrices);
+        double[] values = Values(option, context, assetPrices);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -59,9 +60,9 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         return deltaTensor.cpu().data<double>().ToArray();
     }
 
-    public double[] Gammas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Gammas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
-        double[] values = Values(option, model, market, context, assetPrices);
+        double[] values = Values(option, context, assetPrices);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -76,40 +77,44 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         return gammaTensor.cpu().data<double>().ToArray();
     }
 
-    protected override double CalculateValue(SnowballOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(SnowballOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
+        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
         using DisposeScope scope = torch.NewDisposeScope();
 
         SimulationParameters parameters = PrepareSimulationParameters(option, context);
 
         if (parameters.StepCount <= 0)
         {
-            return CalculateTerminalPayoff(option, market, context);
+            return CalculateTerminalPayoff(option, context);
         }
 
         using RandomNumberSource source = new(pathCount, parameters.StepCount, _device);
-        Tensor priceMatrix = CreatePriceMatrix(model, market, context, parameters.DtVector, source);
+        Tensor priceMatrix = CreatePriceMatrix(context, parameters.DtVector, source);
 
-        return CalculateAveragePayoff(option, model, context, priceMatrix, parameters);
+        return CalculateAveragePayoff(option, context, priceMatrix, parameters);
     }
 
-    private static Tensor CreatePriceMatrix(BsmModel model, MarketData market, PricingContext context, Tensor dtVector, RandomNumberSource source) =>
-        PathGenerator.Generate(market.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dtVector, source);
+    private static Tensor CreatePriceMatrix(PricingContext<BsmModel> context, Tensor dtVector, RandomNumberSource source)
+    {
+        BsmModel model = context.Model;
+        return PathGenerator.Generate(context.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dtVector, source);
+    }
 
     private static double CalculateAveragePayoff(
         SnowballOption option,
-        BsmModel model,
-        PricingContext context,
+        PricingContext<BsmModel> context,
         Tensor priceMatrix,
         in SimulationParameters parameters)
     {
         using DisposeScope scope = torch.NewDisposeScope();
 
+        BsmModel model = context.Model;
         double r = model.RiskFreeRate;
 
         // Knock-out payoff calculation
@@ -147,19 +152,19 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         return pathPayoffs.mean().item<double>();
     }
 
-    private static double CalculateTerminalPayoff(SnowballOption option, MarketData market, PricingContext context)
+    private static double CalculateTerminalPayoff(SnowballOption option, PricingContext<BsmModel> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);
 
         double t = (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
-        double loss = Math.Clamp(market.AssetPrice - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0) / option.InitialPrice;
+        double loss = Math.Clamp(context.AssetPrice - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0) / option.InitialPrice;
 
-        if (market.AssetPrice >= option.KnockOutPrices[^1])
+        if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
             return option.KnockOutCouponRates[^1] * t;
         }
 
-        if (market.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
+        if (context.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             return loss;
         }
@@ -167,7 +172,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         return option.MaturityCouponRate * t;
     }
 
-    private SimulationParameters PrepareSimulationParameters(SnowballOption option, PricingContext context)
+    private SimulationParameters PrepareSimulationParameters(SnowballOption option, PricingContext<BsmModel> context)
     {
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);

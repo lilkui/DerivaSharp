@@ -9,17 +9,18 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
 {
     private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
 
-    public double Value(AmericanOption option, PricingContext context, BsmModel model, MarketData market, RandomNumberSource source)
+    public double Value(AmericanOption option, PricingContext<BsmModel> context, RandomNumberSource source)
     {
         Guard.IsGreaterThan(stepCount, 2);
 
+        BsmModel model = context.Model;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double tau = GetYearsToExpiration(option, context);
+        double tau = GetYearsToExpiration(option, context.ValuationDate);
         double dt = tau / (stepCount - 1);
         double df = Math.Exp(-model.RiskFreeRate * dt);
 
-        using torch.Tensor priceMatrix = PathGenerator.Generate(market.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
+        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -54,15 +55,16 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
-    protected override double CalculateValue(AmericanOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(AmericanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        if (context.ValuationDate == option.ExpirationDate)
+        if (valuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (market.AssetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
+        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
         using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
-        return Value(option, context, model, market, source);
+        return Value(option, context, source);
     }
 }

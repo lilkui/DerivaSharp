@@ -18,11 +18,10 @@ public class BjerksundStenslandAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, 100, effectiveDate, expirationDate);
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         const int precision = 4;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
     [Theory]
@@ -34,10 +33,9 @@ public class BjerksundStenslandAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, 100, effectiveDate, expirationDate);
-        PricingContext ctx = new(expirationDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

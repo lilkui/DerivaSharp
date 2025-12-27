@@ -32,8 +32,7 @@ public class FdEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         FdEuropeanEngine fdEngine = scheme switch
         {
@@ -43,8 +42,8 @@ public class FdEuropeanEngineTest
             _ => throw new ArgumentException("Invalid finite difference scheme"),
         };
 
-        double expected = _analyticEngine.Value(option, _model, market, ctx);
-        double value = fdEngine.Value(option, _model, market, ctx);
+        double expected = _analyticEngine.Value(option, ctx);
+        double value = fdEngine.Value(option, ctx);
         double tolerance = Math.Abs(expected) * toleranceFactor;
         Assert.Equal(expected, value, tolerance);
     }

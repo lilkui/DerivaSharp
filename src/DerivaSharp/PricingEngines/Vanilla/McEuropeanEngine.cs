@@ -8,12 +8,13 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
 {
     private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
 
-    public double Value(EuropeanOption option, PricingContext context, BsmModel model, MarketData market, RandomNumberSource source)
+    public double Value(EuropeanOption option, PricingContext<BsmModel> context, RandomNumberSource source)
     {
-        double tau = GetYearsToExpiration(option, context);
+        BsmModel model = context.Model;
+        double tau = GetYearsToExpiration(option, context.ValuationDate);
         double dt = tau / (stepCount - 1);
 
-        using torch.Tensor priceMatrix = PathGenerator.Generate(market.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
+        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -24,15 +25,16 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
         return averagePayoff * Math.Exp(-model.RiskFreeRate * tau);
     }
 
-    protected override double CalculateValue(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(EuropeanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        if (context.ValuationDate == option.ExpirationDate)
+        if (valuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (market.AssetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
+        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
         using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
-        return Value(option, context, model, market, source);
+        return Value(option, context, source);
     }
 }

@@ -8,26 +8,24 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<AmericanOption>
 {
-    protected override double CalculateValue(AmericanOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(AmericanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        if (context.ValuationDate == option.ExpirationDate)
+        if (valuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Max(z * (market.AssetPrice - option.StrikePrice), 0);
+            return Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
         if (option.OptionType == OptionType.Call)
         {
-            return AmericanCallValue(option, model, market, context);
+            return AmericanCallValue(option, model, assetPrice, valuationDate);
         }
 
         // Use the put-call transformation for American put options
-        AmericanOption transformedOption = new(OptionType.Call, market.AssetPrice, option.EffectiveDate, option.ExpirationDate);
-        return AmericanCallValue(
-            transformedOption,
-            model with { RiskFreeRate = model.DividendYield, DividendYield = model.RiskFreeRate },
-            market with { AssetPrice = option.StrikePrice },
-            context);
+        AmericanOption transformedOption = new(OptionType.Call, assetPrice, option.EffectiveDate, option.ExpirationDate);
+        BsmModel transformedModel = model with { RiskFreeRate = model.DividendYield, DividendYield = model.RiskFreeRate };
+
+        return AmericanCallValue(transformedOption, transformedModel, assetPrice, valuationDate);
     }
 
     private static double Ksi(double s, double t2, double gamma, double h, double i2, double i1, double t1, double r, double b, double v)
@@ -66,11 +64,11 @@ public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<American
 
     private static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
 
-    private double AmericanCallValue(AmericanOption option, BsmModel model, MarketData market, PricingContext context)
+    private double AmericanCallValue(AmericanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
-        double s = market.AssetPrice;
-        double tau = GetYearsToExpiration(option, context);
+        double s = assetPrice;
+        double tau = GetYearsToExpiration(option, valuationDate);
         double vol = model.Volatility;
         double r = model.RiskFreeRate;
         double q = model.DividendYield;
@@ -84,7 +82,8 @@ public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<American
             // Never optimal to exercise early
             EuropeanOption europeanOption = new(OptionType.Call, x, option.EffectiveDate, option.ExpirationDate);
             AnalyticEuropeanEngine europeanEngine = new();
-            value = europeanEngine.Value(europeanOption, model, market, context);
+            PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
+            value = europeanEngine.Value(europeanOption, context);
             return value;
         }
 

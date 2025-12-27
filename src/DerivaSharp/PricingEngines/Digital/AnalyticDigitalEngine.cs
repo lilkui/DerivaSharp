@@ -7,23 +7,22 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
-    protected override double CalculateValue(DigitalOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(DigitalOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = market.AssetPrice;
-        double tau = GetYearsToExpiration(option, context);
+        double tau = GetYearsToExpiration(option, valuationDate);
         double vol = model.Volatility;
         double r = model.RiskFreeRate;
         double q = model.DividendYield;
 
         if (tau == 0)
         {
-            bool inTheMoney = z > 0 ? s > x : s < x;
+            bool inTheMoney = z > 0 ? assetPrice > x : assetPrice < x;
             return option switch
             {
                 CashOrNothingOption con => inTheMoney ? con.Rebate : 0.0,
-                AssetOrNothingOption _ => inTheMoney ? s : 0.0,
+                AssetOrNothingOption _ => inTheMoney ? assetPrice : 0.0,
                 _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidDigitalOption),
             };
         }
@@ -33,14 +32,14 @@ public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
             case CashOrNothingOption con:
             {
                 double k = con.Rebate;
-                double d = (Math.Log(s / x) + (r - q - 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
+                double d = (Math.Log(assetPrice / x) + (r - q - 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
                 return k * Math.Exp(-r * tau) * Normal.CDF(0, 1, z * d);
             }
 
             case AssetOrNothingOption:
             {
-                double d = (Math.Log(s / x) + (r - q + 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
-                return s * Math.Exp(-q * tau) * Normal.CDF(0, 1, z * d);
+                double d = (Math.Log(assetPrice / x) + (r - q + 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
+                return assetPrice * Math.Exp(-q * tau) * Normal.CDF(0, 1, z * d);
             }
 
             default:

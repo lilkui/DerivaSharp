@@ -19,12 +19,12 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         _values = new double[stepCount + 1];
     }
 
-    protected override double CalculateValue(VanillaOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(VanillaOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s0 = market.AssetPrice;
-        double tau = GetYearsToExpiration(option, context);
+        double s0 = assetPrice;
+        double tau = GetYearsToExpiration(option, valuationDate);
 
         if (tau == 0)
         {

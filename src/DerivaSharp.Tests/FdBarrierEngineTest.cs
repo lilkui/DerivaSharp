@@ -43,11 +43,10 @@ public class FdBarrierEngineTest
             expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
-        double actual = _fdEngine.Value(option, _model, market, ctx);
-        double expected = _analyticEngine.Value(option, _model, market, ctx);
+        double actual = _fdEngine.Value(option, ctx);
+        double expected = _analyticEngine.Value(option, ctx);
         double tolerance = Math.Abs(expected) * 0.0001;
         Assert.Equal(expected, actual, tolerance);
     }
@@ -76,12 +75,11 @@ public class FdBarrierEngineTest
         EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
-        double kiValue = _fdEngine.Value(kiOption, _model, market, ctx);
-        double koValue = _fdEngine.Value(koOption, _model, market, ctx);
-        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, _model, market, ctx);
+        double kiValue = _fdEngine.Value(kiOption, ctx);
+        double koValue = _fdEngine.Value(koOption, ctx);
+        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
         double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
         double pvRebate = koOption.Rebate * Math.Exp(-_model.RiskFreeRate * tau);
 

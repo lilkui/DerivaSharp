@@ -12,9 +12,7 @@ public static class SnowballEngineExtensions
     {
         public double ImpliedCouponRate(
             SnowballOption option,
-            BsmModel model,
-            MarketData market,
-            PricingContext context,
+            PricingContext<BsmModel> context,
             double optionPrice,
             bool alignMaturityCouponRate,
             double lowerBound = 0.0,
@@ -56,7 +54,7 @@ public static class SnowballEngineExtensions
                     ? option with { KnockOutCouponRates = adjustedRates, MaturityCouponRate = adjustedRates[^1] }
                     : option with { KnockOutCouponRates = adjustedRates };
 
-                return engine.Value(candidate, model, market, context) - optionPrice;
+                return engine.Value(candidate, context) - optionPrice;
             }
         }
     }

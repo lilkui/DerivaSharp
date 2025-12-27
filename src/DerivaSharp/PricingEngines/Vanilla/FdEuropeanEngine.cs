@@ -7,22 +7,22 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<EuropeanOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(EuropeanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        if (context.ValuationDate == option.ExpirationDate)
+        if (valuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (market.AssetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
-        return base.CalculateValue(option, model, market, context);
+        return base.CalculateValue(option, model, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(EuropeanOption option, BsmModel model, PricingContext context)
+    protected override void InitializeCoefficients(EuropeanOption option, BsmModel model, DateOnly valuationDate)
     {
         MinPrice = 0;
         MaxPrice = 4 * option.StrikePrice;
-        base.InitializeCoefficients(option, model, context);
+        base.InitializeCoefficients(option, model, valuationDate);
     }
 
     protected override void SetTerminalCondition(EuropeanOption option)

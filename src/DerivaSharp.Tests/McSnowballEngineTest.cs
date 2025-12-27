@@ -12,8 +12,7 @@ public class McSnowballEngineTest
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
     private readonly BsmModel _model;
-    private readonly MarketData _market;
-    private readonly PricingContext _ctx;
+    private readonly PricingContext<BsmModel> _ctx;
     private readonly McSnowballEngine _engine;
 
     public McSnowballEngineTest()
@@ -22,8 +21,7 @@ public class McSnowballEngineTest
         _expirationDate = new DateOnly(2023, 1, 5);
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         _model = new BsmModel(0.16, 0.02, 0.04);
-        _market = new MarketData(1);
-        _ctx = new PricingContext(_effectiveDate);
+        _ctx = new PricingContext<BsmModel>(_model, 1.0, _effectiveDate);
         _engine = new McSnowballEngine(100000);
     }
 
@@ -41,7 +39,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        double actual = _engine.Value(option, _model, _market, _ctx);
+        double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -58,11 +56,10 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        PricingContext ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6) };
-        MarketData market = _market with { AssetPrice = 1.05 };
+        PricingContext<BsmModel> ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6), AssetPrice = 1.05 };
 
         const double expected = 0.021192;
-        double actual = _engine.Value(option, _model, market, ctx);
+        double actual = _engine.Value(option, ctx);
         Assert.Equal(expected, actual, 6);
     }
 
@@ -81,7 +78,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        double actual = _engine.Value(option, _model, _market, _ctx);
+        double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -101,7 +98,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        double actual = _engine.Value(option, _model, _market, _ctx);
+        double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -120,7 +117,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0;
-        double actual = _engine.Value(option, _model, _market, _ctx);
+        double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -138,7 +135,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0.086;
-        double actual = _engine.ImpliedCouponRate(template, _model, _market, _ctx, 0, true);
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -157,7 +154,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0.076;
-        double actual = _engine.ImpliedCouponRate(template, _model, _market, _ctx, 0, true);
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -177,7 +174,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0.094;
-        double actual = _engine.ImpliedCouponRate(template, _model, _market, _ctx, 0, false);
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -196,7 +193,7 @@ public class McSnowballEngineTest
             _expirationDate);
 
         const double expected = 0.071;
-        double actual = _engine.ImpliedCouponRate(template, _model, _market, _ctx, 0, true);
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 }

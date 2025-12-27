@@ -19,11 +19,10 @@ public class McEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         double tolerance = Math.Abs(expected) * 0.01;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), tolerance);
+        Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
     }
 
     [Theory]
@@ -36,10 +35,9 @@ public class McEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(expirationDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

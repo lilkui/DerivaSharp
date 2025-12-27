@@ -76,11 +76,10 @@ public class AnalyticBarrierEngineTest
             obsFreq,
             effectiveDate,
             expirationDate);
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
     [Theory]
@@ -108,11 +107,10 @@ public class AnalyticBarrierEngineTest
             0,
             effectiveDate,
             expirationDate);
-        PricingContext ctx = new(expirationDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
     [Fact]
@@ -139,12 +137,11 @@ public class AnalyticBarrierEngineTest
         EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
-        double kiValue = _engine.Value(kiOption, _model, market, ctx);
-        double koValue = _engine.Value(koOption, _model, market, ctx);
-        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, _model, market, ctx);
+        double kiValue = _engine.Value(kiOption, ctx);
+        double koValue = _engine.Value(koOption, ctx);
+        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
         double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
         double pvRebate = koOption.Rebate * Math.Exp(-_model.RiskFreeRate * tau);
 

@@ -31,8 +31,7 @@ public class FdAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(effectiveDate);
-        MarketData market = new(assetPrice);
+        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
 
         FdAmericanEngine fdEngine = scheme switch
         {
@@ -43,6 +42,6 @@ public class FdAmericanEngineTest
         };
 
         double tolerance = Math.Abs(expected) * toleranceFactor;
-        Assert.Equal(expected, fdEngine.Value(option, _model, market, ctx), tolerance);
+        Assert.Equal(expected, fdEngine.Value(option, ctx), tolerance);
     }
 }

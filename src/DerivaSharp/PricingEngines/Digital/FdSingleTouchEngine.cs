@@ -8,7 +8,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<SingleTouchOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(SingleTouchOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(SingleTouchOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         if (option.TouchType is TouchType.NoTouchUp or TouchType.NoTouchDown)
         {
@@ -16,19 +16,19 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
 
             TouchType oneTouchType = option.TouchType == TouchType.NoTouchUp ? TouchType.OneTouchUp : TouchType.OneTouchDown;
             SingleTouchOption oneTouchOption = option with { TouchType = oneTouchType };
-            double oneTouchValue = base.CalculateValue(oneTouchOption, model, market, context);
+            double oneTouchValue = base.CalculateValue(oneTouchOption, model, assetPrice, valuationDate);
 
             double r = model.RiskFreeRate;
-            double tau = GetYearsToExpiration(option, context);
+            double tau = GetYearsToExpiration(option, valuationDate);
             double dfr = Math.Exp(-r * tau);
 
             return option.Rebate * dfr - oneTouchValue;
         }
 
-        return base.CalculateValue(option, model, market, context);
+        return base.CalculateValue(option, model, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(SingleTouchOption option, BsmModel model, PricingContext context)
+    protected override void InitializeCoefficients(SingleTouchOption option, BsmModel model, DateOnly valuationDate)
     {
         if (option.TouchType is TouchType.NoTouchUp or TouchType.NoTouchDown)
         {
@@ -54,7 +54,7 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
                 break;
         }
 
-        base.InitializeCoefficients(option, model, context);
+        base.InitializeCoefficients(option, model, valuationDate);
     }
 
     protected override void SetTerminalCondition(SingleTouchOption option)

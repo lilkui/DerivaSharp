@@ -19,7 +19,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    public double[] Values(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Values(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -29,7 +29,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, model, market, context);
+        CalculateValue(option, context.Model, context.AssetPrice, context.ValuationDate);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;
@@ -43,9 +43,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return values;
     }
 
-    public double[] Deltas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Deltas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
-        double[] values = Values(option, model, market, context, assetPrices);
+        double[] values = Values(option, context, assetPrices);
         double[] deltas = new double[values.Length];
 
         double ds = assetPrices[1] - assetPrices[0];
@@ -61,9 +61,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return deltas;
     }
 
-    public double[] Gammas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
+    public double[] Gammas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {
-        double[] values = Values(option, model, market, context, assetPrices);
+        double[] values = Values(option, context, assetPrices);
         double[] gammas = new double[values.Length];
 
         double ds = assetPrices[1] - assetPrices[0];
@@ -79,32 +79,33 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return gammas;
     }
 
-    protected override double CalculateValue(SnowballOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(SnowballOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
+        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
         InitializeParameters(option, context);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, model, market, context);
+            return base.CalculateValue(option, model, assetPrice, valuationDate);
         }
 
         // First pass: compute the fully knocked-in surface so it can be referenced when
         // the second pass detects an endogenous knock-in event.
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, model, market, context);
+        base.CalculateValue(option, model, assetPrice, valuationDate);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         // Second pass: solve the non-knocked-in scenario, substituting the stored knocked-in surface
         // wherever the price process breaches the knock-in barrier.
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, model, market, context);
+        return base.CalculateValue(option, model, assetPrice, valuationDate);
     }
 
     protected override void SetTerminalCondition(SnowballOption option)
@@ -194,7 +195,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    private void InitializeParameters(SnowballOption option, PricingContext context)
+    private void InitializeParameters(SnowballOption option, PricingContext<BsmModel> context)
     {
         DateOnly valDate = context.ValuationDate;
         DateOnly effDate = option.EffectiveDate;

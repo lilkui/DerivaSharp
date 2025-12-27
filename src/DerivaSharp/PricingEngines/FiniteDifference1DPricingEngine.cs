@@ -61,18 +61,18 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
-    protected override double CalculateValue(TOption option, BsmModel model, MarketData market, PricingContext context)
+    protected override double CalculateValue(TOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
     {
-        SolvePde(option, model, market, context);
-        return LinearInterpolation.InterpolateSorted(market.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
+        SolvePde(option, model, valuationDate);
+        return LinearInterpolation.InterpolateSorted(assetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
-    protected virtual void InitializeCoefficients(TOption option, BsmModel model, PricingContext context)
+    protected virtual void InitializeCoefficients(TOption option, BsmModel model, DateOnly valuationDate)
     {
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
         Guard.IsGreaterThan(MaxPrice, MinPrice);
 
-        double tau = GetYearsToExpiration(option, context);
+        double tau = GetYearsToExpiration(option, valuationDate);
         PriceVector = Generate.LinearSpaced(PriceStepCount + 1, MinPrice, MaxPrice);
         TimeVector = Generate.LinearSpaced(TimeStepCount + 1, 0, tau);
 
@@ -153,9 +153,9 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
         result.CopyTo(ValueMatrixSpan.GetRowSpan(i).Slice(1, length));
     }
 
-    private void SolvePde(TOption option, BsmModel model, MarketData market, PricingContext context)
+    private void SolvePde(TOption option, BsmModel model, DateOnly valuationDate)
     {
-        InitializeCoefficients(option, model, context);
+        InitializeCoefficients(option, model, valuationDate);
         SetTerminalCondition(option);
         SetBoundaryConditions(option, model);
         ApplyStepConditions(TimeStepCount, option, model);
