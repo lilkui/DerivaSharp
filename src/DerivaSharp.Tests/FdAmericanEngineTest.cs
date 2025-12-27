@@ -1,10 +1,12 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class FdAmericanEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.02);
     private readonly FdAmericanEngine _expFdEngine = new(FiniteDifferenceScheme.ExplicitEuler, 200, 4000);
     private readonly FdAmericanEngine _impFdEngine = new(FiniteDifferenceScheme.ImplicitEuler, 1000, 1000);
     private readonly FdAmericanEngine _cnFdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
@@ -29,7 +31,8 @@ public class FdAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.02);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
         FdAmericanEngine fdEngine = scheme switch
         {
@@ -40,6 +43,6 @@ public class FdAmericanEngineTest
         };
 
         double tolerance = Math.Abs(expected) * toleranceFactor;
-        Assert.Equal(expected, fdEngine.Value(option, ctx), tolerance);
+        Assert.Equal(expected, fdEngine.Value(option, _model, market, ctx), tolerance);
     }
 }

@@ -1,10 +1,12 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class FdSingleTouchEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
     private readonly FdSingleTouchEngine _fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     private readonly AnalyticBinaryBarrierEngine _analyticEngine = new();
 
@@ -37,10 +39,11 @@ public class FdSingleTouchEngineTest
             expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
-        double actual = _fdEngine.Value(option, ctx);
-        double expected = _analyticEngine.Value(option, ctx);
+        double actual = _fdEngine.Value(option, _model, market, ctx);
+        double expected = _analyticEngine.Value(option, _model, market, ctx);
         double tolerance = Math.Abs(expected) * 0.0003;
         Assert.Equal(expected, actual, tolerance);
     }

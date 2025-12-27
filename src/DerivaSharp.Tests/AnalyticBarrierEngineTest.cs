@@ -1,10 +1,12 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class AnalyticBarrierEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
     private readonly AnalyticBarrierEngine _engine = new();
 
     public static TheoryData<OptionType, BarrierType, double, double, PaymentType, int, double, double> ValueTestData => new()
@@ -74,10 +76,11 @@ public class AnalyticBarrierEngineTest
             obsFreq,
             effectiveDate,
             expirationDate);
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
     }
 
     [Theory]
@@ -105,10 +108,11 @@ public class AnalyticBarrierEngineTest
             0,
             effectiveDate,
             expirationDate);
-        PricingContext ctx = new(assetPrice, expirationDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(expirationDate);
+        MarketData market = new(assetPrice);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
     }
 
     [Fact]
@@ -135,13 +139,14 @@ public class AnalyticBarrierEngineTest
         EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
 
         const double assetPrice = 100;
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
-        double kiValue = _engine.Value(kiOption, ctx);
-        double koValue = _engine.Value(koOption, ctx);
-        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
+        double kiValue = _engine.Value(kiOption, _model, market, ctx);
+        double koValue = _engine.Value(koOption, _model, market, ctx);
+        double eurValue = new AnalyticEuropeanEngine().Value(eurOption, _model, market, ctx);
         double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
-        double pvRebate = koOption.Rebate * Math.Exp(-ctx.RiskFreeRate * tau);
+        double pvRebate = koOption.Rebate * Math.Exp(-_model.RiskFreeRate * tau);
 
         const int precision = 6;
         Assert.Equal(0, kiValue + koValue - eurValue - pvRebate, precision);

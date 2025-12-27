@@ -1,10 +1,12 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class AnalyticBinaryBarrierEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
     private readonly AnalyticBinaryBarrierEngine _engine = new();
 
     public static TheoryData<string, BarrierType, PaymentType, OptionType?, double, double, double, double> ValueTestData => new()
@@ -62,9 +64,10 @@ public class AnalyticBinaryBarrierEngineTest
             "AssetOrNothing" => new AssetOrNothingBarrierOption(barrierType, paymentType, optionType, strike, barrierPrice, rebate, 0, effectiveDate, expirationDate),
             _ => throw new ArgumentException("Invalid option kind"),
         };
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
     }
 }

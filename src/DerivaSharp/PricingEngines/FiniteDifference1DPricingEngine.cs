@@ -2,12 +2,13 @@ using System.Diagnostics;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.Numerics;
 using MathNet.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
-public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOption>
+public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngine<TOption>
     where TOption : Option
 {
     private readonly double[] _lower1;
@@ -23,7 +24,7 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
     private TridiagonalMatrix? _m1;
     private TridiagonalMatrix? _m2;
 
-    protected FiniteDifferencePricingEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
+    protected FiniteDifference1DPricingEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
         Guard.IsGreaterThanOrEqualTo(priceStepCount, 2);
         Guard.IsGreaterThanOrEqualTo(timeStepCount, 2);
@@ -60,13 +61,13 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
 
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
-    protected override double CalculateValue(TOption option, PricingContext context)
+    protected override double CalculateValue(TOption option, BsmModel model, MarketData market, PricingContext context)
     {
-        SolvePde(option, context);
-        return LinearInterpolation.InterpolateSorted(context.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
+        SolvePde(option, model, market, context);
+        return LinearInterpolation.InterpolateSorted(market.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
-    protected virtual void InitializeCoefficients(TOption option, PricingContext context)
+    protected virtual void InitializeCoefficients(TOption option, BsmModel model, PricingContext context)
     {
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
         Guard.IsGreaterThan(MaxPrice, MinPrice);
@@ -77,9 +78,9 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
 
         double ds = PriceVector[1] - PriceVector[0];
         double dt = TimeVector[1] - TimeVector[0];
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
-        double v = context.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
+        double v = model.Volatility;
 
         double theta = Scheme switch
         {
@@ -123,9 +124,9 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
 
     protected abstract void SetTerminalCondition(TOption option);
 
-    protected abstract void SetBoundaryConditions(TOption option, PricingContext context);
+    protected abstract void SetBoundaryConditions(TOption option, BsmModel model);
 
-    protected abstract void ApplyStepConditions(int i, TOption option, PricingContext context);
+    protected abstract void ApplyStepConditions(int i, TOption option, BsmModel model);
 
     private void SolveSingleStep(int i, Span<double> rhs, Span<double> result)
     {
@@ -152,17 +153,17 @@ public abstract class FiniteDifferencePricingEngine<TOption> : PricingEngine<TOp
         result.CopyTo(ValueMatrixSpan.GetRowSpan(i).Slice(1, length));
     }
 
-    private void SolvePde(TOption option, PricingContext context)
+    private void SolvePde(TOption option, BsmModel model, MarketData market, PricingContext context)
     {
-        InitializeCoefficients(option, context);
+        InitializeCoefficients(option, model, context);
         SetTerminalCondition(option);
-        SetBoundaryConditions(option, context);
-        ApplyStepConditions(TimeStepCount, option, context);
+        SetBoundaryConditions(option, model);
+        ApplyStepConditions(TimeStepCount, option, model);
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
             SolveSingleStep(i, _rhs, _result);
-            ApplyStepConditions(i, option, context);
+            ApplyStepConditions(i, option, model);
         }
     }
 }

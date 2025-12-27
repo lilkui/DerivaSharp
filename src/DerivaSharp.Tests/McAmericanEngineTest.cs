@@ -1,10 +1,12 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class McAmericanEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.02);
     private readonly McAmericanEngine _engine = new(100000, 250);
 
     [Theory]
@@ -17,10 +19,11 @@ public class McAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.02);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
         double tolerance = Math.Abs(expected) * 0.02;
-        Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
+        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), tolerance);
     }
 
     [Theory]
@@ -33,9 +36,10 @@ public class McAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(assetPrice, expirationDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(expirationDate);
+        MarketData market = new(assetPrice);
 
         const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
+        Assert.Equal(expected, _engine.Value(option, _model, market, ctx), precision);
     }
 }

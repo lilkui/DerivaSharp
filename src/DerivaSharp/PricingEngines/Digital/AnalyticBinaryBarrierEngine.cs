@@ -1,29 +1,30 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using MathNet.Numerics.Distributions;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOption>
+public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrierOption>
 {
     private const double Beta = 0.5825971579390107; // Correction factor for discrete barriers
 
-    protected override double CalculateValue(BinaryBarrierOption option, PricingContext context)
+    protected override double CalculateValue(BinaryBarrierOption option, BsmModel model, MarketData market, PricingContext context)
     {
         double x = option.StrikePrice;
         double h = option.BarrierPrice;
         double k = option.Rebate;
         double dt = option.ObservationInterval;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         if (tau == 0)
         {
-            return CalculateTerminalPayoff(option, context);
+            return CalculateTerminalPayoff(option, market);
         }
 
         double vSqrtT = vol * Sqrt(tau);
@@ -308,12 +309,12 @@ public sealed class AnalyticBinaryBarrierEngine : PricingEngine<BinaryBarrierOpt
         }
     }
 
-    private static double CalculateTerminalPayoff(BinaryBarrierOption option, PricingContext context)
+    private static double CalculateTerminalPayoff(BinaryBarrierOption option, MarketData market)
     {
         double x = option.StrikePrice;
         double h = option.BarrierPrice;
         double k = option.Rebate;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
 
         switch (option)
         {

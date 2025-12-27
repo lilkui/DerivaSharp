@@ -1,90 +1,91 @@
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using MathNet.Numerics.Distributions;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class AnalyticEuropeanEngine : PricingEngine<EuropeanOption>
+public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
     public bool UseNumericalGreeks { get; set; } = false;
 
-    public override double Delta(EuropeanOption option, PricingContext context)
+    public override double Delta(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Delta(option, context);
+            return base.Delta(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double _) = D1D2(x, s, tau, vol, r, q);
         return z * Exp(-q * tau) * StdNormCdf(z * d1);
     }
 
-    public override double Gamma(EuropeanOption option, PricingContext context)
+    public override double Gamma(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
-        if (UseNumericalGreeks)
-        {
-            return base.Gamma(option, context);
-        }
-
         ValidateArguments(option, context);
 
+        if (UseNumericalGreeks)
+        {
+            return base.Gamma(option, model, market, context);
+        }
+
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double _) = D1D2(x, s, tau, vol, r, q);
         return Exp(-q * tau) * StdNormPdf(d1) / (s * vol * Sqrt(tau));
     }
 
-    public override double Speed(EuropeanOption option, PricingContext context)
+    public override double Speed(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Speed(option, context);
+            return base.Speed(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double _) = D1D2(x, s, tau, vol, r, q);
-        return -Gamma(option, context) * (1 + d1 / (vol * Sqrt(tau))) / s;
+        return -Gamma(option, model, market, context) * (1 + d1 / (vol * Sqrt(tau))) / s;
     }
 
-    public override double Theta(EuropeanOption option, PricingContext context)
+    public override double Theta(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Theta(option, context);
+            return base.Theta(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
         double theta = -s * Exp(-q * tau) * StdNormPdf(d1) * vol / (2 * Sqrt(tau)) + z * q * s * Exp(-q * tau) * StdNormCdf(z * d1) -
@@ -92,144 +93,144 @@ public sealed class AnalyticEuropeanEngine : PricingEngine<EuropeanOption>
         return theta / 365;
     }
 
-    public override double Charm(EuropeanOption option, PricingContext context)
+    public override double Charm(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Charm(option, context);
+            return base.Charm(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
         return -Exp(-q * tau) * (StdNormPdf(d1) * ((r - q) / (vol * Sqrt(tau)) - 0.5 * d2 / tau) - z * q * StdNormCdf(z * d1)) / 365;
     }
 
-    public override double Color(EuropeanOption option, PricingContext context)
+    public override double Color(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Color(option, context);
+            return base.Color(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
-        return Gamma(option, context) * (q + (r - q) * d1 / (vol * Sqrt(tau)) + (1 - d1 * d2) / (2 * tau)) / 365;
+        return Gamma(option, model, market, context) * (q + (r - q) * d1 / (vol * Sqrt(tau)) + (1 - d1 * d2) / (2 * tau)) / 365;
     }
 
-    public override double Vega(EuropeanOption option, PricingContext context)
+    public override double Vega(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Vega(option, context);
+            return base.Vega(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double _) = D1D2(x, s, tau, vol, r, q);
         return s * Exp(-q * tau) * StdNormPdf(d1) * Sqrt(tau) / 100;
     }
 
-    public override double Vanna(EuropeanOption option, PricingContext context)
+    public override double Vanna(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Vanna(option, context);
+            return base.Vanna(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
         return -Exp(-q * tau) * d2 / vol * StdNormPdf(d1) / 100;
     }
 
-    public override double Zomma(EuropeanOption option, PricingContext context)
+    public override double Zomma(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Zomma(option, context);
+            return base.Zomma(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
-        return Gamma(option, context) * (d1 * d2 - 1) / vol / 100;
+        return Gamma(option, model, market, context) * (d1 * d2 - 1) / vol / 100;
     }
 
-    public override double Rho(EuropeanOption option, PricingContext context)
+    public override double Rho(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.Rho(option, context);
+            return base.Rho(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         (double _, double d2) = D1D2(x, s, tau, vol, r, q);
         return z * tau * x * Exp(-r * tau) * StdNormCdf(z * d2) / 100;
     }
 
-    public override PricingResult ValueAndGreeks(EuropeanOption option, PricingContext context)
+    public override PricingResult ValueAndGreeks(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (UseNumericalGreeks)
         {
-            return base.ValueAndGreeks(option, context);
+            return base.ValueAndGreeks(option, model, market, context);
         }
 
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         double value;
         double delta = 0, gamma = 0, speed = 0, theta = 0, charm = 0, color = 0, vega = 0, vanna = 0, zomma = 0, rho = 0;
@@ -278,17 +279,17 @@ public sealed class AnalyticEuropeanEngine : PricingEngine<EuropeanOption>
         };
     }
 
-    protected override double CalculateValue(EuropeanOption option, PricingContext context)
+    protected override double CalculateValue(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         ValidateArguments(option, context);
 
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         if (tau == 0)
         {

@@ -1,12 +1,13 @@
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifferencePricingEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
+    : FiniteDifference1DPricingEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
@@ -18,7 +19,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    public double[] Values(SnowballOption option, PricingContext context, double[] assetPrices)
+    public double[] Values(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -28,7 +29,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, context);
+        CalculateValue(option, model, market, context);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;
@@ -42,9 +43,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return values;
     }
 
-    public double[] Deltas(SnowballOption option, PricingContext context, double[] assetPrices)
+    public double[] Deltas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
     {
-        double[] values = Values(option, context, assetPrices);
+        double[] values = Values(option, model, market, context, assetPrices);
         double[] deltas = new double[values.Length];
 
         double ds = assetPrices[1] - assetPrices[0];
@@ -60,9 +61,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return deltas;
     }
 
-    public double[] Gammas(SnowballOption option, PricingContext context, double[] assetPrices)
+    public double[] Gammas(SnowballOption option, BsmModel model, MarketData market, PricingContext context, double[] assetPrices)
     {
-        double[] values = Values(option, context, assetPrices);
+        double[] values = Values(option, model, market, context, assetPrices);
         double[] gammas = new double[values.Length];
 
         double ds = assetPrices[1] - assetPrices[0];
@@ -78,7 +79,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return gammas;
     }
 
-    protected override double CalculateValue(SnowballOption option, PricingContext context)
+    protected override double CalculateValue(SnowballOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -90,20 +91,20 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, context);
+            return base.CalculateValue(option, model, market, context);
         }
 
         // First pass: compute the fully knocked-in surface so it can be referenced when
         // the second pass detects an endogenous knock-in event.
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, context);
+        base.CalculateValue(option, model, market, context);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         // Second pass: solve the non-knocked-in scenario, substituting the stored knocked-in surface
         // wherever the price process breaches the knock-in barrier.
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, context);
+        return base.CalculateValue(option, model, market, context);
     }
 
     protected override void SetTerminalCondition(SnowballOption option)
@@ -129,9 +130,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void SetBoundaryConditions(SnowballOption option, PricingContext context)
+    protected override void SetBoundaryConditions(SnowballOption option, BsmModel model)
     {
-        double r = context.RiskFreeRate;
+        double r = model.RiskFreeRate;
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
@@ -162,7 +163,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void ApplyStepConditions(int i, SnowballOption option, PricingContext context)
+    protected override void ApplyStepConditions(int i, SnowballOption option, BsmModel model)
     {
         int obsIdx = _stepToObservationIndex[i];
         if (obsIdx != -1)

@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class BinomialTreeVanillaEngine : PricingEngine<VanillaOption>
+public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
 {
     private readonly int _stepCount;
     private readonly double[] _prices;
@@ -18,11 +19,11 @@ public sealed class BinomialTreeVanillaEngine : PricingEngine<VanillaOption>
         _values = new double[stepCount + 1];
     }
 
-    protected override double CalculateValue(VanillaOption option, PricingContext context)
+    protected override double CalculateValue(VanillaOption option, BsmModel model, MarketData market, PricingContext context)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s0 = context.AssetPrice;
+        double s0 = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
 
         if (tau == 0)
@@ -30,9 +31,9 @@ public sealed class BinomialTreeVanillaEngine : PricingEngine<VanillaOption>
             return Math.Max(z * (s0 - x), 0);
         }
 
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
         bool isAmerican = option.Exercise == Exercise.American;
 
         double dt = tau / _stepCount;

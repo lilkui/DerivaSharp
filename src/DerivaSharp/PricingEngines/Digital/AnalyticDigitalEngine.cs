@@ -1,20 +1,21 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using MathNet.Numerics.Distributions;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class AnalyticDigitalEngine : PricingEngine<DigitalOption>
+public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
-    protected override double CalculateValue(DigitalOption option, PricingContext context)
+    protected override double CalculateValue(DigitalOption option, BsmModel model, MarketData market, PricingContext context)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         if (tau == 0)
         {

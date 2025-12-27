@@ -1,10 +1,12 @@
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
 public class FdEuropeanEngineTest
 {
+    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
     private readonly FdEuropeanEngine _expFdEngine = new(FiniteDifferenceScheme.ExplicitEuler, 200, 4000);
     private readonly FdEuropeanEngine _impFdEngine = new(FiniteDifferenceScheme.ImplicitEuler, 1000, 1000);
     private readonly FdEuropeanEngine _cnFdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
@@ -30,7 +32,8 @@ public class FdEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext ctx = new(assetPrice, effectiveDate, 0.3, 0.04, 0.01);
+        PricingContext ctx = new(effectiveDate);
+        MarketData market = new(assetPrice);
 
         FdEuropeanEngine fdEngine = scheme switch
         {
@@ -40,8 +43,8 @@ public class FdEuropeanEngineTest
             _ => throw new ArgumentException("Invalid finite difference scheme"),
         };
 
-        double expected = _analyticEngine.Value(option, ctx);
-        double value = fdEngine.Value(option, ctx);
+        double expected = _analyticEngine.Value(option, _model, market, ctx);
+        double value = fdEngine.Value(option, _model, market, ctx);
         double tolerance = Math.Abs(expected) * toleranceFactor;
         Assert.Equal(expected, value, tolerance);
     }

@@ -1,12 +1,15 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda = false) : TorchSharpPricingEngine<AmericanOption>(useCuda)
+public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda = false) : BsmPricingEngine<AmericanOption>
 {
-    public double Value(AmericanOption option, PricingContext context, RandomNumberSource source)
+    private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
+
+    public double Value(AmericanOption option, PricingContext context, BsmModel model, MarketData market, RandomNumberSource source)
     {
         Guard.IsGreaterThan(stepCount, 2);
 
@@ -14,9 +17,9 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, context);
         double dt = tau / (stepCount - 1);
-        double df = Math.Exp(-context.RiskFreeRate * dt);
+        double df = Math.Exp(-model.RiskFreeRate * dt);
 
-        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, context.RiskFreeRate - context.DividendYield, context.Volatility, dt, source);
+        using torch.Tensor priceMatrix = PathGenerator.Generate(market.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -51,15 +54,15 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
-    protected override double CalculateValue(AmericanOption option, PricingContext context)
+    protected override double CalculateValue(AmericanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (context.AssetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (market.AssetPrice - option.StrikePrice), 0);
         }
 
-        using RandomNumberSource source = new(pathCount, stepCount - 1, Device);
-        return Value(option, context, source);
+        using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
+        return Value(option, context, model, market, source);
     }
 }

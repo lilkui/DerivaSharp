@@ -1,27 +1,28 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifferencePricingEngine<EuropeanOption>(scheme, priceStepCount, timeStepCount)
+    : FiniteDifference1DPricingEngine<EuropeanOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(EuropeanOption option, PricingContext context)
+    protected override double CalculateValue(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (context.AssetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (market.AssetPrice - option.StrikePrice), 0);
         }
 
-        return base.CalculateValue(option, context);
+        return base.CalculateValue(option, model, market, context);
     }
 
-    protected override void InitializeCoefficients(EuropeanOption option, PricingContext context)
+    protected override void InitializeCoefficients(EuropeanOption option, BsmModel model, PricingContext context)
     {
         MinPrice = 0;
         MaxPrice = 4 * option.StrikePrice;
-        base.InitializeCoefficients(option, context);
+        base.InitializeCoefficients(option, model, context);
     }
 
     protected override void SetTerminalCondition(EuropeanOption option)
@@ -35,11 +36,11 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void SetBoundaryConditions(EuropeanOption option, PricingContext context)
+    protected override void SetBoundaryConditions(EuropeanOption option, BsmModel model)
     {
         double x = option.StrikePrice;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         double maxTime = TimeVector[^1];
         double minPrice = PriceVector[0];
@@ -68,7 +69,7 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void ApplyStepConditions(int i, EuropeanOption option, PricingContext context)
+    protected override void ApplyStepConditions(int i, EuropeanOption option, BsmModel model)
     {
     }
 }

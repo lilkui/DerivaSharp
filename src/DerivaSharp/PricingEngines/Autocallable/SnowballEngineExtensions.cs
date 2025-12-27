@@ -1,5 +1,6 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using MathNet.Numerics;
 using MathNet.Numerics.RootFinding;
 
@@ -7,10 +8,12 @@ namespace DerivaSharp.PricingEngines;
 
 public static class SnowballEngineExtensions
 {
-    extension(PricingEngine<SnowballOption> engine)
+    extension(PricingEngine<SnowballOption, BsmModel> engine)
     {
         public double ImpliedCouponRate(
             SnowballOption option,
+            BsmModel model,
+            MarketData market,
             PricingContext context,
             double optionPrice,
             bool alignMaturityCouponRate,
@@ -53,7 +56,7 @@ public static class SnowballEngineExtensions
                     ? option with { KnockOutCouponRates = adjustedRates, MaturityCouponRate = adjustedRates[^1] }
                     : option with { KnockOutCouponRates = adjustedRates };
 
-                return engine.Value(candidate, context) - optionPrice;
+                return engine.Value(candidate, model, market, context) - optionPrice;
             }
         }
     }

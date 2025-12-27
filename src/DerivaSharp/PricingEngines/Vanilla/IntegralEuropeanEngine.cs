@@ -1,20 +1,21 @@
 ﻿using DerivaSharp.Instruments;
+using DerivaSharp.Models;
 using MathNet.Numerics.Integration;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
-public sealed class IntegralEuropeanEngine : PricingEngine<EuropeanOption>
+public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
-    protected override double CalculateValue(EuropeanOption option, PricingContext context)
+    protected override double CalculateValue(EuropeanOption option, BsmModel model, MarketData market, PricingContext context)
     {
         double x = option.StrikePrice;
         double sgn = (int)option.OptionType;
-        double s = context.AssetPrice;
+        double s = market.AssetPrice;
         double tau = GetYearsToExpiration(option, context);
-        double vol = context.Volatility;
-        double r = context.RiskFreeRate;
-        double q = context.DividendYield;
+        double vol = model.Volatility;
+        double r = model.RiskFreeRate;
+        double q = model.DividendYield;
 
         if (tau == 0)
         {
