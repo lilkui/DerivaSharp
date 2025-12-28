@@ -176,7 +176,7 @@ public sealed record SnowballOption : Option
         DateOnly expirationDate)
     {
         int n = knockOutObservationDates.Length;
-        double[] knockOutPrices = Enumerable.Repeat(initialPrice * knockInLevel, n).ToArray();
+        double[] knockOutPrices = Enumerable.Repeat(initialPrice * knockOutLevel, n).ToArray();
         knockOutPrices[^1] = initialPrice * finalKnockOutLevel;
         return new SnowballOption(
             Enumerable.Repeat(couponRate, n).ToArray(),
