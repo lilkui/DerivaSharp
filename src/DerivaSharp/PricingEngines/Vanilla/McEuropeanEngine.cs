@@ -6,7 +6,7 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda = false) : BsmPricingEngine<EuropeanOption>
 {
-    private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
+    private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
     public double Value(EuropeanOption option, PricingContext<BsmModel> context, RandomNumberSource source)
     {

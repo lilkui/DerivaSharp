@@ -7,7 +7,7 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda = false) : BsmPricingEngine<AmericanOption>
 {
-    private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
+    private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
     public double Value(AmericanOption option, PricingContext<BsmModel> context, RandomNumberSource source)
     {

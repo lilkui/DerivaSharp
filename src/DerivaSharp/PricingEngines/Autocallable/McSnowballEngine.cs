@@ -9,7 +9,7 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<SnowballOption>
 {
-    private readonly torch.Device _device = TorchHelper.GetDevice(useCuda);
+    private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
     public double[] Values(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
     {

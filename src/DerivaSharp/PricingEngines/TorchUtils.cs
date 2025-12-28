@@ -3,7 +3,7 @@ using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
-internal static class TorchHelper
+internal static class TorchUtils
 {
     public static torch.Device GetDevice(bool useCuda)
     {
