@@ -11,7 +11,6 @@ public class McSnowballEngineTest
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
-    private readonly BsmModel _model;
     private readonly PricingContext<BsmModel> _ctx;
     private readonly McSnowballEngine _engine;
 
@@ -20,8 +19,8 @@ public class McSnowballEngineTest
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
-        _model = new BsmModel(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModel>(_model, 1.0, _effectiveDate);
+        BsmModel model = new(0.16, 0.02, 0.04);
+        _ctx = new PricingContext<BsmModel>(model, 1.0, _effectiveDate);
         _engine = new McSnowballEngine(100000);
     }
 
@@ -92,6 +91,63 @@ public class McSnowballEngineTest
             0.8,
             1.03,
             0.02,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void DualCouponSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateDualCouponSnowball(
+            0.125,
+            0.04,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ParachuteSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateParachuteSnowball(
+            0.084,
+            1.0,
+            0.8,
+            1.03,
+            0.95,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void OtmSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateOtmSnowball(
+            0.105,
+            1.0,
+            0.8,
+            1.03,
+            1.05,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
             _effectiveDate,
@@ -175,6 +231,63 @@ public class McSnowballEngineTest
 
         const double expected = 0.094;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_DualCouponSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateDualCouponSnowball(
+            0.1,
+            0.04,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.125;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_ParachuteSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateParachuteSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            0.95,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.084;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_OtmSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateOtmSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            1.05,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.105;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
