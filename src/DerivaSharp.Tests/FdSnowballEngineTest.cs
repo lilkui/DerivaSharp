@@ -11,7 +11,6 @@ public class FdSnowballEngineTest
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
-    private readonly BsmModel _model;
     private readonly PricingContext<BsmModel> _ctx;
     private readonly FdSnowballEngine _engine;
 
@@ -20,8 +19,8 @@ public class FdSnowballEngineTest
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
-        _model = new BsmModel(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModel>(_model, 1.0, _effectiveDate);
+        BsmModel model = new(0.16, 0.02, 0.04);
+        _ctx = new PricingContext<BsmModel>(model, 1.0, _effectiveDate);
         _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
     }
 
@@ -179,6 +178,24 @@ public class FdSnowballEngineTest
     }
 
     [Fact]
+    public void EuropeanSnowballValue_IsAccurate()
+    {
+        SnowballOption option = SnowballOption.CreateEuropeanSnowball(
+            0.053,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
     public void ImpliedKnockOutCouponRate_StandardSnowball_IsAccurate()
     {
         SnowballOption template = SnowballOption.CreateStandardSnowball(
@@ -307,6 +324,24 @@ public class FdSnowballEngineTest
             _expirationDate);
 
         const double expected = 0.074;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_EuropeanSnowball_IsAccurate()
+    {
+        SnowballOption template = SnowballOption.CreateEuropeanSnowball(
+            0.1,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.053;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }

@@ -181,7 +181,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             }
         }
 
-        if (!_isSolvingKnockedIn)
+        if (!_isSolvingKnockedIn && option.KnockInObservationFrequency == ObservationFrequency.Daily)
         {
             double kiPrice = option.KnockInPrice;
             ReadOnlySpan2D<double> knockedInSpan = new(_knockedInValues, TimeStepCount + 1, PriceStepCount + 1);

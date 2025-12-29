@@ -133,7 +133,10 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         Tensor discountedKoPayoff = pathKoCouponRate * couponAccrualTime * torch.exp(-r * timeToKo);
 
         // Maturity payoff calculation
-        Tensor hasKnockedInOnFuturePath = (priceMatrix < option.KnockInPrice).any(1);
+        Tensor finalSpot = priceMatrix.select(1, -1);
+        Tensor hasKnockedInOnFuturePath = option.KnockInObservationFrequency == ObservationFrequency.AtExpiry
+            ? finalSpot < option.KnockInPrice
+            : (priceMatrix < option.KnockInPrice).any(1);
         Tensor hasKnockedIn = option.BarrierTouchStatus == BarrierTouchStatus.DownTouch
             ? torch.ones_like(hasKnockedInOnFuturePath)
             : hasKnockedInOnFuturePath;
@@ -142,7 +145,6 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         double dfFinal = Math.Exp(-r * timeToMaturity);
         double maturityCouponPayoff = option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
 
-        Tensor finalSpot = priceMatrix.select(1, -1);
         Tensor loss = torch.clamp_(finalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
         Tensor discountedMaturityPayoff = torch.where(hasKnockedIn.logical_not(), maturityCouponPayoff, loss) * dfFinal;
 

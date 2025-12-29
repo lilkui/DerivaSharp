@@ -11,6 +11,7 @@ public sealed record SnowballOption : Option
         double upperStrikePrice,
         double lowerStrikePrice,
         DateOnly[] knockOutObservationDates,
+        ObservationFrequency knockInObservationFrequency,
         BarrierTouchStatus barrierTouchStatus,
         DateOnly effectiveDate,
         DateOnly expirationDate)
@@ -24,6 +25,7 @@ public sealed record SnowballOption : Option
         UpperStrikePrice = upperStrikePrice;
         LowerStrikePrice = lowerStrikePrice;
         KnockOutObservationDates = knockOutObservationDates;
+        KnockInObservationFrequency = knockInObservationFrequency;
         BarrierTouchStatus = barrierTouchStatus;
     }
 
@@ -42,6 +44,8 @@ public sealed record SnowballOption : Option
     public double LowerStrikePrice { get; init; }
 
     public DateOnly[] KnockOutObservationDates { get; init; }
+
+    public ObservationFrequency KnockInObservationFrequency { get; init; }
 
     public BarrierTouchStatus BarrierTouchStatus { get; init; }
 
@@ -66,6 +70,7 @@ public sealed record SnowballOption : Option
             initialPrice,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -95,6 +100,7 @@ public sealed record SnowballOption : Option
             initialPrice,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -131,6 +137,7 @@ public sealed record SnowballOption : Option
             initialPrice,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -158,6 +165,7 @@ public sealed record SnowballOption : Option
             initialPrice,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -187,6 +195,7 @@ public sealed record SnowballOption : Option
             initialPrice,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -214,6 +223,7 @@ public sealed record SnowballOption : Option
             initialPrice * strikeLevel,
             0,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
@@ -241,6 +251,34 @@ public sealed record SnowballOption : Option
             initialPrice,
             initialPrice * floorLevel,
             knockOutObservationDates,
+            ObservationFrequency.Daily,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate);
+    }
+
+    // 欧式
+    public static SnowballOption CreateEuropeanSnowball(
+        double couponRate,
+        double initialPrice,
+        double knockInLevel,
+        double knockOutLevel,
+        DateOnly[] knockOutObservationDates,
+        BarrierTouchStatus barrierTouchStatus,
+        DateOnly effectiveDate,
+        DateOnly expirationDate)
+    {
+        int n = knockOutObservationDates.Length;
+        return new SnowballOption(
+            Enumerable.Repeat(couponRate, n).ToArray(),
+            couponRate,
+            initialPrice,
+            initialPrice * knockInLevel,
+            Enumerable.Repeat(initialPrice * knockOutLevel, n).ToArray(),
+            initialPrice,
+            0,
+            knockOutObservationDates,
+            ObservationFrequency.AtExpiry,
             barrierTouchStatus,
             effectiveDate,
             expirationDate);
