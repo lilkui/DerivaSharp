@@ -30,7 +30,7 @@ public class McPhoenixEngineTest
         BsmModel model = new(0.16, 0.02, 0.04);
         PricingContext<BsmModel> ctx = new(model, 1.0, _effectiveDate);
         PhoenixOption option = PhoenixOption.CreateStandardPhoenix(
-            0.002,
+            0.0016,
             1.0,
             0.7,
             1.03,
@@ -50,7 +50,7 @@ public class McPhoenixEngineTest
     public void ImpliedCouponRate_StandardPhoenix_IsAccurate()
     {
         PhoenixOption template = PhoenixOption.CreateStandardPhoenix(
-            0.002,
+            0.001,
             1.0,
             0.7,
             1.03,
@@ -59,7 +59,7 @@ public class McPhoenixEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.002;
+        const double expected = 0.0016;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
