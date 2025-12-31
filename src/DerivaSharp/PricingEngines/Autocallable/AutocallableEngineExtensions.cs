@@ -6,7 +6,7 @@ using MathNet.Numerics.RootFinding;
 
 namespace DerivaSharp.PricingEngines;
 
-public static class SnowballEngineExtensions
+public static class AutocallableEngineExtensions
 {
     extension(PricingEngine<SnowballOption, BsmModel> engine)
     {
@@ -53,6 +53,38 @@ public static class SnowballEngineExtensions
                 SnowballOption candidate = alignMaturityCouponRate
                     ? option with { KnockOutCouponRates = adjustedRates, MaturityCouponRate = adjustedRates[^1] }
                     : option with { KnockOutCouponRates = adjustedRates };
+
+                return engine.Value(candidate, context) - optionPrice;
+            }
+        }
+    }
+
+    extension(PricingEngine<PhoenixOption, BsmModel> engine)
+    {
+        public double ImpliedCouponRate(
+            PhoenixOption option,
+            PricingContext<BsmModel> context,
+            double optionPrice,
+            double lowerBound = 0.0,
+            double upperBound = 1.0,
+            double accuracy = 1e-5)
+        {
+            Guard.IsNotNull(engine);
+            Guard.IsNotNull(option);
+            Guard.IsLessThan(lowerBound, upperBound);
+
+            try
+            {
+                return Brent.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+            }
+            catch (NonConvergenceException)
+            {
+                return double.NaN;
+            }
+
+            double ObjectiveFunction(double rate)
+            {
+                PhoenixOption candidate = option with { CouponRate = rate };
 
                 return engine.Value(candidate, context) - optionPrice;
             }
