@@ -12,7 +12,7 @@ DerivaSharp is a C# library for pricing financial derivatives.
 | **Digital Option** | Analytic |
 | **Binary Barrier Option** | Analytic, Finite Difference |
 | **Snowball Option** | Finite Difference, Monte Carlo |
-| **Phoenix Option** | Monte Carlo |
+| **Phoenix Option** | Finite Difference, Monte Carlo |
 
 ## Getting Started
 
