@@ -27,8 +27,6 @@ public class McPhoenixEngineTest
     [Fact]
     public void StandardPhoenixValue_IsAccurate()
     {
-        BsmModel model = new(0.16, 0.02, 0.04);
-        PricingContext<BsmModel> ctx = new(model, 1.0, _effectiveDate);
         PhoenixOption option = PhoenixOption.CreateStandardPhoenix(
             0.0016,
             1.0,
@@ -39,10 +37,44 @@ public class McPhoenixEngineTest
             _effectiveDate,
             _expirationDate);
 
-        McPhoenixEngine engine = new(100000);
-        double actual = engine.Value(option, ctx);
+        const double expected = 0.0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void FixedCouponNoteValue_IsAccurate()
+    {
+        PhoenixOption option = PhoenixOption.CreateFixedCouponNote(
+            0.0012,
+            1.0,
+            0.7,
+            1.03,
+            _obsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
 
         const double expected = 0.0;
+        double actual = _engine.Value(option, _ctx);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void DigitalCouponNoteValue_IsAccurate()
+    {
+        PhoenixOption option = PhoenixOption.CreateDigitalCouponNote(
+            0.0012,
+            1.0,
+            0.7,
+            1.03,
+            _obsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0;
+        double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
 
@@ -60,6 +92,42 @@ public class McPhoenixEngineTest
             _expirationDate);
 
         const double expected = 0.0016;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_FixedCouponNote_IsAccurate()
+    {
+        PhoenixOption template = PhoenixOption.CreateFixedCouponNote(
+            0.001,
+            1.0,
+            0.7,
+            1.03,
+            _obsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0012;
+        double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
+        Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void ImpliedCouponRate_DigitalCouponNote_IsAccurate()
+    {
+        PhoenixOption template = PhoenixOption.CreateDigitalCouponNote(
+            0.001,
+            1.0,
+            0.7,
+            1.03,
+            _obsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        const double expected = 0.0012;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
