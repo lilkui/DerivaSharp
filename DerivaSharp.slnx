@@ -4,4 +4,5 @@
   </Folder>
   <Project Path="src/DerivaSharp/DerivaSharp.csproj" />
   <Project Path="src/DerivaSharp.Tests/DerivaSharp.Tests.csproj" />
+  <Project Path="src/DerivaSharp.Benchmarks/DerivaSharp.Benchmarks.csproj" />
 </Solution>
