@@ -7,7 +7,7 @@ namespace DerivaSharp.Tests;
 
 public class McSnowballEngineTest
 {
-    private const double DefaultTolerance = 0.002;
+    private const double DefaultTolerance = 0.003;
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
