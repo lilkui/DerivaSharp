@@ -1,5 +1,6 @@
 using System;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
@@ -7,6 +8,8 @@ using DerivaSharp.PricingEngines;
 namespace DerivaSharp.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net10_0)]
+[SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class VanillaBenchmarks
 {
     private BsmModel _model;
@@ -44,7 +47,7 @@ public class VanillaBenchmarks
     [Benchmark]
     public double FdEuropean()
     {
-        var engine = new FdEuropeanEngine(FiniteDifferenceScheme.CrankNicolson, 800, 400);
+        var engine = new FdEuropeanEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_european, _context);
     }
 
@@ -72,7 +75,7 @@ public class VanillaBenchmarks
     [Benchmark]
     public double FdAmerican()
     {
-        var engine = new FdAmericanEngine(FiniteDifferenceScheme.CrankNicolson, 800, 400);
+        var engine = new FdAmericanEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_american, _context);
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
@@ -9,6 +10,8 @@ using DerivaSharp.Time;
 namespace DerivaSharp.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net10_0)]
+[SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class AutocallableBenchmarks
 {
     private BsmModel _model;
@@ -41,7 +44,7 @@ public class AutocallableBenchmarks
     [Benchmark]
     public double FdSnowball()
     {
-        var engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 800, 400);
+        var engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_snowball, _context);
     }
 
