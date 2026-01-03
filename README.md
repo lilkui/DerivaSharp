@@ -56,7 +56,7 @@ Explore the [notebooks/](notebooks/) folder for interactive examples. These note
 | **Snowball Option** | Finite Difference, Monte Carlo |
 | **Phoenix Option** | Finite Difference, Monte Carlo |
 
-## Performance Benchmarks
+## Performance
 
 **System Configuration:**
 
@@ -65,20 +65,18 @@ Explore the [notebooks/](notebooks/) folder for interactive examples. These note
 - **OS**: Windows 11 (25H2)
 - **Runtime**: .NET 10.0.1
 
-| Instrument | Pricing Algorithm | Parameters | Execution Time |
-| :--- | :--- | :--- | ---: |
-| **European Option** | Analytic | - | 0.000000045 s |
-| | Finite Difference | 800×400 grid (CN) | 0.0038 s |
-| | Monte Carlo | 1M paths | 0.012 s |
-| | Binomial Tree | 500 steps | 0.00011 s |
-| | Integral | - | 0.000099 s |
-| **American Option** | Bjerksund-Stensland | - | 0.0000061 s |
-| | Finite Difference | 800×400 grid (CN) | 0.0042 s |
-| | Monte Carlo | 100K paths, 250 steps | 0.89 s |
-| **Barrier Option** | Analytic | - | 0.00000026 s |
-| | Finite Difference | 800×400 grid (CN) | 0.0038 s |
-| **Snowball Option** | Finite Difference | 800×400 grid (CN) | 0.0078 s |
-| | Monte Carlo | 1M paths | 3.4 s |
-| | Monte Carlo | 1M paths, GPU-accelerated | 0.081 s |
+| Instrument | Pricing Algorithm | Parameters | JIT | AOT |
+| :--- | :--- | :--- | ---: | ---: |
+| **Vanilla European** | Analytic | - | 45 ns | 54 ns |
+| | Finite Difference | 1000×500 grid (CN) | 6.4 ms | 6.6 ms |
+| | Monte Carlo | 1M paths | 11.8 ms | 13.7 ms |
+| | Binomial Tree | 500 steps | 114 μs | 138 μs |
+| | Integral | - | 99 μs | 106 μs |
+| **Vanilla American** | Bjerksund-Stensland | - | 6.2 μs | 6.9 μs |
+| | Finite Difference | 1000×500 grid (CN) | 7.0 ms | 7.2 ms |
+| | Monte Carlo | 100K paths, 250 steps | 895 ms | 942 ms |
+| **Snowball** | Finite Difference | 1000×500 grid (CN) | 12.5 ms | 13.0 ms |
+| | Monte Carlo | 1M paths | 3.45 s | 3.89 s |
+| | Monte Carlo | 1M paths, GPU-accelerated | 81.4 ms | 80.9 ms |
 
 *CN = Crank-Nicolson scheme*
