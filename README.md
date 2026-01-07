@@ -1,8 +1,12 @@
 # DerivaSharp
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![Stage: Experimental](https://img.shields.io/badge/stage-experimental-orange)
 
 DerivaSharp is a high-performance C# library for financial derivatives pricing, providing a comprehensive suite of instruments and sophisticated pricing algorithms.
+
+> [!WARNING]
+> This project is under active development. Expect frequent breaking changes and API evolution.
 
 ## Quick Start
 
