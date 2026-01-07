@@ -8,7 +8,6 @@ public class AnalyticEuropeanEngineTest
 {
     private readonly EuropeanOption _call;
     private readonly EuropeanOption _put;
-    private readonly BsmModelParameters _modelParameters;
     private readonly PricingContext<BsmModelParameters> _ctx;
     private readonly AnalyticEuropeanEngine _engine;
 
@@ -18,8 +17,8 @@ public class AnalyticEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
         _call = new EuropeanOption(OptionType.Call, 100, effectiveDate, expirationDate);
         _put = new EuropeanOption(OptionType.Put, 100, effectiveDate, expirationDate);
-        _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
-        _ctx = new PricingContext<BsmModelParameters>(_modelParameters, 100, effectiveDate);
+        BsmModelParameters modelParameters = new(0.3, 0.04, 0.01);
+        _ctx = new PricingContext<BsmModelParameters>(modelParameters, 100, effectiveDate);
         _engine = new AnalyticEuropeanEngine();
     }
 
