@@ -11,7 +11,7 @@ public class McPhoenixEngineTest
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _obsDates;
-    private readonly PricingContext<BsmModel> _ctx;
+    private readonly PricingContext<BsmModelParameters> _ctx;
     private readonly McPhoenixEngine _engine;
 
     public McPhoenixEngineTest()
@@ -19,8 +19,8 @@ public class McPhoenixEngineTest
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
         _obsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
-        BsmModel model = new(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModel>(model, 1.0, _effectiveDate);
+        BsmModelParameters parameters = new(0.16, 0.02, 0.04);
+        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
         _engine = new McPhoenixEngine(100000);
     }
 

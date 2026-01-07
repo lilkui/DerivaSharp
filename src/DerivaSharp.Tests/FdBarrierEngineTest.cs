@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class FdBarrierEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
     private readonly FdBarrierEngine _fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     private readonly AnalyticBarrierEngine _analyticEngine = new();
 
@@ -43,7 +43,7 @@ public class FdBarrierEngineTest
             expirationDate);
 
         const double assetPrice = 100;
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double actual = _fdEngine.Value(option, ctx);
         double expected = _analyticEngine.Value(option, ctx);
@@ -75,13 +75,13 @@ public class FdBarrierEngineTest
         EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
 
         const double assetPrice = 100;
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double kiValue = _fdEngine.Value(kiOption, ctx);
         double koValue = _fdEngine.Value(koOption, ctx);
         double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
         double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
-        double pvRebate = koOption.Rebate * Math.Exp(-_model.RiskFreeRate * tau);
+        double pvRebate = koOption.Rebate * Math.Exp(-_modelParameters.RiskFreeRate * tau);
 
         const int precision = 4;
         Assert.Equal(0, kiValue + koValue - eurValue - pvRebate, precision);

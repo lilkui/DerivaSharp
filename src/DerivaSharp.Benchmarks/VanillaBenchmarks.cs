@@ -12,19 +12,19 @@ namespace DerivaSharp.Benchmarks;
 [SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class VanillaBenchmarks
 {
-    private BsmModel _model;
-    private PricingContext<BsmModel> _context;
+    private BsmModelParameters _modelParameters;
+    private PricingContext<BsmModelParameters> _context;
     private EuropeanOption _european;
     private AmericanOption _american;
 
     [GlobalSetup]
     public void Setup()
     {
-        _model = new BsmModel(0.3, 0.04, 0.01);
+        _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
         DateOnly effectiveDate = new(2025, 1, 6);
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
-        _context = new PricingContext<BsmModel>(_model, 100.0, effectiveDate);
+        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, effectiveDate);
 
         _european = new EuropeanOption(OptionType.Call, 100.0, effectiveDate, expirationDate);
         _american = new AmericanOption(OptionType.Call, 100.0, effectiveDate, expirationDate);
@@ -33,56 +33,56 @@ public class VanillaBenchmarks
     [Benchmark]
     public double AnalyticEuropean()
     {
-        var engine = new AnalyticEuropeanEngine();
+        AnalyticEuropeanEngine engine = new();
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double IntegralEuropean()
     {
-        var engine = new IntegralEuropeanEngine();
+        IntegralEuropeanEngine engine = new();
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double FdEuropean()
     {
-        var engine = new FdEuropeanEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdEuropeanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double BinomialTreeVanilla()
     {
-        var engine = new BinomialTreeVanillaEngine(500);
+        BinomialTreeVanillaEngine engine = new(500);
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double McEuropean()
     {
-        var engine = new McEuropeanEngine(1_000_000, 2);
+        McEuropeanEngine engine = new(1_000_000, 2);
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double BjerksundStenslandAmerican()
     {
-        var engine = new BjerksundStenslandAmericanEngine();
+        BjerksundStenslandAmericanEngine engine = new();
         return engine.Value(_american, _context);
     }
 
     [Benchmark]
     public double FdAmerican()
     {
-        var engine = new FdAmericanEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdAmericanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_american, _context);
     }
 
     [Benchmark]
     public double McAmerican()
     {
-        var engine = new McAmericanEngine(100_000, 250);
+        McAmericanEngine engine = new(100_000, 250);
         return engine.Value(_american, _context);
     }
 }

@@ -9,18 +9,18 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public double Value(AmericanOption option, PricingContext<BsmModel> context, RandomNumberSource source)
+    public double Value(AmericanOption option, PricingContext<BsmModelParameters> context, RandomNumberSource source)
     {
         Guard.IsGreaterThan(stepCount, 2);
 
-        BsmModel model = context.Model;
+        BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, context.ValuationDate);
         double dt = tau / (stepCount - 1);
-        double df = Math.Exp(-model.RiskFreeRate * dt);
+        double df = Math.Exp(-parameters.RiskFreeRate * dt);
 
-        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, model.RiskFreeRate - model.DividendYield, model.Volatility, dt, source);
+        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, parameters.RiskFreeRate - parameters.DividendYield, parameters.Volatility, dt, source);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -55,7 +55,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
-    protected override double CalculateValue(AmericanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (valuationDate == option.ExpirationDate)
         {
@@ -63,7 +63,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
             return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
-        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
+        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
         return Value(option, context, source);
     }

@@ -61,13 +61,13 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
-    protected override double CalculateValue(TOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
-        SolvePde(option, model, valuationDate);
+        SolvePde(option, parameters, valuationDate);
         return LinearInterpolation.InterpolateSorted(assetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
-    protected virtual void InitializeCoefficients(TOption option, BsmModel model, DateOnly valuationDate)
+    protected virtual void InitializeCoefficients(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
         Guard.IsGreaterThan(MaxPrice, MinPrice);
@@ -78,9 +78,9 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
         double ds = PriceVector[1] - PriceVector[0];
         double dt = TimeVector[1] - TimeVector[0];
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
-        double v = model.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
+        double v = parameters.Volatility;
 
         double theta = Scheme switch
         {
@@ -124,9 +124,9 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
     protected abstract void SetTerminalCondition(TOption option);
 
-    protected abstract void SetBoundaryConditions(TOption option, BsmModel model);
+    protected abstract void SetBoundaryConditions(TOption option, BsmModelParameters parameters);
 
-    protected abstract void ApplyStepConditions(int i, TOption option, BsmModel model);
+    protected abstract void ApplyStepConditions(int i, TOption option, BsmModelParameters parameters);
 
     private void SolveSingleStep(int i, Span<double> rhs, Span<double> result)
     {
@@ -153,17 +153,17 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
         result.CopyTo(ValueMatrixSpan.GetRowSpan(i).Slice(1, length));
     }
 
-    private void SolvePde(TOption option, BsmModel model, DateOnly valuationDate)
+    private void SolvePde(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        InitializeCoefficients(option, model, valuationDate);
+        InitializeCoefficients(option, parameters, valuationDate);
         SetTerminalCondition(option);
-        SetBoundaryConditions(option, model);
-        ApplyStepConditions(TimeStepCount, option, model);
+        SetBoundaryConditions(option, parameters);
+        ApplyStepConditions(TimeStepCount, option, parameters);
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
             SolveSingleStep(i, _rhs, _result);
-            ApplyStepConditions(i, option, model);
+            ApplyStepConditions(i, option, parameters);
         }
     }
 }

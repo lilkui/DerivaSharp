@@ -14,18 +14,18 @@ namespace DerivaSharp.Benchmarks;
 [SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class AutocallableBenchmarks
 {
-    private BsmModel _model;
-    private PricingContext<BsmModel> _context;
+    private BsmModelParameters _modelParameters;
+    private PricingContext<BsmModelParameters> _context;
     private SnowballOption _snowball;
     private DateOnly _effectiveDate;
 
     [GlobalSetup]
     public void Setup()
     {
-        _model = new BsmModel(0.3, 0.04, 0.01);
+        _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
         _effectiveDate = new DateOnly(2022, 1, 5);
 
-        _context = new PricingContext<BsmModel>(_model, 100.0, _effectiveDate);
+        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, _effectiveDate);
 
         DateOnly expirationDate = _effectiveDate.AddYears(1);
         DateOnly[] koObsDates = DateUtils.GetObservationDates(_effectiveDate, expirationDate, 3).ToArray();
@@ -44,21 +44,21 @@ public class AutocallableBenchmarks
     [Benchmark]
     public double FdSnowball()
     {
-        var engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdSnowballEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
         return engine.Value(_snowball, _context);
     }
 
     [Benchmark]
     public double McSnowball()
     {
-        var engine = new McSnowballEngine(1_000_000);
+        McSnowballEngine engine = new(1_000_000);
         return engine.Value(_snowball, _context);
     }
 
     [Benchmark]
     public double McSnowball_Cuda()
     {
-        var engine = new McSnowballEngine(1_000_000, true);
+        McSnowballEngine engine = new(1_000_000, true);
         return engine.Value(_snowball, _context);
     }
 }

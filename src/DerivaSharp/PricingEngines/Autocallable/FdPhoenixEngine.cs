@@ -19,7 +19,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double _couponAmount;
     private double _lossAtZero;
 
-    public double[] Values(PhoenixOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Values(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -29,7 +29,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, context.Model, context.AssetPrice, context.ValuationDate);
+        CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;
@@ -43,7 +43,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         return values;
     }
 
-    public double[] Deltas(PhoenixOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Deltas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         double[] deltas = new double[values.Length];
@@ -61,7 +61,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         return deltas;
     }
 
-    public double[] Gammas(PhoenixOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Gammas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         double[] gammas = new double[values.Length];
@@ -79,34 +79,34 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         return gammas;
     }
 
-    protected override double CalculateValue(PhoenixOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(PhoenixOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
+        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         InitializeParameters(option, context);
 
         if (!_hasDailyKnockIn)
         {
             _isSolvingKnockedIn = option.BarrierTouchStatus == BarrierTouchStatus.DownTouch;
-            return base.CalculateValue(option, model, assetPrice, valuationDate);
+            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
         }
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, model, assetPrice, valuationDate);
+            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
         }
 
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, model, assetPrice, valuationDate);
+        base.CalculateValue(option, parameters, assetPrice, valuationDate);
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
     protected override void SetTerminalCondition(PhoenixOption option)
@@ -139,9 +139,9 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    protected override void SetBoundaryConditions(PhoenixOption option, BsmModel model)
+    protected override void SetBoundaryConditions(PhoenixOption option, BsmModelParameters parameters)
     {
-        double r = model.RiskFreeRate;
+        double r = parameters.RiskFreeRate;
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
@@ -171,7 +171,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    protected override void ApplyStepConditions(int i, PhoenixOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, PhoenixOption option, BsmModelParameters parameters)
     {
         int obsIdx = _stepToObservationIndex[i];
         if (obsIdx != -1)
@@ -211,7 +211,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private void InitializeParameters(PhoenixOption option, PricingContext<BsmModel> context)
+    private void InitializeParameters(PhoenixOption option, PricingContext<BsmModelParameters> context)
     {
         DateOnly valDate = context.ValuationDate;
         DateOnly[] obsDates = option.KnockOutObservationDates;

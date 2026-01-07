@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class BinomialTreeVanillaEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
     private readonly BinomialTreeVanillaEngine _engine = new(500);
 
     [Theory]
@@ -19,7 +19,7 @@ public class BinomialTreeVanillaEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double tolerance = Math.Abs(expected) * 0.001;
         Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
@@ -35,7 +35,7 @@ public class BinomialTreeVanillaEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, expirationDate);
 
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);

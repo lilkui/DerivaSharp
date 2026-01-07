@@ -11,7 +11,7 @@ public class McSnowballEngineTest
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _koObsDates;
-    private readonly PricingContext<BsmModel> _ctx;
+    private readonly PricingContext<BsmModelParameters> _ctx;
     private readonly McSnowballEngine _engine;
 
     public McSnowballEngineTest()
@@ -19,8 +19,8 @@ public class McSnowballEngineTest
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
-        BsmModel model = new(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModel>(model, 1.0, _effectiveDate);
+        BsmModelParameters parameters = new(0.16, 0.02, 0.04);
+        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
         _engine = new McSnowballEngine(100000);
     }
 
@@ -55,7 +55,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        PricingContext<BsmModel> ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6), AssetPrice = 1.05 };
+        PricingContext<BsmModelParameters> ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6), AssetPrice = 1.05 };
 
         const double expected = 0.021192;
         double actual = _engine.Value(option, ctx);

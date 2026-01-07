@@ -8,8 +8,8 @@ public class AnalyticEuropeanEngineTest
 {
     private readonly EuropeanOption _call;
     private readonly EuropeanOption _put;
-    private readonly BsmModel _model;
-    private readonly PricingContext<BsmModel> _ctx;
+    private readonly BsmModelParameters _modelParameters;
+    private readonly PricingContext<BsmModelParameters> _ctx;
     private readonly AnalyticEuropeanEngine _engine;
 
     public AnalyticEuropeanEngineTest()
@@ -18,8 +18,8 @@ public class AnalyticEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
         _call = new EuropeanOption(OptionType.Call, 100, effectiveDate, expirationDate);
         _put = new EuropeanOption(OptionType.Put, 100, effectiveDate, expirationDate);
-        _model = new BsmModel(0.3, 0.04, 0.01);
-        _ctx = new PricingContext<BsmModel>(_model, 100, effectiveDate);
+        _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
+        _ctx = new PricingContext<BsmModelParameters>(_modelParameters, 100, effectiveDate);
         _engine = new AnalyticEuropeanEngine();
     }
 
@@ -89,7 +89,7 @@ public class AnalyticEuropeanEngineTest
     public void Value_AtExpiry_ReturnsIntrinsicValue()
     {
         const int precision = 6;
-        PricingContext<BsmModel> ctx = _ctx with { ValuationDate = _call.ExpirationDate, AssetPrice = 110 };
+        PricingContext<BsmModelParameters> ctx = _ctx with { ValuationDate = _call.ExpirationDate, AssetPrice = 110 };
         Assert.Equal(10, _engine.Value(_call, ctx), precision);
         Assert.Equal(0, _engine.Value(_put, ctx), precision);
     }

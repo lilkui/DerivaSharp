@@ -19,7 +19,7 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         _values = new double[stepCount + 1];
     }
 
-    protected override double CalculateValue(VanillaOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(VanillaOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
@@ -31,9 +31,9 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
             return Math.Max(z * (s0 - x), 0);
         }
 
-        double vol = model.Volatility;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
         bool isAmerican = option.Exercise == Exercise.American;
 
         double dt = tau / _stepCount;

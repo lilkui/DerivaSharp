@@ -6,13 +6,13 @@ namespace DerivaSharp.PricingEngines;
 
 public abstract class PricingEngine<TOption, TModel>
     where TOption : Option
-    where TModel : IModel
+    where TModel : IModelParameters
 {
     public double Value(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
-        return CalculateValue(option, context.Model, context.AssetPrice, context.ValuationDate);
+        return CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
     }
 
     // DValueDSpot
@@ -20,7 +20,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
 
@@ -35,7 +35,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
 
@@ -51,7 +51,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
 
@@ -70,7 +70,7 @@ public abstract class PricingEngine<TOption, TModel>
 
         DateOnly t = context.ValuationDate;
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double v0 = CalculateValue(option, model, context.AssetPrice, context.ValuationDate);
 
         bool atExpiry = t >= option.ExpirationDate;
@@ -84,7 +84,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
         double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
@@ -104,7 +104,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.Model;
+        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
         double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;

@@ -11,7 +11,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 {
     private bool[]? _isObservationTime;
 
-    protected override double CalculateValue(BarrierOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (valuationDate == option.ExpirationDate)
         {
@@ -32,10 +32,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             };
         }
 
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(BarrierOption option, BsmModel model, DateOnly valuationDate)
+    protected override void InitializeCoefficients(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (option.ObservationInterval == 0) // continuous observation
         {
@@ -64,7 +64,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
         }
 
-        base.InitializeCoefficients(option, model, valuationDate);
+        base.InitializeCoefficients(option, parameters, valuationDate);
 
         if (option.ObservationInterval > 0)
         {
@@ -98,13 +98,13 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    protected override void SetBoundaryConditions(BarrierOption option, BsmModel model)
+    protected override void SetBoundaryConditions(BarrierOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;
         double k = option.Rebate;
         double z = (int)option.OptionType;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         double maxTime = TimeVector[^1];
         double minPrice = PriceVector[0];
@@ -131,10 +131,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                         break;
                     case BarrierType.UpAndIn:
                         ValueMatrixSpan[i, 0] = Math.Max(z * (minPrice * dfq - x * dfr), 0);
-                        ValueMatrixSpan[i, ^1] = EuropeanValue(option, model, maxPrice, tau);
+                        ValueMatrixSpan[i, ^1] = EuropeanValue(option, parameters, maxPrice, tau);
                         break;
                     case BarrierType.DownAndIn:
-                        ValueMatrixSpan[i, 0] = EuropeanValue(option, model, minPrice, tau);
+                        ValueMatrixSpan[i, 0] = EuropeanValue(option, parameters, minPrice, tau);
                         ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
                     default:
@@ -169,7 +169,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    protected override void ApplyStepConditions(int i, BarrierOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, BarrierOption option, BsmModelParameters parameters)
     {
         // Continuous observation: nothing to do (already handled by boundary conditions)
         if (option.ObservationInterval == 0)
@@ -187,7 +187,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         double barrier = option.BarrierPrice;
         double k = option.Rebate;
         double tau = TimeVector[^1] - TimeVector[i];
-        double pvRebate = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * Math.Exp(-model.RiskFreeRate * tau);
+        double pvRebate = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * Math.Exp(-parameters.RiskFreeRate * tau);
 
         switch (option.BarrierType)
         {
@@ -218,7 +218,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 {
                     if (PriceVector[j] >= barrier)
                     {
-                        currentValues[j] = EuropeanValue(option, model, PriceVector[j], tau);
+                        currentValues[j] = EuropeanValue(option, parameters, PriceVector[j], tau);
                     }
                 }
 
@@ -229,7 +229,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 {
                     if (PriceVector[j] <= barrier)
                     {
-                        currentValues[j] = EuropeanValue(option, model, PriceVector[j], tau);
+                        currentValues[j] = EuropeanValue(option, parameters, PriceVector[j], tau);
                     }
                 }
 
@@ -241,13 +241,13 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private static double EuropeanValue(BarrierOption option, BsmModel model, double assetPrice, double tau)
+    private static double EuropeanValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, double tau)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double vol = model.Volatility;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         if (tau == 0)
         {

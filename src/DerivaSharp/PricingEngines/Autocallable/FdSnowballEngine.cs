@@ -19,7 +19,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    public double[] Values(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Values(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -29,7 +29,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, context.Model, context.AssetPrice, context.ValuationDate);
+        CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;
@@ -43,7 +43,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return values;
     }
 
-    public double[] Deltas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Deltas(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         double[] deltas = new double[values.Length];
@@ -61,7 +61,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return deltas;
     }
 
-    public double[] Gammas(SnowballOption option, PricingContext<BsmModel> context, double[] assetPrices)
+    public double[] Gammas(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         double[] gammas = new double[values.Length];
@@ -79,33 +79,33 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         return gammas;
     }
 
-    protected override double CalculateValue(SnowballOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(SnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        PricingContext<BsmModel> context = new(model, assetPrice, valuationDate);
+        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         InitializeParameters(option, context);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, model, assetPrice, valuationDate);
+            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
         }
 
         // First pass: compute the fully knocked-in surface so it can be referenced when
         // the second pass detects an endogenous knock-in event.
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, model, assetPrice, valuationDate);
+        base.CalculateValue(option, parameters, assetPrice, valuationDate);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         // Second pass: solve the non-knocked-in scenario, substituting the stored knocked-in surface
         // wherever the price process breaches the knock-in barrier.
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
     protected override void SetTerminalCondition(SnowballOption option)
@@ -131,9 +131,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void SetBoundaryConditions(SnowballOption option, BsmModel model)
+    protected override void SetBoundaryConditions(SnowballOption option, BsmModelParameters parameters)
     {
-        double r = model.RiskFreeRate;
+        double r = parameters.RiskFreeRate;
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
@@ -164,7 +164,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void ApplyStepConditions(int i, SnowballOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, SnowballOption option, BsmModelParameters parameters)
     {
         int obsIdx = _stepToObservationIndex[i];
         if (obsIdx != -1)
@@ -195,7 +195,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    private void InitializeParameters(SnowballOption option, PricingContext<BsmModel> context)
+    private void InitializeParameters(SnowballOption option, PricingContext<BsmModelParameters> context)
     {
         DateOnly valDate = context.ValuationDate;
         DateOnly effDate = option.EffectiveDate;

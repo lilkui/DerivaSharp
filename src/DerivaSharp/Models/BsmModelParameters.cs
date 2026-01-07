@@ -2,9 +2,9 @@
 
 namespace DerivaSharp.Models;
 
-public readonly record struct BsmModel : IModel
+public readonly record struct BsmModelParameters : IModelParameters
 {
-    public BsmModel(double volatility, double riskFreeRate, double dividendYield)
+    public BsmModelParameters(double volatility, double riskFreeRate, double dividendYield)
     {
         Guard.IsGreaterThanOrEqualTo(volatility, 0);
 

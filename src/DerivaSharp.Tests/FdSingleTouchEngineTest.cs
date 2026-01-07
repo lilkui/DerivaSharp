@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class FdSingleTouchEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
     private readonly FdSingleTouchEngine _fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     private readonly AnalyticBinaryBarrierEngine _analyticEngine = new();
 
@@ -39,7 +39,7 @@ public class FdSingleTouchEngineTest
             expirationDate);
 
         const double assetPrice = 100;
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double actual = _fdEngine.Value(option, ctx);
         double expected = _analyticEngine.Value(option, ctx);

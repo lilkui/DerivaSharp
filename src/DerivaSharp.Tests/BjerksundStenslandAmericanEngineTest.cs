@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class BjerksundStenslandAmericanEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.02);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.02);
     private readonly BjerksundStenslandAmericanEngine _engine = new();
 
     [Theory]
@@ -18,7 +18,7 @@ public class BjerksundStenslandAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, 100, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         const int precision = 4;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
@@ -33,7 +33,7 @@ public class BjerksundStenslandAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, 100, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, expirationDate);
 
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);

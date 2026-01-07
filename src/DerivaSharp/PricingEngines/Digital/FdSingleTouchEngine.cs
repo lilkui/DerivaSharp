@@ -8,7 +8,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<SingleTouchOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(SingleTouchOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(SingleTouchOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (option.TouchType is TouchType.NoTouchUp or TouchType.NoTouchDown)
         {
@@ -16,19 +16,19 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
 
             TouchType oneTouchType = option.TouchType == TouchType.NoTouchUp ? TouchType.OneTouchUp : TouchType.OneTouchDown;
             SingleTouchOption oneTouchOption = option with { TouchType = oneTouchType };
-            double oneTouchValue = base.CalculateValue(oneTouchOption, model, assetPrice, valuationDate);
+            double oneTouchValue = base.CalculateValue(oneTouchOption, parameters, assetPrice, valuationDate);
 
-            double r = model.RiskFreeRate;
+            double r = parameters.RiskFreeRate;
             double tau = GetYearsToExpiration(option, valuationDate);
             double dfr = Math.Exp(-r * tau);
 
             return option.Rebate * dfr - oneTouchValue;
         }
 
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(SingleTouchOption option, BsmModel model, DateOnly valuationDate)
+    protected override void InitializeCoefficients(SingleTouchOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (option.TouchType is TouchType.NoTouchUp or TouchType.NoTouchDown)
         {
@@ -54,17 +54,17 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
                 break;
         }
 
-        base.InitializeCoefficients(option, model, valuationDate);
+        base.InitializeCoefficients(option, parameters, valuationDate);
     }
 
     protected override void SetTerminalCondition(SingleTouchOption option)
     {
     }
 
-    protected override void SetBoundaryConditions(SingleTouchOption option, BsmModel model)
+    protected override void SetBoundaryConditions(SingleTouchOption option, BsmModelParameters parameters)
     {
         double k = option.Rebate;
-        double r = model.RiskFreeRate;
+        double r = parameters.RiskFreeRate;
 
         double maxTime = TimeVector[^1];
 
@@ -92,7 +92,7 @@ public sealed class FdSingleTouchEngine(FiniteDifferenceScheme scheme, int price
         }
     }
 
-    protected override void ApplyStepConditions(int i, SingleTouchOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, SingleTouchOption option, BsmModelParameters parameters)
     {
     }
 }

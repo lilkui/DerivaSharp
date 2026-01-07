@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class AnalyticBarrierEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
     private readonly AnalyticBarrierEngine _engine = new();
 
     public static TheoryData<OptionType, BarrierType, double, double, PaymentType, int, double, double> ValueTestData => new()
@@ -76,7 +76,7 @@ public class AnalyticBarrierEngineTest
             obsFreq,
             effectiveDate,
             expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
@@ -107,7 +107,7 @@ public class AnalyticBarrierEngineTest
             0,
             effectiveDate,
             expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, expirationDate);
 
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
@@ -137,13 +137,13 @@ public class AnalyticBarrierEngineTest
         EuropeanOption eurOption = new(OptionType.Call, strike, effectiveDate, expirationDate);
 
         const double assetPrice = 100;
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double kiValue = _engine.Value(kiOption, ctx);
         double koValue = _engine.Value(koOption, ctx);
         double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);
         double tau = (expirationDate.DayNumber - effectiveDate.DayNumber) / 365.0;
-        double pvRebate = koOption.Rebate * Math.Exp(-_model.RiskFreeRate * tau);
+        double pvRebate = koOption.Rebate * Math.Exp(-_modelParameters.RiskFreeRate * tau);
 
         const int precision = 6;
         Assert.Equal(0, kiValue + koValue - eurValue - pvRebate, precision);

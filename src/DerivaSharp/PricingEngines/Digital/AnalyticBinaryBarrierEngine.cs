@@ -10,7 +10,7 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
 {
     private const double Beta = 0.5825971579390107; // Correction factor for discrete barriers
 
-    protected override double CalculateValue(BinaryBarrierOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(BinaryBarrierOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         double h = option.BarrierPrice;
@@ -18,9 +18,9 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
         double dt = option.ObservationInterval;
         double s = assetPrice;
         double tau = GetYearsToExpiration(option, valuationDate);
-        double vol = model.Volatility;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         if (tau == 0)
         {

@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class FdAmericanEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.02);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.02);
     private readonly FdAmericanEngine _expFdEngine = new(FiniteDifferenceScheme.ExplicitEuler, 200, 4000);
     private readonly FdAmericanEngine _impFdEngine = new(FiniteDifferenceScheme.ImplicitEuler, 1000, 1000);
     private readonly FdAmericanEngine _cnFdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
@@ -31,7 +31,7 @@ public class FdAmericanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         AmericanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         FdAmericanEngine fdEngine = scheme switch
         {

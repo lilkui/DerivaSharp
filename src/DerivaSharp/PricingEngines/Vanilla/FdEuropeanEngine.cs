@@ -7,7 +7,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<EuropeanOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(EuropeanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (valuationDate == option.ExpirationDate)
         {
@@ -15,14 +15,14 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
             return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(EuropeanOption option, BsmModel model, DateOnly valuationDate)
+    protected override void InitializeCoefficients(EuropeanOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
         MaxPrice = 4 * option.StrikePrice;
-        base.InitializeCoefficients(option, model, valuationDate);
+        base.InitializeCoefficients(option, parameters, valuationDate);
     }
 
     protected override void SetTerminalCondition(EuropeanOption option)
@@ -36,11 +36,11 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void SetBoundaryConditions(EuropeanOption option, BsmModel model)
+    protected override void SetBoundaryConditions(EuropeanOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         double maxTime = TimeVector[^1];
         double minPrice = PriceVector[0];
@@ -69,7 +69,7 @@ public sealed class FdEuropeanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void ApplyStepConditions(int i, EuropeanOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, EuropeanOption option, BsmModelParameters parameters)
     {
     }
 }

@@ -7,7 +7,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<AmericanOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(AmericanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (valuationDate == option.ExpirationDate)
         {
@@ -15,14 +15,14 @@ public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceSte
             return Math.Max(z * (assetPrice - option.StrikePrice), 0);
         }
 
-        return base.CalculateValue(option, model, assetPrice, valuationDate);
+        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(AmericanOption option, BsmModel model, DateOnly valuationDate)
+    protected override void InitializeCoefficients(AmericanOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
         MaxPrice = 4 * option.StrikePrice;
-        base.InitializeCoefficients(option, model, valuationDate);
+        base.InitializeCoefficients(option, parameters, valuationDate);
     }
 
     protected override void SetTerminalCondition(AmericanOption option)
@@ -36,11 +36,11 @@ public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void SetBoundaryConditions(AmericanOption option, BsmModel model)
+    protected override void SetBoundaryConditions(AmericanOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         double maxTime = TimeVector[^1];
         double maxPrice = PriceVector[^1];
@@ -68,7 +68,7 @@ public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    protected override void ApplyStepConditions(int i, AmericanOption option, BsmModel model)
+    protected override void ApplyStepConditions(int i, AmericanOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;

@@ -2,5 +2,5 @@
 
 namespace DerivaSharp.PricingEngines;
 
-public readonly record struct PricingContext<TModel>(TModel Model, double AssetPrice, DateOnly ValuationDate)
-    where TModel : IModel;
+public readonly record struct PricingContext<TModelParameters>(TModelParameters ModelParameters, double AssetPrice, DateOnly ValuationDate)
+    where TModelParameters : IModelParameters;

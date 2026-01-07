@@ -8,11 +8,11 @@ namespace DerivaSharp.PricingEngines;
 
 public static class AutocallableEngineExtensions
 {
-    extension(PricingEngine<SnowballOption, BsmModel> engine)
+    extension(PricingEngine<SnowballOption, BsmModelParameters> engine)
     {
         public double ImpliedCouponRate(
             SnowballOption option,
-            PricingContext<BsmModel> context,
+            PricingContext<BsmModelParameters> context,
             double optionPrice,
             bool alignMaturityCouponRate,
             double lowerBound = 0.0,
@@ -59,11 +59,11 @@ public static class AutocallableEngineExtensions
         }
     }
 
-    extension(PricingEngine<PhoenixOption, BsmModel> engine)
+    extension(PricingEngine<PhoenixOption, BsmModelParameters> engine)
     {
         public double ImpliedCouponRate(
             PhoenixOption option,
-            PricingContext<BsmModel> context,
+            PricingContext<BsmModelParameters> context,
             double optionPrice,
             double lowerBound = 0.0,
             double upperBound = 1.0,

@@ -7,14 +7,14 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
-    protected override double CalculateValue(DigitalOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(DigitalOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);
-        double vol = model.Volatility;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         if (tau == 0)
         {

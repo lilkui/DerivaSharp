@@ -7,14 +7,14 @@ namespace DerivaSharp.PricingEngines;
 
 public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
-    protected override double CalculateValue(EuropeanOption option, BsmModel model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         double x = option.StrikePrice;
         double sgn = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);
-        double vol = model.Volatility;
-        double r = model.RiskFreeRate;
-        double q = model.DividendYield;
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
 
         if (tau == 0)
         {

@@ -6,7 +6,7 @@ namespace DerivaSharp.Tests;
 
 public class McEuropeanEngineTest
 {
-    private readonly BsmModel _model = new(0.3, 0.04, 0.01);
+    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
     private readonly McEuropeanEngine _engine = new(500000, 2);
 
     [Theory]
@@ -19,7 +19,7 @@ public class McEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
 
         double tolerance = Math.Abs(expected) * 0.01;
         Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
@@ -35,7 +35,7 @@ public class McEuropeanEngineTest
         DateOnly expirationDate = effectiveDate.AddDays(365);
 
         EuropeanOption option = new(optionType, strike, effectiveDate, expirationDate);
-        PricingContext<BsmModel> ctx = new(_model, assetPrice, expirationDate);
+        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, expirationDate);
 
         const int precision = 6;
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
