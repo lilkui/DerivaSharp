@@ -1,12 +1,12 @@
 # DerivaSharp
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Stage: Experimental](https://img.shields.io/badge/stage-experimental-orange)
 
 DerivaSharp is a high-performance C# library for financial derivatives pricing, providing a comprehensive suite of instruments and sophisticated pricing algorithms.
 
 > [!WARNING]
-> This project is under active development. Expect frequent breaking changes and API evolution.
+> This project is currently in an experimental stage. Please anticipate frequent breaking changes and API instability.
 
 ## Quick Start
 
@@ -19,24 +19,27 @@ using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 
+DateOnly valuationDate = new(2025, 1, 6);
+DateOnly expirationDate = valuationDate.AddYears(1);
+
 // 1. Define the instrument
-var option = new EuropeanOption(
+EuropeanOption option = new(
     OptionType.Call,
     100.0,
-    new DateOnly(2024, 1, 1),
-    new DateOnly(2025, 1, 1));
+    valuationDate,
+    expirationDate);
 
-// 2. Set up the model
-var model = new BsmModel(0.3, 0.04, 0.01);
+// 2. Set up the model parameters
+BsmModelParameters modelParameters = new(0.3, 0.04, 0.01);
 
 // 3. Create the pricing context
-var context = new PricingContext<BsmModel>(
-    model,
-    100.0,
-    new DateOnly(2024, 1, 1));
+PricingContext<BsmModelParameters> context = new(
+    modelParameters,
+    assetPrice: 100.0,
+    valuationDate);
 
 // 4. Price the option
-var engine = new AnalyticEuropeanEngine();
+AnalyticEuropeanEngine engine = new();
 double price = engine.Value(option, context);
 double delta = engine.Delta(option, context);
 
