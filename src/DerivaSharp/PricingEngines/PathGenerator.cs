@@ -1,11 +1,17 @@
+using DerivaSharp.Models;
 using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
 public static class PathGenerator
 {
-    public static torch.Tensor Generate(double s0, double mu, double sigma, torch.Tensor dtVector, RandomNumberSource source)
+    public static torch.Tensor Generate(PricingContext<BsmModelParameters> context, torch.Tensor dtVector, RandomNumberSource source)
     {
+        BsmModelParameters parameters = context.ModelParameters;
+        double s0 = context.AssetPrice;
+        double mu = parameters.RiskFreeRate - parameters.DividendYield;
+        double sigma = parameters.Volatility;
+
         torch.Tensor z = source.GetRandomNumberMatrix();
 
         using DisposeScope scope = torch.NewDisposeScope();

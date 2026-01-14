@@ -1,7 +1,6 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using DerivaSharp.Time;
 using TorchSharp;
 using Tensor = TorchSharp.torch.Tensor;
 
@@ -31,7 +30,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         for (int i = 0; i < count; i++)
         {
             PricingContext<BsmModelParameters> assetContext = context with { AssetPrice = assetPrices[i] };
-            using Tensor priceMatrix = CreatePriceMatrix(assetContext, simData.DtVector, source);
+            using Tensor priceMatrix = PathGenerator.Generate(assetContext, simData.DtVector, source);
             values[i] = CalculateAveragePayoff(option, assetContext, priceMatrix, simData);
         }
 
@@ -42,34 +41,14 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
     {
         double[] values = Values(option, context, assetPrices);
 
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        Tensor valueTensor = torch.tensor(values, torch.float64, _device);
-        Tensor deltaTensor = torch.zeros_like(valueTensor);
-
-        double ds = assetPrices[1] - assetPrices[0];
-        deltaTensor[1..^1] = (valueTensor[2..] - valueTensor[..^2]) / (2 * ds);
-        deltaTensor[0] = (valueTensor[1] - valueTensor[0]) / ds;
-        deltaTensor[^1] = (valueTensor[^1] - valueTensor[^2]) / ds;
-
-        return deltaTensor.cpu().data<double>().ToArray();
+        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
     }
 
     public double[] Gammas(Accumulator option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
 
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        Tensor valueTensor = torch.tensor(values, torch.float64, _device);
-        Tensor gammaTensor = torch.zeros_like(valueTensor);
-
-        double ds = assetPrices[1] - assetPrices[0];
-        gammaTensor[1..^1] = (valueTensor[2..] - 2 * valueTensor[1..^1] + valueTensor[..^2]) / (ds * ds);
-        gammaTensor[0] = (valueTensor[2] - 2 * valueTensor[1] + valueTensor[0]) / (ds * ds);
-        gammaTensor[^1] = (valueTensor[^1] - 2 * valueTensor[^2] + valueTensor[^3]) / (ds * ds);
-
-        return gammaTensor.cpu().data<double>().ToArray();
+        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
     }
 
     protected override double CalculateValue(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
@@ -85,15 +64,9 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
-        Tensor priceMatrix = CreatePriceMatrix(context, simData.DtVector, source);
+        Tensor priceMatrix = PathGenerator.Generate(context, simData.DtVector, source);
 
         return CalculateAveragePayoff(option, context, priceMatrix, simData);
-    }
-
-    private static Tensor CreatePriceMatrix(PricingContext<BsmModelParameters> context, Tensor dtVector, RandomNumberSource source)
-    {
-        BsmModelParameters parameters = context.ModelParameters;
-        return PathGenerator.Generate(context.AssetPrice, parameters.RiskFreeRate - parameters.DividendYield, parameters.Volatility, dtVector, source);
     }
 
     private static double CalculateAveragePayoff(
@@ -106,24 +79,23 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 
         double r = context.ModelParameters.RiskFreeRate;
 
-        Tensor obsPrices = priceMatrix;
-        Tensor koHit = obsPrices >= option.KnockOutPrice;
+        Tensor koHit = priceMatrix >= option.KnockOutPrice;
         Tensor hasKo = koHit.any(1);
         Tensor firstKoIdx = koHit.@long().argmax(1);
 
-        Tensor obsIndices = torch.arange(obsPrices.size(1), torch.int64, obsPrices.device).unsqueeze(0);
+        Tensor obsIndices = torch.arange(priceMatrix.size(1), torch.int64, priceMatrix.device).unsqueeze(0);
         Tensor activeMask = torch.where(hasKo.unsqueeze(1), obsIndices < firstKoIdx.unsqueeze(1), torch.ones_like(koHit));
-        Tensor accumulateMask = activeMask.logical_and(obsPrices < option.KnockOutPrice);
+        Tensor accumulateMask = activeMask.logical_and(priceMatrix < option.KnockOutPrice);
 
-        Tensor baseQty = torch.full_like(obsPrices, option.DailyQuantity);
+        Tensor baseQty = torch.full_like(priceMatrix, option.DailyQuantity);
         Tensor accelQty = baseQty * option.AccelerationFactor;
-        Tensor qtyPerDay = torch.where(obsPrices < option.StrikePrice, accelQty, baseQty);
+        Tensor qtyPerDay = torch.where(priceMatrix < option.StrikePrice, accelQty, baseQty);
         Tensor effectiveQty = torch.where(accumulateMask, qtyPerDay, torch.zeros_like(qtyPerDay));
 
         Tensor totalQuantity = effectiveQty.sum(1).add(option.AccumulatedQuantity);
 
-        Tensor koSpot = obsPrices.gather(1, firstKoIdx.unsqueeze(1)).squeeze(1);
-        Tensor finalSpot = obsPrices.select(1, -1);
+        Tensor koSpot = priceMatrix.gather(1, firstKoIdx.unsqueeze(1)).squeeze(1);
+        Tensor finalSpot = priceMatrix.select(1, -1);
         Tensor terminalSpot = torch.where(hasKo, koSpot, finalSpot);
 
         Tensor koTime = simData.TimeGrid.index_select(0, firstKoIdx);
@@ -148,34 +120,8 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
 
-        DateOnly[] futureTradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
-        if (futureTradingDays.Length <= 1)
-        {
-            return new SimulationData(
-                torch.empty(0, torch.float64, _device),
-                torch.empty(0, torch.float64, _device),
-                0);
-        }
-
-        int stepCount = futureTradingDays.Length - 1;
-
-        double[] yearFractions = new double[futureTradingDays.Length];
-        int t0 = valuationDate.DayNumber;
-        for (int i = 0; i < futureTradingDays.Length; i++)
-        {
-            yearFractions[i] = (futureTradingDays[i].DayNumber - t0) / 365.0;
-        }
-
-        double[] dtArray = new double[stepCount];
-        for (int i = 0; i < stepCount; i++)
-        {
-            dtArray[i] = yearFractions[i + 1] - yearFractions[i];
-        }
-
-        Tensor timeGrid = torch.tensor(yearFractions, torch.float64, _device);
-        Tensor dtVector = torch.tensor(dtArray, torch.float64, _device);
-
-        return new SimulationData(timeGrid, dtVector, stepCount);
+        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, _device);
+        return new SimulationData(grid.TimeGrid, grid.DtVector, grid.StepCount);
     }
 
     private readonly record struct SimulationData(Tensor TimeGrid, Tensor DtVector, int StepCount);

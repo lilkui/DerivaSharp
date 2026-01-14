@@ -1,7 +1,6 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using DerivaSharp.Time;
 using TorchSharp;
 using Tensor = TorchSharp.torch.Tensor;
 
@@ -36,7 +35,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         for (int i = 0; i < count; i++)
         {
             PricingContext<BsmModelParameters> assetContext = context with { AssetPrice = assetPrices[i] };
-            using Tensor priceMatrix = CreatePriceMatrix(assetContext, simData.DtVector, source);
+            using Tensor priceMatrix = PathGenerator.Generate(assetContext, simData.DtVector, source);
             values[i] = CalculateAveragePayoff(option, assetContext, priceMatrix, simData);
         }
 
@@ -47,34 +46,14 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
     {
         double[] values = Values(option, context, assetPrices);
 
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        Tensor valueTensor = torch.tensor(values, torch.float64, _device);
-        Tensor deltaTensor = torch.zeros_like(valueTensor);
-
-        double ds = assetPrices[1] - assetPrices[0];
-        deltaTensor[1..^1] = (valueTensor[2..] - valueTensor[..^2]) / (2 * ds);
-        deltaTensor[0] = (valueTensor[1] - valueTensor[0]) / ds;
-        deltaTensor[^1] = (valueTensor[^1] - valueTensor[^2]) / ds;
-
-        return deltaTensor.cpu().data<double>().ToArray();
+        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
     }
 
     public double[] Gammas(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
 
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        Tensor valueTensor = torch.tensor(values, torch.float64, _device);
-        Tensor gammaTensor = torch.zeros_like(valueTensor);
-
-        double ds = assetPrices[1] - assetPrices[0];
-        gammaTensor[1..^1] = (valueTensor[2..] - 2 * valueTensor[1..^1] + valueTensor[..^2]) / (ds * ds);
-        gammaTensor[0] = (valueTensor[2] - 2 * valueTensor[1] + valueTensor[0]) / (ds * ds);
-        gammaTensor[^1] = (valueTensor[^1] - 2 * valueTensor[^2] + valueTensor[^3]) / (ds * ds);
-
-        return gammaTensor.cpu().data<double>().ToArray();
+        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
     }
 
     protected override double CalculateValue(SnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
@@ -95,15 +74,9 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
-        Tensor priceMatrix = CreatePriceMatrix(context, simData.DtVector, source);
+        Tensor priceMatrix = PathGenerator.Generate(context, simData.DtVector, source);
 
         return CalculateAveragePayoff(option, context, priceMatrix, simData);
-    }
-
-    private static Tensor CreatePriceMatrix(PricingContext<BsmModelParameters> context, Tensor dtVector, RandomNumberSource source)
-    {
-        BsmModelParameters parameters = context.ModelParameters;
-        return PathGenerator.Generate(context.AssetPrice, parameters.RiskFreeRate - parameters.DividendYield, parameters.Volatility, dtVector, source);
     }
 
     private static double CalculateAveragePayoff(
@@ -179,35 +152,19 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
 
-        DateOnly[] futureTradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
-        if (futureTradingDays.Length <= 1)
+        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, _device);
+        if (grid.StepCount <= 0)
         {
             return new SimulationData(
-                torch.empty(0, torch.float64, _device),
-                torch.empty(0, torch.float64, _device),
+                grid.TimeGrid,
+                grid.DtVector,
                 torch.empty(0, torch.int64, _device),
                 torch.empty(0, torch.float64, _device),
                 torch.empty(0, torch.float64, _device),
                 0);
         }
 
-        int stepCount = futureTradingDays.Length - 1;
-
-        double[] yearFractions = new double[futureTradingDays.Length];
-        int t0 = valuationDate.DayNumber;
-        for (int i = 0; i < futureTradingDays.Length; i++)
-        {
-            yearFractions[i] = (futureTradingDays[i].DayNumber - t0) / 365.0;
-        }
-
-        double[] dtArray = new double[stepCount];
-        for (int i = 0; i < stepCount; i++)
-        {
-            dtArray[i] = yearFractions[i + 1] - yearFractions[i];
-        }
-
-        Tensor timeGrid = torch.tensor(yearFractions, torch.float64, _device);
-        Tensor dtVector = torch.tensor(dtArray, torch.float64, _device);
+        DateOnly[] futureTradingDays = grid.TradingDays;
 
         DateOnly[] futureObsDates = option.KnockOutObservationDates.Where(d => d >= valuationDate).ToArray();
 
@@ -240,7 +197,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         Tensor koPrices = torch.tensor(koPricesArray, torch.float64, _device);
         Tensor koCouponRates = torch.tensor(koCouponRatesArray, torch.float64, _device);
 
-        return new SimulationData(timeGrid, dtVector, obsIdx, koPrices, koCouponRates, stepCount);
+        return new SimulationData(grid.TimeGrid, grid.DtVector, obsIdx, koPrices, koCouponRates, grid.StepCount);
     }
 
     private readonly record struct SimulationData(Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, Tensor KoCouponRates, int StepCount);

@@ -20,7 +20,8 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         double dt = tau / (stepCount - 1);
         double df = Math.Exp(-parameters.RiskFreeRate * dt);
 
-        using torch.Tensor priceMatrix = PathGenerator.Generate(context.AssetPrice, parameters.RiskFreeRate - parameters.DividendYield, parameters.Volatility, dt, source);
+        using torch.Tensor dtVector = torch.full([stepCount - 1], dt, torch.float64, _device);
+        using torch.Tensor priceMatrix = PathGenerator.Generate(context, dtVector, source);
 
         using DisposeScope scope = torch.NewDisposeScope();
 
