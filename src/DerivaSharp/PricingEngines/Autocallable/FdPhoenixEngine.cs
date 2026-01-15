@@ -46,37 +46,13 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     public double[] Deltas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
-        double[] deltas = new double[values.Length];
-
-        double ds = assetPrices[1] - assetPrices[0];
-
-        for (int i = 1; i < values.Length - 1; i++)
-        {
-            deltas[i] = (values[i + 1] - values[i - 1]) / (2 * ds);
-        }
-
-        deltas[0] = (values[1] - values[0]) / ds;
-        deltas[^1] = (values[^1] - values[^2]) / ds;
-
-        return deltas;
+        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
     }
 
     public double[] Gammas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
-        double[] gammas = new double[values.Length];
-
-        double ds = assetPrices[1] - assetPrices[0];
-
-        for (int i = 1; i < values.Length - 1; i++)
-        {
-            gammas[i] = (values[i + 1] - 2 * values[i] + values[i - 1]) / (ds * ds);
-        }
-
-        gammas[0] = (values[2] - 2 * values[1] + values[0]) / (ds * ds);
-        gammas[^1] = (values[^1] - 2 * values[^2] + values[^3]) / (ds * ds);
-
-        return gammas;
+        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
     }
 
     protected override double CalculateValue(PhoenixOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
