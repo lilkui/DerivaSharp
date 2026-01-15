@@ -2,7 +2,7 @@ namespace DerivaSharp.PricingEngines;
 
 internal static class FiniteDifferenceGreeks
 {
-    public static double[] ComputeDeltas(double[] assetPrices, double[] values)
+    public static double[] ComputeDeltas(ReadOnlySpan<double> assetPrices, ReadOnlySpan<double> values)
     {
         int count = assetPrices.Length;
         double ds = assetPrices[1] - assetPrices[0];
@@ -19,7 +19,7 @@ internal static class FiniteDifferenceGreeks
         return deltas;
     }
 
-    public static double[] ComputeGammas(double[] assetPrices, double[] values)
+    public static double[] ComputeGammas(ReadOnlySpan<double> assetPrices, ReadOnlySpan<double> values)
     {
         int count = assetPrices.Length;
         double ds = assetPrices[1] - assetPrices[0];
