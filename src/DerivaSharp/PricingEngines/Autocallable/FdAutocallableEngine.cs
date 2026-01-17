@@ -10,7 +10,7 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     : FiniteDifference1DPricingEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : AutocallableNote
 {
-    public double[] Values(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -32,18 +32,6 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
         }
 
         return values;
-    }
-
-    public double[] Deltas(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
-    }
-
-    public double[] Gammas(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
     }
 
     protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex, double tMax)

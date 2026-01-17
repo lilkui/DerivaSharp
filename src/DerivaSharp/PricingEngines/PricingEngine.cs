@@ -121,6 +121,56 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlusNext - 2 * vNext + vSpotMinusNext - vSpotPlus + 2 * v0 - vSpotMinus) / (ds * ds);
     }
 
+    public virtual double[] Values(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    {
+        Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
+
+        double[] values = new double[assetPrices.Length];
+        for (int i = 0; i < assetPrices.Length; i++)
+        {
+            values[i] = Value(option, context with { AssetPrice = assetPrices[i] });
+        }
+
+        return values;
+    }
+
+    public virtual double[] Deltas(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    {
+        double[] values = Values(option, context, assetPrices);
+        int count = assetPrices.Length;
+        double ds = assetPrices[1] - assetPrices[0];
+
+        double[] deltas = new double[count];
+        deltas[0] = (values[1] - values[0]) / ds;
+        deltas[^1] = (values[^1] - values[^2]) / ds;
+
+        for (int i = 1; i < count - 1; i++)
+        {
+            deltas[i] = (values[i + 1] - values[i - 1]) / (2 * ds);
+        }
+
+        return deltas;
+    }
+
+    public virtual double[] Gammas(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    {
+        double[] values = Values(option, context, assetPrices);
+        int count = assetPrices.Length;
+        double ds = assetPrices[1] - assetPrices[0];
+        double dsSquared = ds * ds;
+
+        double[] gammas = new double[count];
+        gammas[0] = (values[2] - 2 * values[1] + values[0]) / dsSquared;
+        gammas[^1] = (values[^1] - 2 * values[^2] + values[^3]) / dsSquared;
+
+        for (int i = 1; i < count - 1; i++)
+        {
+            gammas[i] = (values[i + 1] - 2 * values[i] + values[i - 1]) / dsSquared;
+        }
+
+        return gammas;
+    }
+
     protected abstract double CalculateValue(TOption option, TModel model, double assetPrice, DateOnly valuationDate);
 
     protected double GetYearsToExpiration(TOption option, DateOnly valuationDate)

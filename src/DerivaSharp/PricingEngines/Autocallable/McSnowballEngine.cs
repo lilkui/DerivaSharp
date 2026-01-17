@@ -2,6 +2,7 @@ using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using TorchSharp;
+using ZLinq;
 using Tensor = TorchSharp.torch.Tensor;
 
 namespace DerivaSharp.PricingEngines;
@@ -10,7 +11,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public double[] Values(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(SnowballOption option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -26,7 +27,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
 
         if (simData.StepCount <= 0)
         {
-            return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
+            return assetPrices.AsValueEnumerable().Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
@@ -40,20 +41,6 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         }
 
         return values;
-    }
-
-    public double[] Deltas(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-
-        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
-    }
-
-    public double[] Gammas(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-
-        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
     }
 
     protected override double CalculateValue(SnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
