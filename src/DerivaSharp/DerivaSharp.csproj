@@ -19,7 +19,6 @@
     <PackageReference Include="TorchSharp" Version="0.105.1" />
     <PackageReference Include="libtorch-cuda-12.1-win-x64" Version="2.5.1" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="libtorch-cuda-12.1-linux-x64" Version="2.5.1" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageReference Include="ZLinq" Version="1.5.4" />
   </ItemGroup>
 
 </Project>

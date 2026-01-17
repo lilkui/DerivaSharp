@@ -2,7 +2,6 @@ using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using TorchSharp;
-using ZLinq;
 using Tensor = TorchSharp.torch.Tensor;
 
 namespace DerivaSharp.PricingEngines;
@@ -22,7 +21,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 
         if (simData.StepCount <= 0)
         {
-            return assetPrices.AsValueEnumerable().Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
+            return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
