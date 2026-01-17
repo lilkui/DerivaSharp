@@ -11,7 +11,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public override double[] Values(Accumulator option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
+    public override double[] Values(Accumulator option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);

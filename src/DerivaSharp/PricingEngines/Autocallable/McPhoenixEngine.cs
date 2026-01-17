@@ -11,7 +11,7 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPr
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public override double[] Values(PhoenixOption option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
+    public override double[] Values(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

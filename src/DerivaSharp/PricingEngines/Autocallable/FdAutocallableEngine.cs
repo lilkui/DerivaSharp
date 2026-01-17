@@ -10,7 +10,7 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     : FiniteDifference1DPricingEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : AutocallableNote
 {
-    public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
+    public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

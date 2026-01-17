@@ -121,7 +121,7 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlusNext - 2 * vNext + vSpotMinusNext - vSpotPlus + 2 * v0 - vSpotMinus) / (ds * ds);
     }
 
-    public virtual double[] Values(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    public virtual double[] Values(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
 
@@ -134,7 +134,7 @@ public abstract class PricingEngine<TOption, TModel>
         return values;
     }
 
-    public virtual double[] Deltas(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    public virtual double[] Deltas(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         int count = assetPrices.Length;
@@ -152,7 +152,7 @@ public abstract class PricingEngine<TOption, TModel>
         return deltas;
     }
 
-    public virtual double[] Gammas(TOption option, PricingContext<TModel> context, ReadOnlySpan<double> assetPrices)
+    public virtual double[] Gammas(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         int count = assetPrices.Length;

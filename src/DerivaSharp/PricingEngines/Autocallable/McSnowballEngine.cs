@@ -11,7 +11,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public override double[] Values(SnowballOption option, PricingContext<BsmModelParameters> context, ReadOnlySpan<double> assetPrices)
+    public override double[] Values(SnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
