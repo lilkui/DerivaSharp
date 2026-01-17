@@ -1,15 +1,16 @@
-﻿using DerivaSharp.Instruments;
+using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Tests;
 
-public class AnalyticBinaryBarrierEngineTest
+public static class BinaryBarrierOptionTestData
 {
-    private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
-    private readonly AnalyticBinaryBarrierEngine _engine = new();
+    public const double Strike = 100;
+    public static readonly DateOnly EffectiveDate = new(2025, 1, 6);
+    public static readonly DateOnly ExpirationDate = EffectiveDate.AddDays(365);
+    public static readonly BsmModelParameters ModelParameters = new(0.3, 0.04, 0.01);
 
-    public static TheoryData<string, BarrierType, PaymentType, OptionType?, double, double, double, double> ValueTestData => new()
+    public static TheoryData<string, BarrierType, PaymentType, OptionType?, double, double, double, double> ValueData => new()
     {
         // OptionKind, BarrierType, PaymentType, OptionType, BarrierPrice, Rebate, AssetPrice, Expected
         { "CashOrNothing", BarrierType.DownAndIn, PaymentType.PayAtHit, null, 90, 10, 100, 7.310536 },
@@ -41,32 +42,4 @@ public class AnalyticBinaryBarrierEngineTest
         { "AssetOrNothing", BarrierType.DownAndOut, PaymentType.PayAtExpiry, OptionType.Put, 90, 0, 100, 1.470063 },
         { "AssetOrNothing", BarrierType.UpAndOut, PaymentType.PayAtExpiry, OptionType.Put, 110, 0, 100, 17.916153 },
     };
-
-    [Theory]
-    [MemberData(nameof(ValueTestData))]
-    public void Value_IsAccurate(
-        string optionKind,
-        BarrierType barrierType,
-        PaymentType paymentType,
-        OptionType? optionType,
-        double barrierPrice,
-        double rebate,
-        double assetPrice,
-        double expected)
-    {
-        const double strike = 100;
-        DateOnly effectiveDate = new(2025, 1, 6);
-        DateOnly expirationDate = effectiveDate.AddDays(365);
-
-        BinaryBarrierOption option = optionKind switch
-        {
-            "CashOrNothing" => new CashOrNothingBarrierOption(barrierType, paymentType, optionType, strike, barrierPrice, rebate, 0, effectiveDate, expirationDate),
-            "AssetOrNothing" => new AssetOrNothingBarrierOption(barrierType, paymentType, optionType, strike, barrierPrice, rebate, 0, effectiveDate, expirationDate),
-            _ => throw new ArgumentException("Invalid option kind"),
-        };
-        PricingContext<BsmModelParameters> ctx = new(_modelParameters, assetPrice, effectiveDate);
-
-        const int precision = 6;
-        Assert.Equal(expected, _engine.Value(option, ctx), precision);
-    }
 }
