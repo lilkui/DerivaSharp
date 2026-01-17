@@ -2,12 +2,14 @@ using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 using DerivaSharp.Time;
+using TorchSharp;
 
 namespace DerivaSharp.Tests;
 
 public class McPhoenixEngineTest
 {
     private const double DefaultTolerance = 0.003;
+    private static readonly bool s_useCuda = torch.cuda.is_available();
     private readonly DateOnly _effectiveDate;
     private readonly DateOnly _expirationDate;
     private readonly DateOnly[] _obsDates;
@@ -21,7 +23,7 @@ public class McPhoenixEngineTest
         _obsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
         _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
-        _engine = new McPhoenixEngine(100000);
+        _engine = new McPhoenixEngine(100000, s_useCuda);
     }
 
     [Fact]

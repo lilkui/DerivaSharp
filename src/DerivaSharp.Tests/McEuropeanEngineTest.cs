@@ -1,13 +1,15 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using TorchSharp;
 
 namespace DerivaSharp.Tests;
 
 public class McEuropeanEngineTest
 {
+    private static readonly bool s_useCuda = torch.cuda.is_available();
     private readonly BsmModelParameters _modelParameters = new(0.3, 0.04, 0.01);
-    private readonly McEuropeanEngine _engine = new(500000, 2);
+    private readonly McEuropeanEngine _engine = new(500000, 2, s_useCuda);
 
     [Theory]
     [InlineData(OptionType.Call, 100, 13.1511)]
