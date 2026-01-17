@@ -71,7 +71,7 @@ dotnet publish -c Release -r win-x64
 | **Digital Option** | Analytic |
 | **Binary Barrier Option** | Analytic, Finite Difference |
 | **Autocallable Note (Snowball, Phoenix)** | Finite Difference, Monte Carlo |
-| **Accumulator** | Monte Carlo |
+| **Accumulator** | Finite Difference, Monte Carlo |
 
 ## Performance Benchmarks
 
@@ -82,7 +82,7 @@ dotnet publish -c Release -r win-x64
 - **OS**: Windows 11 (25H2)
 - **Runtime**: .NET 10.0
 
-| Instrument | Pricing Algorithm | Parameters | JIT | AOT |
+| Instrument | Pricing Algorithm | Parameters | Time (JIT) | Time (AOT) |
 | :--- | :--- | :--- | ---: | ---: |
 | **Vanilla European** | Analytic | - | 45 ns | 54 ns |
 | | Finite Difference | 1000×500 grid (CN) | 6.4 ms | 6.6 ms |
