@@ -1,13 +1,11 @@
 using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifference1DPricingEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
+    : FdAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
@@ -18,42 +16,6 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double[]? _couponBarriers;
     private double _couponAmount;
     private double _lossAtZero;
-
-    public double[] Values(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
-        {
-            return new double[assetPrices.Length];
-        }
-
-        int count = assetPrices.Length;
-        Guard.IsGreaterThanOrEqualTo(count, 3);
-
-        CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
-
-        double[] values = new double[count];
-        ReadOnlySpan<double> priceSpan = PriceVector;
-        ReadOnlySpan<double> valueSpan = ValueMatrixSpan.GetRowSpan(0);
-
-        for (int i = 0; i < count; i++)
-        {
-            values[i] = LinearInterpolation.InterpolateSorted(assetPrices[i], priceSpan, valueSpan);
-        }
-
-        return values;
-    }
-
-    public double[] Deltas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-        return FiniteDifferenceGreeks.ComputeDeltas(assetPrices, values);
-    }
-
-    public double[] Gammas(PhoenixOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
-    {
-        double[] values = Values(option, context, assetPrices);
-        return FiniteDifferenceGreeks.ComputeGammas(assetPrices, values);
-    }
 
     protected override double CalculateValue(PhoenixOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
@@ -172,19 +134,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             }
         }
 
-        if (!_isSolvingKnockedIn && _hasDailyKnockIn)
-        {
-            double kiPrice = option.KnockInPrice;
-            ReadOnlySpan2D<double> knockedInSpan = new(_knockedInValues, TimeStepCount + 1, PriceStepCount + 1);
-
-            for (int j = 0; j <= PriceStepCount; j++)
-            {
-                if (PriceVector[j] < kiPrice)
-                {
-                    ValueMatrixSpan[i, j] = knockedInSpan[i, j];
-                }
-            }
-        }
+        ApplyKnockInSubstitution(i, option.KnockInPrice, !_isSolvingKnockedIn && _hasDailyKnockIn, _knockedInValues);
     }
 
     private void InitializeParameters(PhoenixOption option, PricingContext<BsmModelParameters> context)
@@ -215,17 +165,6 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         MaxPrice = maxBarrier * 4.0;
 
         double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
-        double dt = tMax / TimeStepCount;
-        _stepToObservationIndex.AsSpan().Fill(-1);
-
-        for (int k = 0; k < n; k++)
-        {
-            double tObs = _observationTimes[k];
-            int step = (int)Math.Round(tObs / dt);
-            if (step >= 0 && step <= TimeStepCount && Math.Abs(step * dt - tObs) < dt / 2.0)
-            {
-                _stepToObservationIndex[step] = k;
-            }
-        }
+        MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
     }
 }

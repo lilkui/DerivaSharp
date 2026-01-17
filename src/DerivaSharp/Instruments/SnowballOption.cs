@@ -1,6 +1,6 @@
 namespace DerivaSharp.Instruments;
 
-public sealed record SnowballOption : Option
+public sealed record SnowballOption : AutocallableNote
 {
     public SnowballOption(
         double[] knockOutCouponRates,
@@ -15,39 +15,25 @@ public sealed record SnowballOption : Option
         BarrierTouchStatus barrierTouchStatus,
         DateOnly effectiveDate,
         DateOnly expirationDate)
-        : base(effectiveDate, expirationDate)
+        : base(
+            initialPrice,
+            knockInPrice,
+            knockOutPrices,
+            upperStrikePrice,
+            lowerStrikePrice,
+            knockOutObservationDates,
+            knockInObservationFrequency,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate)
     {
         KnockOutCouponRates = knockOutCouponRates;
         MaturityCouponRate = maturityCouponRate;
-        KnockInPrice = knockInPrice;
-        KnockOutPrices = knockOutPrices;
-        InitialPrice = initialPrice;
-        UpperStrikePrice = upperStrikePrice;
-        LowerStrikePrice = lowerStrikePrice;
-        KnockOutObservationDates = knockOutObservationDates;
-        KnockInObservationFrequency = knockInObservationFrequency;
-        BarrierTouchStatus = barrierTouchStatus;
     }
 
     public double[] KnockOutCouponRates { get; init; }
 
     public double MaturityCouponRate { get; init; }
-
-    public double InitialPrice { get; init; }
-
-    public double KnockInPrice { get; init; }
-
-    public double[] KnockOutPrices { get; init; }
-
-    public double UpperStrikePrice { get; init; }
-
-    public double LowerStrikePrice { get; init; }
-
-    public DateOnly[] KnockOutObservationDates { get; init; }
-
-    public ObservationFrequency KnockInObservationFrequency { get; init; }
-
-    public BarrierTouchStatus BarrierTouchStatus { get; init; }
 
     // 平敲
     public static SnowballOption CreateStandardSnowball(

@@ -1,6 +1,6 @@
 namespace DerivaSharp.Instruments;
 
-public sealed record PhoenixOption : Option
+public sealed record PhoenixOption : AutocallableNote
 {
     public PhoenixOption(
         double couponRate,
@@ -15,39 +15,25 @@ public sealed record PhoenixOption : Option
         BarrierTouchStatus barrierTouchStatus,
         DateOnly effectiveDate,
         DateOnly expirationDate)
-        : base(effectiveDate, expirationDate)
+        : base(
+            initialPrice,
+            knockInPrice,
+            knockOutPrices,
+            upperStrikePrice,
+            lowerStrikePrice,
+            knockOutObservationDates,
+            knockInObservationFrequency,
+            barrierTouchStatus,
+            effectiveDate,
+            expirationDate)
     {
         CouponRate = couponRate;
-        InitialPrice = initialPrice;
-        KnockInPrice = knockInPrice;
-        KnockOutPrices = knockOutPrices;
         CouponBarrierPrices = couponBarrierPrices;
-        UpperStrikePrice = upperStrikePrice;
-        LowerStrikePrice = lowerStrikePrice;
-        KnockOutObservationDates = knockOutObservationDates;
-        KnockInObservationFrequency = knockInObservationFrequency;
-        BarrierTouchStatus = barrierTouchStatus;
     }
 
     public double CouponRate { get; init; }
 
-    public double InitialPrice { get; init; }
-
-    public double KnockInPrice { get; init; }
-
-    public double[] KnockOutPrices { get; init; }
-
     public double[] CouponBarrierPrices { get; init; }
-
-    public double UpperStrikePrice { get; init; }
-
-    public double LowerStrikePrice { get; init; }
-
-    public DateOnly[] KnockOutObservationDates { get; init; }
-
-    public ObservationFrequency KnockInObservationFrequency { get; init; }
-
-    public BarrierTouchStatus BarrierTouchStatus { get; init; }
 
     public static PhoenixOption CreateStandardPhoenix(
         double couponRate,
@@ -79,6 +65,7 @@ public sealed record PhoenixOption : Option
             expirationDate);
     }
 
+    // FCN
     public static PhoenixOption CreateFixedCouponNote(
         double couponRate,
         double initialPrice,
@@ -109,6 +96,7 @@ public sealed record PhoenixOption : Option
             expirationDate);
     }
 
+    // DCN
     public static PhoenixOption CreateDigitalCouponNote(
         double couponRate,
         double initialPrice,
