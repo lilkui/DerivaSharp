@@ -9,8 +9,6 @@ internal static class ExceptionMessages
     internal const string InvalidDigitalOption = "Invalid digital option.";
     internal const string InvalidFiniteDifferenceScheme = "Invalid finite difference scheme.";
     internal const string InvalidOptionType = "Invalid option type.";
-    internal const string InvalidTouchType = "Invalid touch type.";
     internal const string PayAtHitNotValidForKnockIn = "Rebate payment type 'PayAtHit' is not valid for knock-in options.";
     internal const string SpanLengthsMustMatch = "All spans must have the same length.";
-    internal const string UseCashParityForNoTouch = "Use cash parity for no-touch options.";
 }
