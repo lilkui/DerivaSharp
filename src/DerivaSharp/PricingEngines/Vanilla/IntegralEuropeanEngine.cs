@@ -21,7 +21,7 @@ public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
             return Max(sgn * (assetPrice - x), 0);
         }
 
-        double result = DoubleExponentialTransformation.Integrate(Integrand, -8, 8, 1e-8);
+        double result = DoubleExponentialTransformation.Integrate(Integrand, -10, 10, 1e-8);
         return Exp(-r * tau) * result;
 
         double Integrand(double z)
