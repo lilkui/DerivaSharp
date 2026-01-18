@@ -9,7 +9,6 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.Benchmarks;
 
-[MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class AutocallableBenchmarks
@@ -44,21 +43,21 @@ public class AutocallableBenchmarks
     [Benchmark]
     public double FdSnowball()
     {
-        FdSnowballEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdSnowballEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
         return engine.Value(_snowball, _context);
     }
 
     [Benchmark]
     public double McSnowball()
     {
-        McSnowballEngine engine = new(1_000_000);
+        McSnowballEngine engine = new(500_000);
         return engine.Value(_snowball, _context);
     }
 
     [Benchmark]
     public double McSnowball_Cuda()
     {
-        McSnowballEngine engine = new(1_000_000, true);
+        McSnowballEngine engine = new(500_000, true);
         return engine.Value(_snowball, _context);
     }
 }

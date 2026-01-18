@@ -7,7 +7,6 @@ using DerivaSharp.PricingEngines;
 
 namespace DerivaSharp.Benchmarks;
 
-[MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [SimpleJob(RuntimeMoniker.NativeAot10_0)]
 public class VanillaBenchmarks
@@ -23,9 +22,7 @@ public class VanillaBenchmarks
         _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
         DateOnly effectiveDate = new(2025, 1, 6);
         DateOnly expirationDate = effectiveDate.AddDays(365);
-
         _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, effectiveDate);
-
         _european = new EuropeanOption(OptionType.Call, 100.0, effectiveDate, expirationDate);
         _american = new AmericanOption(OptionType.Call, 100.0, effectiveDate, expirationDate);
     }
@@ -47,21 +44,21 @@ public class VanillaBenchmarks
     [Benchmark]
     public double FdEuropean()
     {
-        FdEuropeanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdEuropeanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double BinomialTreeVanilla()
     {
-        BinomialTreeVanillaEngine engine = new(500);
+        BinomialTreeVanillaEngine engine = new(1000);
         return engine.Value(_european, _context);
     }
 
     [Benchmark]
     public double McEuropean()
     {
-        McEuropeanEngine engine = new(1_000_000, 2);
+        McEuropeanEngine engine = new(500_000, 2);
         return engine.Value(_european, _context);
     }
 
@@ -75,7 +72,7 @@ public class VanillaBenchmarks
     [Benchmark]
     public double FdAmerican()
     {
-        FdAmericanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        FdAmericanEngine engine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
         return engine.Value(_american, _context);
     }
 

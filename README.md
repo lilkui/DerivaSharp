@@ -65,11 +65,11 @@ dotnet publish -c Release -r win-x64
 
 | Instrument | Pricing Algorithms |
 | :--- | :--- |
-| **Vanilla European Option** | Analytic, Finite Difference, Monte Carlo, Binomial Tree, Numerical Integration |
+| **Vanilla European Option** | Analytical, Finite Difference, Monte Carlo, Binomial Tree, Numerical Integration |
 | **Vanilla American Option** | Bjerksund-Stensland Approximation, Finite Difference, Monte Carlo (Longstaff-Schwartz), Binomial Tree |
-| **Barrier Option** | Analytic, Finite Difference |
-| **Digital Option** | Analytic |
-| **Binary Barrier Option** | Analytic, Finite Difference |
+| **Barrier Option** | Analytical, Finite Difference |
+| **Digital Option** | Analytical |
+| **Binary Barrier Option** | Analytical, Finite Difference |
 | **Autocallable Note (Snowball, Phoenix)** | Finite Difference, Monte Carlo |
 | **Accumulator** | Finite Difference, Monte Carlo |
 
@@ -84,16 +84,16 @@ dotnet publish -c Release -r win-x64
 
 | Instrument | Pricing Algorithm | Parameters | Time (JIT) | Time (AOT) |
 | :--- | :--- | :--- | ---: | ---: |
-| **Vanilla European** | Analytic | - | 45 ns | 54 ns |
-| | Finite Difference | 1000×500 grid (CN) | 6.4 ms | 6.6 ms |
-| | Monte Carlo | 1M paths | 11.8 ms | 13.7 ms |
-| | Binomial Tree | 500 steps | 114 μs | 138 μs |
-| | Numerical Integration | - | 99 μs | 106 μs |
+| **Vanilla European** | Analytical | - | 45.6 ns | 54.5 ns |
+| | Finite Difference | 1000×1000 grid (CN) | 12.0 ms | 11.8 ms |
+| | Monte Carlo | 500000 paths | 5.9 ms | 7.0 ms |
+| | Binomial Tree | 1000 steps | 477 μs | 543 μs |
+| | Numerical Integration | - | 104 μs | 106 μs |
 | **Vanilla American** | Bjerksund-Stensland | - | 6.2 μs | 6.9 μs |
-| | Finite Difference | 1000×500 grid (CN) | 7.0 ms | 7.2 ms |
-| | Monte Carlo | 100K paths, 250 steps | 895 ms | 942 ms |
-| **Snowball** | Finite Difference | 1000×500 grid (CN) | 12.5 ms | 13.0 ms |
-| | Monte Carlo | 1M paths | 3.45 s | 3.89 s |
-| | Monte Carlo | 1M paths, GPU-accelerated | 81.4 ms | 80.9 ms |
+| | Finite Difference | 1000×1000 grid (CN) | 12.9 ms | 13.0 ms |
+| | Monte Carlo | 100000 paths, 250 steps | 900 ms | 965 ms |
+| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 26.1 ms | 25.4 ms |
+| | Monte Carlo | 500000 paths | 1.71 s | 1.95 s |
+| | Monte Carlo | 500000 paths, GPU-accelerated | 40.8 ms | 40.9 ms |
 
 *CN = Crank-Nicolson scheme*
