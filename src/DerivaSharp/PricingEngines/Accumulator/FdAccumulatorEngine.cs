@@ -7,6 +7,16 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
+// Finite-difference accumulator pricing is split into two linear components.
+// 1) AccumulatorUnitValueEngine solves for the unit payoff value A(t,S): the PDE value of
+//    a single accumulated unit (terminal payoff S-K), with step conditions that enforce
+//    knock-out behavior on observation dates. This is the standard BSM PDE with
+//    observation-time resets, so it is well-posed with boundary/terminal conditions.
+// 2) AccumulatorFutureAccrualEngine solves for the remaining expected accrual B(t,S):
+//    the present value of future quantities, using the previously solved A matrix to
+//    convert each observation's incremental quantity into value via linearity.
+// The final value is Q_accumulated * A + B. This works because the payoff is affine in
+// the accumulated quantity and the PDE is linear, so superposition applies.
 public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 {
     private readonly FiniteDifferenceScheme _scheme;
@@ -38,24 +48,24 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             return terminal;
         }
 
-        AccumulatorAEngine aEngine = new(_scheme, _priceStepCount, _timeStepCount);
-        aEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        AccumulatorUnitValueEngine unitValueEngine = new(_scheme, _priceStepCount, _timeStepCount);
+        unitValueEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
 
-        double[] aMatrix = aEngine.GetValueMatrixCopy();
-        ReadOnlySpan<double> aRow = aEngine.GetRow0Span();
-        ReadOnlySpan<double> priceVector = aEngine.PriceGrid;
+        double[] unitValueMatrix = unitValueEngine.GetValueMatrixCopy();
+        ReadOnlySpan<double> unitValueRow = unitValueEngine.GetRow0Span();
+        ReadOnlySpan<double> priceGrid = unitValueEngine.PriceGrid;
 
-        AccumulatorBEngine bEngine = new(_scheme, _priceStepCount, _timeStepCount, aMatrix);
-        bEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        AccumulatorFutureAccrualEngine futureAccrualEngine = new(_scheme, _priceStepCount, _timeStepCount, unitValueMatrix);
+        futureAccrualEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
 
-        ReadOnlySpan<double> bRow = bEngine.GetRow0Span();
+        ReadOnlySpan<double> futureAccrualRow = futureAccrualEngine.GetRow0Span();
 
         double[] values = new double[assetPrices.Length];
         for (int i = 0; i < assetPrices.Length; i++)
         {
-            double aValue = LinearInterpolation.InterpolateSorted(assetPrices[i], priceVector, aRow);
-            double bValue = LinearInterpolation.InterpolateSorted(assetPrices[i], priceVector, bRow);
-            values[i] = option.AccumulatedQuantity * aValue + bValue;
+            double unitValue = LinearInterpolation.InterpolateSorted(assetPrices[i], priceGrid, unitValueRow);
+            double futureAccrualValue = LinearInterpolation.InterpolateSorted(assetPrices[i], priceGrid, futureAccrualRow);
+            values[i] = option.AccumulatedQuantity * unitValue + futureAccrualValue;
         }
 
         return values;
@@ -68,14 +78,14 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             return option.AccumulatedQuantity * (assetPrice - option.StrikePrice);
         }
 
-        AccumulatorAEngine aEngine = new(_scheme, _priceStepCount, _timeStepCount);
-        double aValue = aEngine.Solve(option, parameters, assetPrice, valuationDate);
-        double[] aMatrix = aEngine.GetValueMatrixCopy();
+        AccumulatorUnitValueEngine unitValueEngine = new(_scheme, _priceStepCount, _timeStepCount);
+        double unitValue = unitValueEngine.Solve(option, parameters, assetPrice, valuationDate);
+        double[] unitValueMatrix = unitValueEngine.GetValueMatrixCopy();
 
-        AccumulatorBEngine bEngine = new(_scheme, _priceStepCount, _timeStepCount, aMatrix);
-        double bValue = bEngine.Solve(option, parameters, assetPrice, valuationDate);
+        AccumulatorFutureAccrualEngine futureAccrualEngine = new(_scheme, _priceStepCount, _timeStepCount, unitValueMatrix);
+        double futureAccrualValue = futureAccrualEngine.Solve(option, parameters, assetPrice, valuationDate);
 
-        return option.AccumulatedQuantity * aValue + bValue;
+        return option.AccumulatedQuantity * unitValue + futureAccrualValue;
     }
 
     private static void BuildObservationSteps(DateOnly valuationDate, DateOnly expirationDate, Span<int> stepToObservationIndex, int timeStepCount)
@@ -114,7 +124,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         }
     }
 
-    private sealed class AccumulatorAEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
+    private sealed class AccumulatorUnitValueEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
         : FiniteDifference1DPricingEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
     {
         private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
@@ -193,10 +203,9 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         }
     }
 
-    private sealed class AccumulatorBEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount, double[] aValues)
+    private sealed class AccumulatorFutureAccrualEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount, double[] unitValues)
         : FiniteDifference1DPricingEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
     {
-        private readonly double[] _aValues = aValues;
         private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
         private double _strike;
         private double _knockOut;
@@ -248,7 +257,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
                 return;
             }
 
-            ReadOnlySpan2D<double> aMatrix = new(_aValues, TimeStepCount + 1, PriceStepCount + 1);
+            ReadOnlySpan2D<double> unitValueMatrix = new(unitValues, TimeStepCount + 1, PriceStepCount + 1);
             Span<double> row = ValueMatrixSpan.GetRowSpan(i);
 
             for (int j = 0; j <= PriceStepCount; j++)
@@ -262,7 +271,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
                 }
 
                 double dq = s < _strike ? _dailyQuantity * _accelerationFactor : _dailyQuantity;
-                row[j] += dq * aMatrix[i, j];
+                row[j] += dq * unitValueMatrix[i, j];
             }
         }
     }
