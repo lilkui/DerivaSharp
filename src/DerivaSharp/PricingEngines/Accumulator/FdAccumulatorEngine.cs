@@ -7,16 +7,30 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
-// Finite-difference accumulator pricing is split into two linear components.
-// 1) AccumulatorUnitValueEngine solves for the unit payoff value A(t,S): the PDE value of
-//    a single accumulated unit (terminal payoff S-K), with step conditions that enforce
-//    knock-out behavior on observation dates. This is the standard BSM PDE with
-//    observation-time resets, so it is well-posed with boundary/terminal conditions.
-// 2) AccumulatorFutureAccrualEngine solves for the remaining expected accrual B(t,S):
-//    the present value of future quantities, using the previously solved A matrix to
-//    convert each observation's incremental quantity into value via linearity.
-// The final value is Q_accumulated * A + B. This works because the payoff is affine in
-// the accumulated quantity and the PDE is linear, so superposition applies.
+// This FD engine prices an Accumulator by exploiting linearity of the BSM PDE and the
+// fact that the contract value is affine in the already-accumulated quantity q.
+//
+// We write the value as
+//   V(t, S, q) = q * A(t, S) + B(t, S)
+//
+// A(t, S): "unit accumulated value"
+//   - Value of ONE already-accrued unit.
+//   - Terminal payoff: (S - K).
+//   - On each observation date, enforce knock-out by applying a jump/step condition:
+//       if S >= KO, set A to intrinsic (S - K).
+//   - Between observation dates, A evolves under the standard BSM PDE with usual
+//     boundary/terminal conditions.
+//
+// B(t, S): "future accrual value" (value when q = 0)
+//   - Terminal payoff: 0.
+//   - On each observation date, if S < KO, add the value of the newly accrued
+//     quantity dq(S) (daily or accelerated) using the already-solved A:
+//       B += dq(S) * A(t, S)
+//     and if S >= KO, set B = 0 (knocked out).
+//   - Between observation dates, B also evolves under the BSM PDE.
+//
+// Solve A first on the grid, then solve B using A as input. Final price:
+//   V(t,S) = q_accumulated * A(t,S) + B(t,S).
 public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 {
     private readonly FiniteDifferenceScheme _scheme;
