@@ -1,6 +1,6 @@
 namespace DerivaSharp.Instruments;
 
-public sealed record PhoenixOption : AutocallableNote
+public sealed record PhoenixOption : KiAutocallableNote
 {
     public PhoenixOption(
         double couponRate,

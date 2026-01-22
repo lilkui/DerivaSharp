@@ -5,7 +5,7 @@ using DerivaSharp.Models;
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FdAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
+    : FdKiAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];

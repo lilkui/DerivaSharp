@@ -6,9 +6,9 @@ using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
-public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
+public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FiniteDifference1DPricingEngine<TOption>(scheme, priceStepCount, timeStepCount)
-    where TOption : AutocallableNote
+    where TOption : KiAutocallableNote
 {
     public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {

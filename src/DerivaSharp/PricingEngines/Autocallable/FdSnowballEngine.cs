@@ -25,7 +25,7 @@ namespace DerivaSharp.PricingEngines;
 // In other words, the two passes implement a coupled two-state PDE by solving the KI state first
 // and using it as a boundary/interface condition for the NKI state.
 public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FdAutocallableEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
+    : FdKiAutocallableEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];

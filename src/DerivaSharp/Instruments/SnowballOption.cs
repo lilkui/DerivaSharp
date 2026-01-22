@@ -1,6 +1,6 @@
 namespace DerivaSharp.Instruments;
 
-public sealed record SnowballOption : AutocallableNote
+public sealed record SnowballOption : KiAutocallableNote
 {
     public SnowballOption(
         double[] knockOutCouponRates,
