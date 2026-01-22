@@ -34,22 +34,6 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
         return values;
     }
 
-    protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex, double tMax)
-    {
-        stepToObservationIndex.Fill(-1);
-
-        double dt = tMax / TimeStepCount;
-        for (int k = 0; k < observationTimes.Length; k++)
-        {
-            double tObs = observationTimes[k];
-            int step = (int)Math.Round(tObs / dt);
-            if (step >= 0 && step <= TimeStepCount && Math.Abs(step * dt - tObs) < dt / 2.0)
-            {
-                stepToObservationIndex[step] = k;
-            }
-        }
-    }
-
     protected void ApplyKnockInSubstitution(int i, double knockInPrice, bool apply, double[] knockedInValues)
     {
         if (!apply)

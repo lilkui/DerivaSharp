@@ -128,6 +128,22 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
     protected abstract void ApplyStepConditions(int i, TOption option, BsmModelParameters parameters);
 
+    protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex, double tMax)
+    {
+        stepToObservationIndex.Fill(-1);
+
+        double dt = tMax / TimeStepCount;
+        for (int k = 0; k < observationTimes.Length; k++)
+        {
+            double tObs = observationTimes[k];
+            int step = (int)Math.Round(tObs / dt);
+            if (step >= 0 && step <= TimeStepCount && Math.Abs(step * dt - tObs) < dt / 2.0)
+            {
+                stepToObservationIndex[step] = k;
+            }
+        }
+    }
+
     private void SolveSingleStep(int i, Span<double> rhs, Span<double> result)
     {
         Debug.Assert(_m1 is not null);
