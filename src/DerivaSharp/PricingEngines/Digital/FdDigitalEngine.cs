@@ -5,7 +5,7 @@ using DerivaSharp.Models;
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifference1DPricingEngine<DigitalOption>(scheme, priceStepCount, timeStepCount)
+    : BsmFiniteDifferenceEngine<DigitalOption>(scheme, priceStepCount, timeStepCount)
 {
     protected override double CalculateValue(DigitalOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {

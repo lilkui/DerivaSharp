@@ -62,7 +62,7 @@ double price = engine.Value(option, context);
 
 ### Finite Difference Engines
 
-All FD engines inherit from `FiniteDifference1DPricingEngine<TOption>` (src/DerivaSharp/PricingEngines/FiniteDifference1DPricingEngine.cs):
+All FD engines inherit from `BsmFiniteDifferenceEngine<TOption>` (src/DerivaSharp/PricingEngines/BsmFiniteDifferenceEngine.cs):
 
 - Builds 1D PDE grids (price × time) and solves backward in time
 - Supports three schemes: Explicit Euler, Implicit Euler, Crank-Nicolson

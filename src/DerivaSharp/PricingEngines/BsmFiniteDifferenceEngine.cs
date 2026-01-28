@@ -8,7 +8,7 @@ using MathNet.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
-public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngine<TOption>
+public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOption>
     where TOption : Option
 {
     private readonly double[] _lower1;
@@ -24,7 +24,7 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
     private TridiagonalMatrix? _m1;
     private TridiagonalMatrix? _m2;
 
-    protected FiniteDifference1DPricingEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
+    protected BsmFiniteDifferenceEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
         Guard.IsGreaterThanOrEqualTo(priceStepCount, 2);
         Guard.IsGreaterThanOrEqualTo(timeStepCount, 2);
@@ -53,9 +53,9 @@ public abstract class FiniteDifference1DPricingEngine<TOption> : BsmPricingEngin
 
     protected double MaxPrice { get; set; }
 
-    protected double[] PriceVector { get; set; } = null!;
+    protected double[] PriceVector { get; set; } = [];
 
-    protected double[] TimeVector { get; set; } = null!;
+    protected double[] TimeVector { get; set; } = [];
 
     protected FiniteDifferenceScheme Scheme { get; }
 

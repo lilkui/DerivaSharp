@@ -7,7 +7,7 @@ using MathNet.Numerics.Distributions;
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifference1DPricingEngine<BarrierOption>(scheme, priceStepCount, timeStepCount)
+    : BsmFiniteDifferenceEngine<BarrierOption>(scheme, priceStepCount, timeStepCount)
 {
     private bool[]? _isObservationTime;
 

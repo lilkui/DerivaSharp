@@ -5,7 +5,7 @@ using DerivaSharp.Models;
 namespace DerivaSharp.PricingEngines;
 
 public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifference1DPricingEngine<TOption>(scheme, priceStepCount, timeStepCount)
+    : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : VanillaOption
 {
     protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)

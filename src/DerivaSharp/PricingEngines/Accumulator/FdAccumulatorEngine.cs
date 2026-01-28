@@ -139,7 +139,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
     }
 
     private sealed class AccumulatorUnitValueEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-        : FiniteDifference1DPricingEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
+        : BsmFiniteDifferenceEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
     {
         private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
         private double _strike;
@@ -218,7 +218,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
     }
 
     private sealed class AccumulatorFutureAccrualEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount, double[] unitValues)
-        : FiniteDifference1DPricingEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
+        : BsmFiniteDifferenceEngine<Accumulator>(scheme, priceStepCount, timeStepCount)
     {
         private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
         private double _strike;

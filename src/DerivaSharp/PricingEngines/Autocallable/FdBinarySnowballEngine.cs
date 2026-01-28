@@ -6,7 +6,7 @@ using DerivaSharp.Numerics;
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : FiniteDifference1DPricingEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
+    : BsmFiniteDifferenceEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
     private double[]? _observationTimes;
