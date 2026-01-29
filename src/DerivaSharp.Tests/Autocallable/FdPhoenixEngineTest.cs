@@ -21,14 +21,14 @@ public class FdPhoenixEngineTest
         _obsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
         _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
-        _engine = new FdPhoenixEngine(FiniteDifferenceScheme.CrankNicolson, 200, 400);
+        _engine = new FdPhoenixEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     }
 
     [Fact]
     public void StandardPhoenixValue_IsAccurate()
     {
         PhoenixOption option = PhoenixOption.CreateStandardPhoenix(
-            0.0016,
+            0.002,
             1.0,
             0.7,
             1.03,

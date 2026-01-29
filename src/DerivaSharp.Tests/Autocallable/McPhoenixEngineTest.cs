@@ -30,7 +30,7 @@ public class McPhoenixEngineTest
     public void StandardPhoenixValue_IsAccurate()
     {
         PhoenixOption option = PhoenixOption.CreateStandardPhoenix(
-            0.0016,
+            0.002,
             1.0,
             0.7,
             1.03,

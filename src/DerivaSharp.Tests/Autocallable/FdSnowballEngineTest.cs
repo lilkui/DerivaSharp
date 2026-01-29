@@ -21,14 +21,14 @@ public class FdSnowballEngineTest
         _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
         _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
-        _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 500);
+        _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     }
 
     [Fact]
     public void StandardSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.0885,
+            0.0892,
             1.0,
             0.8,
             1.03,
@@ -124,7 +124,7 @@ public class FdSnowballEngineTest
     public void ParachuteSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateParachuteSnowball(
-            0.0873,
+            0.0880,
             1.0,
             0.8,
             1.03,
@@ -143,7 +143,7 @@ public class FdSnowballEngineTest
     public void OtmSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateOtmSnowball(
-            0.109,
+            0.11,
             1.0,
             0.8,
             1.03,
@@ -162,7 +162,7 @@ public class FdSnowballEngineTest
     public void LossCappedSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateLossCappedSnowball(
-            0.074,
+            0.0746,
             1.0,
             0.8,
             1.03,
@@ -208,7 +208,7 @@ public class FdSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.0885;
+        const double expected = 0.0892;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -285,7 +285,7 @@ public class FdSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.0873;
+        const double expected = 0.0880;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -304,7 +304,7 @@ public class FdSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.109;
+        const double expected = 0.110;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -323,7 +323,7 @@ public class FdSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.074;
+        const double expected = 0.0746;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
