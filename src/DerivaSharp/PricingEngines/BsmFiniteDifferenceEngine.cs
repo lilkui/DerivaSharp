@@ -130,17 +130,32 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex, double tMax)
     {
+        Guard.IsEqualTo(stepToObservationIndex.Length, TimeStepCount + 1);
         stepToObservationIndex.Fill(-1);
 
         double dt = tMax / TimeStepCount;
         for (int k = 0; k < observationTimes.Length; k++)
         {
             double tObs = observationTimes[k];
+
+            // Find nearest step
             int step = (int)Math.Round(tObs / dt);
-            if (step >= 0 && step <= TimeStepCount && Math.Abs(step * dt - tObs) < dt / 2.0)
+            step = Math.Clamp(step, 0, TimeStepCount);
+
+            // Check if observation time is close enough to the grid point
+            const double tolerance = 1e-3;
+            if (Math.Abs(step * dt - tObs) > tolerance)
             {
-                stepToObservationIndex[step] = k;
+                ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
             }
+
+            // Check for collision
+            if (stepToObservationIndex[step] != -1)
+            {
+                ThrowHelper.ThrowArgumentException(ExceptionMessages.MultipleObservationsAtSameStep);
+            }
+
+            stepToObservationIndex[step] = k;
         }
     }
 
