@@ -17,7 +17,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         double assetPrice = context.AssetPrice;
         DateOnly valuationDate = context.ValuationDate;
         double vol = parameters.Volatility;
-        double dvol = NumericalApproximationParameters.VolatilityShift;
+        double dvol = ShiftParameters.VolatilityShift;
 
         double vVolPlus = CalculateValue(option, parameters with { Volatility = vol + dvol }, assetPrice, valuationDate);
         double vVolMinus = CalculateValue(option, parameters with { Volatility = vol - dvol }, assetPrice, valuationDate);
@@ -35,8 +35,8 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         DateOnly valuationDate = context.ValuationDate;
         double vol = parameters.Volatility;
 
-        double ds = assetPrice * NumericalApproximationParameters.AssetPriceShiftFactor;
-        double dvol = NumericalApproximationParameters.VolatilityShift;
+        double ds = assetPrice * ShiftParameters.AssetPriceShiftFactor;
+        double dvol = ShiftParameters.VolatilityShift;
 
         double vSpotPlusVolPlus = CalculateValue(option, parameters with { Volatility = vol + dvol }, assetPrice + ds, valuationDate);
         double vSpotMinusVolPlus = CalculateValue(option, parameters with { Volatility = vol + dvol }, assetPrice - ds, valuationDate);
@@ -56,8 +56,8 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         DateOnly valuationDate = context.ValuationDate;
         double vol = parameters.Volatility;
 
-        double ds = assetPrice * NumericalApproximationParameters.AssetPriceShiftFactor;
-        double dvol = NumericalApproximationParameters.VolatilityShift;
+        double ds = assetPrice * ShiftParameters.AssetPriceShiftFactor;
+        double dvol = ShiftParameters.VolatilityShift;
 
         double vVolPlus = CalculateValue(option, parameters with { Volatility = vol + dvol }, assetPrice, valuationDate);
         double vSpotPlusVolPlus = CalculateValue(option, parameters with { Volatility = vol + dvol }, assetPrice + ds, valuationDate);
@@ -79,7 +79,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         double assetPrice = context.AssetPrice;
         DateOnly valuationDate = context.ValuationDate;
         double r = parameters.RiskFreeRate;
-        double dr = NumericalApproximationParameters.InterestRateShift;
+        double dr = ShiftParameters.InterestRateShift;
 
         double vRatePlus = CalculateValue(option, parameters with { RiskFreeRate = r + dr }, assetPrice, valuationDate);
         double vRateMinus = CalculateValue(option, parameters with { RiskFreeRate = r - dr }, assetPrice, valuationDate);
@@ -97,9 +97,9 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
 
-        double ds = assetPrice * NumericalApproximationParameters.AssetPriceShiftFactor;
-        double dvol = NumericalApproximationParameters.VolatilityShift;
-        double dr = NumericalApproximationParameters.InterestRateShift;
+        double ds = assetPrice * ShiftParameters.AssetPriceShiftFactor;
+        double dvol = ShiftParameters.VolatilityShift;
+        double dr = ShiftParameters.InterestRateShift;
 
         double v0 = CalculateValue(option, parameters, assetPrice, valuationDate);
 

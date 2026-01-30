@@ -8,6 +8,8 @@ public abstract class PricingEngine<TOption, TModel>
     where TOption : Option
     where TModel : IModelParameters
 {
+    protected NumericalShiftParameters ShiftParameters { get; init; } = NumericalShiftParameters.Default;
+
     public double Value(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -22,7 +24,7 @@ public abstract class PricingEngine<TOption, TModel>
 
         TModel model = context.ModelParameters;
         double s = context.AssetPrice;
-        double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
+        double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
         double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
         double vSpotMinus = CalculateValue(option, model, s - ds, context.ValuationDate);
@@ -37,7 +39,7 @@ public abstract class PricingEngine<TOption, TModel>
 
         TModel model = context.ModelParameters;
         double s = context.AssetPrice;
-        double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
+        double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
         double v0 = CalculateValue(option, model, s, context.ValuationDate);
         double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
@@ -53,7 +55,7 @@ public abstract class PricingEngine<TOption, TModel>
 
         TModel model = context.ModelParameters;
         double s = context.AssetPrice;
-        double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
+        double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
         double v0 = CalculateValue(option, model, s, context.ValuationDate);
         double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
@@ -87,7 +89,7 @@ public abstract class PricingEngine<TOption, TModel>
         TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
-        double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
+        double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
         double vSpotPlus = CalculateValue(option, model, s + ds, t);
         double vSpotMinus = CalculateValue(option, model, s - ds, t);
@@ -107,7 +109,7 @@ public abstract class PricingEngine<TOption, TModel>
         TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
-        double ds = s * NumericalApproximationParameters.AssetPriceShiftFactor;
+        double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
         double v0 = CalculateValue(option, model, s, t);
         double vSpotPlus = CalculateValue(option, model, s + ds, t);
