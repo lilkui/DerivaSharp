@@ -50,4 +50,17 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
             }
         }
     }
+
+    protected void MapKnockInSteps(ReadOnlySpan<double> observationTimes, Span<bool> stepFlags, double tMax)
+    {
+        stepFlags.Clear();
+        double dt = tMax / TimeStepCount;
+
+        foreach (double tObs in observationTimes)
+        {
+            int step = (int)Math.Round(tObs / dt);
+            step = Math.Clamp(step, 0, TimeStepCount);
+            stepFlags[step] = true;
+        }
+    }
 }

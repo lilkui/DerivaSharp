@@ -1,6 +1,7 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -9,6 +10,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
+    private readonly bool[] _stepToKnockInObservation = new bool[timeStepCount + 1];
     private bool _isSolvingKnockedIn;
     private bool _hasDailyKnockIn;
     private double[]? _observationTimes;
@@ -134,7 +136,8 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             }
         }
 
-        ApplyKnockInSubstitution(i, option.KnockInPrice, !_isSolvingKnockedIn && _hasDailyKnockIn, _knockedInValues);
+        bool applyKnockIn = !_isSolvingKnockedIn && _hasDailyKnockIn && _stepToKnockInObservation[i];
+        ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
     private void InitializeParameters(PhoenixOption option, PricingContext<BsmModelParameters> context)
@@ -166,5 +169,21 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
         double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
         MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
+
+        if (_hasDailyKnockIn)
+        {
+            DateOnly[] tradingDays = DateUtils.GetTradingDays(valDate, option.ExpirationDate).ToArray();
+            double[] tradingTimes = new double[tradingDays.Length];
+            for (int i = 0; i < tradingDays.Length; i++)
+            {
+                tradingTimes[i] = (tradingDays[i].DayNumber - valDate.DayNumber) / 365.0;
+            }
+
+            MapKnockInSteps(tradingTimes, _stepToKnockInObservation, tMax);
+        }
+        else
+        {
+            Array.Clear(_stepToKnockInObservation);
+        }
     }
 }

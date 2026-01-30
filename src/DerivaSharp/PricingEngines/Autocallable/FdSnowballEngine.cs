@@ -1,5 +1,6 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -29,6 +30,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 {
     private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
     private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
+    private readonly bool[] _stepToKnockInObservation = new bool[timeStepCount + 1];
     private bool _isSolvingKnockedIn;
     private double[]? _observationTimes;
     private double[]? _observationPrices;
@@ -115,7 +117,8 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             }
             else
             {
-                ValueMatrixSpan[i, PriceStepCount] = _maturityPayoff * df;
+                double terminalPayoff = _isSolvingKnockedIn ? 0.0 : _maturityPayoff;
+                ValueMatrixSpan[i, PriceStepCount] = terminalPayoff * df;
             }
         }
     }
@@ -137,7 +140,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             }
         }
 
-        bool applyKnockIn = !_isSolvingKnockedIn && option.KnockInObservationFrequency == ObservationFrequency.Daily;
+        bool applyKnockIn = !_isSolvingKnockedIn
+                            && option.KnockInObservationFrequency == ObservationFrequency.Daily
+                            && _stepToKnockInObservation[i];
         ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
@@ -169,5 +174,21 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
         double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
         MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
+
+        if (option.KnockInObservationFrequency == ObservationFrequency.Daily)
+        {
+            DateOnly[] tradingDays = DateUtils.GetTradingDays(valDate, option.ExpirationDate).ToArray();
+            double[] tradingTimes = new double[tradingDays.Length];
+            for (int i = 0; i < tradingDays.Length; i++)
+            {
+                tradingTimes[i] = (tradingDays[i].DayNumber - valDate.DayNumber) / 365.0;
+            }
+
+            MapKnockInSteps(tradingTimes, _stepToKnockInObservation, tMax);
+        }
+        else
+        {
+            Array.Clear(_stepToKnockInObservation);
+        }
     }
 }
