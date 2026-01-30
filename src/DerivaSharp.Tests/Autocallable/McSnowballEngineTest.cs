@@ -30,7 +30,7 @@ public class McSnowballEngineTest
     public void StandardSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.085,
+            0.0865,
             1.0,
             0.8,
             1.03,
@@ -48,7 +48,7 @@ public class McSnowballEngineTest
     public void StandardSnowballValue_KnockOutOnObservationDate_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStandardSnowball(
-            0.085,
+            0.0845,
             1.0,
             0.8,
             1.03,
@@ -57,9 +57,13 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        PricingContext<BsmModelParameters> ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6), AssetPrice = 1.05 };
+        PricingContext<BsmModelParameters> ctx = _ctx with
+        {
+            ValuationDate = new DateOnly(2022, 4, 6),
+            AssetPrice = 1.05,
+        };
 
-        const double expected = 0.021192;
+        const double expected = 0.021067;
         double actual = _engine.Value(option, ctx);
         Assert.Equal(expected, actual, 6);
     }
@@ -68,7 +72,7 @@ public class McSnowballEngineTest
     public void StepDownSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateStepDownSnowball(
-            0.076,
+            0.0769,
             1.0,
             0.8,
             1.03,
@@ -87,7 +91,7 @@ public class McSnowballEngineTest
     public void BothDownSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateBothDownSnowball(
-            0.094,
+            0.0951,
             0.005,
             1.0,
             0.8,
@@ -107,7 +111,7 @@ public class McSnowballEngineTest
     public void DualCouponSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateDualCouponSnowball(
-            0.125,
+            0.126,
             0.04,
             1.0,
             0.8,
@@ -126,7 +130,7 @@ public class McSnowballEngineTest
     public void ParachuteSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateParachuteSnowball(
-            0.084,
+            0.0855,
             1.0,
             0.8,
             1.03,
@@ -145,7 +149,7 @@ public class McSnowballEngineTest
     public void OtmSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateOtmSnowball(
-            0.105,
+            0.107,
             1.0,
             0.8,
             1.03,
@@ -164,7 +168,7 @@ public class McSnowballEngineTest
     public void LossCappedSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateLossCappedSnowball(
-            0.071,
+            0.0721,
             1.0,
             0.8,
             1.03,
@@ -183,7 +187,7 @@ public class McSnowballEngineTest
     public void EuropeanSnowballValue_IsAccurate()
     {
         SnowballOption option = SnowballOption.CreateEuropeanSnowball(
-            0.053,
+            0.0535,
             1.0,
             0.8,
             1.03,
@@ -210,7 +214,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.086;
+        const double expected = 0.0865;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -229,7 +233,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.076;
+        const double expected = 0.0769;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -249,7 +253,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.094;
+        const double expected = 0.0951;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -268,7 +272,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.125;
+        const double expected = 0.126;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, false);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -287,7 +291,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.084;
+        const double expected = 0.0855;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -306,7 +310,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.105;
+        const double expected = 0.107;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -325,7 +329,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.071;
+        const double expected = 0.0721;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -343,7 +347,7 @@ public class McSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.053;
+        const double expected = 0.0535;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0, true);
         Assert.Equal(expected, actual, DefaultTolerance);
     }

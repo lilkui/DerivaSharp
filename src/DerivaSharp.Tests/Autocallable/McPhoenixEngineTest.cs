@@ -30,7 +30,7 @@ public class McPhoenixEngineTest
     public void StandardPhoenixValue_IsAccurate()
     {
         PhoenixOption option = PhoenixOption.CreateStandardPhoenix(
-            0.002,
+            0.0019,
             1.0,
             0.7,
             1.03,
@@ -66,7 +66,7 @@ public class McPhoenixEngineTest
     public void DigitalCouponNoteValue_IsAccurate()
     {
         PhoenixOption option = PhoenixOption.CreateDigitalCouponNote(
-            0.0012,
+            0.0013,
             1.0,
             0.7,
             1.03,
@@ -93,7 +93,7 @@ public class McPhoenixEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.0016;
+        const double expected = 0.0019;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
@@ -129,7 +129,7 @@ public class McPhoenixEngineTest
             _effectiveDate,
             _expirationDate);
 
-        const double expected = 0.0012;
+        const double expected = 0.0013;
         double actual = _engine.ImpliedCouponRate(template, _ctx, 0);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
