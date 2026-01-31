@@ -1,6 +1,5 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -13,7 +12,8 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);
         double r = model.RiskFreeRate;
-        double b = r - model.DividendYield;
+        double q = model.DividendYield;
+        double b = r - q;
         double vol = model.Volatility;
         double realizedAverage = option.RealizedAveragePrice;
 
@@ -25,7 +25,7 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
         double averagePeriod = GetYearsBetween(option.AverageStartDate, option.ExpirationDate);
         if (averagePeriod == 0)
         {
-            return GeneralizedBlackScholes(z, assetPrice, strike, tau, r, b, vol);
+            return BsmCalculator.CalculateValue(z, assetPrice, strike, tau, vol, r, q);
         }
 
         double t1 = Max(0, tau - averagePeriod);
@@ -71,7 +71,7 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
             scale = tau / averagePeriod;
         }
 
-        return scale * GeneralizedBlackScholes(z, assetPrice, adjustedStrike, tau, r, bA, vA);
+        return scale * BsmCalculator.CalculateValue(z, assetPrice, adjustedStrike, tau, vA, r, r - bA);
     }
 
     private static double CalculateAverageSecondMoment(double b, double vol, double tau, double t1)
@@ -91,28 +91,6 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
 
         return 2 * Exp(twoBPlusVol2 * tau) / (bPlusVol2 * twoBPlusVol2 * delta2) + 2 * Exp(twoBPlusVol2 * t1) / (b * delta2) * (1 / twoBPlusVol2 - Exp(b * delta) / bPlusVol2);
     }
-
-    private static double GeneralizedBlackScholes(int z, double s, double x, double tau, double r, double b, double vol)
-    {
-        if (tau == 0)
-        {
-            return Max(z * (s - x), 0);
-        }
-
-        if (vol == 0)
-        {
-            double forward = s * Exp(b * tau);
-            return Max(z * (forward - x), 0) * Exp(-r * tau);
-        }
-
-        double sqrtT = Sqrt(tau);
-        double d1 = (Log(s / x) + (b + vol * vol / 2) * tau) / (vol * sqrtT);
-        double d2 = d1 - vol * sqrtT;
-
-        return z * (s * Exp((b - r) * tau) * StdNormCdf(z * d1) - x * Exp(-r * tau) * StdNormCdf(z * d2));
-    }
-
-    private static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
 
     private static double GetYearsBetween(DateOnly startDate, DateOnly endDate) =>
         (endDate.DayNumber - startDate.DayNumber) / 365.0;

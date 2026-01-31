@@ -2,7 +2,6 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -102,7 +101,8 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     {
         double x = option.StrikePrice;
         double k = option.Rebate;
-        double z = (int)option.OptionType;
+        int z = (int)option.OptionType;
+        double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
@@ -131,10 +131,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                         break;
                     case BarrierType.UpAndIn:
                         ValueMatrixSpan[i, 0] = Math.Max(z * (minPrice * dfq - x * dfr), 0);
-                        ValueMatrixSpan[i, ^1] = EuropeanValue(option, parameters, maxPrice, tau);
+                        ValueMatrixSpan[i, ^1] = BsmCalculator.CalculateValue(z, maxPrice, x, tau, vol, r, q);
                         break;
                     case BarrierType.DownAndIn:
-                        ValueMatrixSpan[i, 0] = EuropeanValue(option, parameters, minPrice, tau);
+                        ValueMatrixSpan[i, 0] = BsmCalculator.CalculateValue(z, minPrice, x, tau, vol, r, q);
                         ValueMatrixSpan[i, ^1] = Math.Max(z * (maxPrice * dfq - x * dfr), 0);
                         break;
                     default:
@@ -184,9 +184,14 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
 
         Span<double> currentValues = ValueMatrixSpan.GetRowSpan(i);
+        double x = option.StrikePrice;
         double barrier = option.BarrierPrice;
         double k = option.Rebate;
+        int z = (int)option.OptionType;
         double tau = TimeVector[^1] - TimeVector[i];
+        double vol = parameters.Volatility;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
         double pvRebate = option.RebatePaymentType == PaymentType.PayAtHit ? k : k * Math.Exp(-parameters.RiskFreeRate * tau);
 
         switch (option.BarrierType)
@@ -218,7 +223,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 {
                     if (PriceVector[j] >= barrier)
                     {
-                        currentValues[j] = EuropeanValue(option, parameters, PriceVector[j], tau);
+                        currentValues[j] = BsmCalculator.CalculateValue(z, PriceVector[j], x, tau, vol, r, q);
                     }
                 }
 
@@ -229,7 +234,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 {
                     if (PriceVector[j] <= barrier)
                     {
-                        currentValues[j] = EuropeanValue(option, parameters, PriceVector[j], tau);
+                        currentValues[j] = BsmCalculator.CalculateValue(z, PriceVector[j], x, tau, vol, r, q);
                     }
                 }
 
@@ -239,27 +244,6 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 Debug.Fail(ExceptionMessages.InvalidBarrierType);
                 break;
         }
-    }
-
-    private static double EuropeanValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, double tau)
-    {
-        double x = option.StrikePrice;
-        int z = (int)option.OptionType;
-        double vol = parameters.Volatility;
-        double r = parameters.RiskFreeRate;
-        double q = parameters.DividendYield;
-
-        if (tau == 0)
-        {
-            return Math.Max(z * (assetPrice - x), 0);
-        }
-
-        double d1 = (Math.Log(assetPrice / x) + (r - q + vol * vol / 2) * tau) / (vol * Math.Sqrt(tau));
-        double d2 = d1 - vol * Math.Sqrt(tau);
-
-        return z * (assetPrice * Math.Exp(-q * tau) * StdNormCdf(z * d1) - x * Math.Exp(-r * tau) * StdNormCdf(z * d2));
-
-        static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
     }
 
     private void BuildObservationSchedule(BarrierOption option)

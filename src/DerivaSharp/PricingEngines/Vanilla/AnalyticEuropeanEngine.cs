@@ -1,6 +1,5 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -27,8 +26,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double _) = D1D2(x, s, tau, vol, r, q);
-        return z * Exp(-q * tau) * StdNormCdf(z * d1);
+        (double d1, double _) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return z * Exp(-q * tau) * BsmCalculator.StdNormCdf(z * d1);
     }
 
     public override double Gamma(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -48,8 +47,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double _) = D1D2(x, s, tau, vol, r, q);
-        return Exp(-q * tau) * StdNormPdf(d1) / (s * vol * Sqrt(tau));
+        (double d1, double _) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return Exp(-q * tau) * BsmCalculator.StdNormPdf(d1) / (s * vol * Sqrt(tau));
     }
 
     public override double Speed(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -69,7 +68,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double _) = D1D2(x, s, tau, vol, r, q);
+        (double d1, double _) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
         return -Gamma(option, context) * (1 + d1 / (vol * Sqrt(tau))) / s;
     }
 
@@ -91,9 +90,9 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
-        double theta = -s * Exp(-q * tau) * StdNormPdf(d1) * vol / (2 * Sqrt(tau)) + z * q * s * Exp(-q * tau) * StdNormCdf(z * d1) -
-                       z * r * x * Exp(-r * tau) * StdNormCdf(z * d2);
+        (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        double theta = -s * Exp(-q * tau) * BsmCalculator.StdNormPdf(d1) * vol / (2 * Sqrt(tau)) + z * q * s * Exp(-q * tau) * BsmCalculator.StdNormCdf(z * d1) -
+                       z * r * x * Exp(-r * tau) * BsmCalculator.StdNormCdf(z * d2);
         return theta / 365;
     }
 
@@ -115,8 +114,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
-        return -Exp(-q * tau) * (StdNormPdf(d1) * ((r - q) / (vol * Sqrt(tau)) - 0.5 * d2 / tau) - z * q * StdNormCdf(z * d1)) / 365;
+        (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return -Exp(-q * tau) * (BsmCalculator.StdNormPdf(d1) * ((r - q) / (vol * Sqrt(tau)) - 0.5 * d2 / tau) - z * q * BsmCalculator.StdNormCdf(z * d1)) / 365;
     }
 
     public override double Color(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -136,7 +135,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
+        (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
         return Gamma(option, context) * (q + (r - q) * d1 / (vol * Sqrt(tau)) + (1 - d1 * d2) / (2 * tau)) / 365;
     }
 
@@ -157,8 +156,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double _) = D1D2(x, s, tau, vol, r, q);
-        return s * Exp(-q * tau) * StdNormPdf(d1) * Sqrt(tau) / 100;
+        (double d1, double _) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return s * Exp(-q * tau) * BsmCalculator.StdNormPdf(d1) * Sqrt(tau) / 100;
     }
 
     public override double Vanna(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -178,8 +177,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
-        return -Exp(-q * tau) * d2 / vol * StdNormPdf(d1) / 100;
+        (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return -Exp(-q * tau) * d2 / vol * BsmCalculator.StdNormPdf(d1) / 100;
     }
 
     public override double Zomma(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -199,7 +198,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
+        (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
         return Gamma(option, context) * (d1 * d2 - 1) / vol / 100;
     }
 
@@ -221,8 +220,8 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        (double _, double d2) = D1D2(x, s, tau, vol, r, q);
-        return z * tau * x * Exp(-r * tau) * StdNormCdf(z * d2) / 100;
+        (double _, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
+        return z * tau * x * Exp(-r * tau) * BsmCalculator.StdNormCdf(z * d2) / 100;
     }
 
     public override PricingResult ValueAndGreeks(EuropeanOption option, PricingContext<BsmModelParameters> context)
@@ -252,14 +251,14 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         }
         else
         {
-            (double d1, double d2) = D1D2(x, s, tau, vol, r, q);
+            (double d1, double d2) = BsmCalculator.D1D2(s, x, tau, vol, r, q);
 
             double sqrtT = Sqrt(tau);
             double expQt = Exp(-q * tau);
             double expRt = Exp(-r * tau);
-            double nd1 = StdNormPdf(d1);
-            double nzd1 = StdNormCdf(z * d1);
-            double nzd2 = StdNormCdf(z * d2);
+            double nd1 = BsmCalculator.StdNormPdf(d1);
+            double nzd1 = BsmCalculator.StdNormCdf(z * d1);
+            double nzd2 = BsmCalculator.StdNormCdf(z * d2);
 
             value = z * (s * expQt * nzd1 - x * expRt * nzd2);
             delta = z * expQt * nzd1;
@@ -302,24 +301,6 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        if (tau == 0)
-        {
-            return Max(z * (assetPrice - x), 0);
-        }
-
-        (double d1, double d2) = D1D2(x, assetPrice, tau, vol, r, q);
-        return z * (assetPrice * Exp(-q * tau) * StdNormCdf(z * d1) - x * Exp(-r * tau) * StdNormCdf(z * d2));
-    }
-
-    private static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
-
-    private static double StdNormPdf(double x) => Normal.PDF(0, 1, x);
-
-    private static (double D1, double D2) D1D2(double x, double s, double tau, double vol, double r, double q)
-    {
-        double d1 = (Log(s / x) + (r - q + vol * vol / 2) * tau) / (vol * Sqrt(tau));
-        double d2 = d1 - vol * Sqrt(tau);
-
-        return (d1, d2);
+        return BsmCalculator.CalculateValue(z, assetPrice, x, tau, vol, r, q);
     }
 }
