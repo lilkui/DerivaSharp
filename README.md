@@ -63,15 +63,14 @@ dotnet publish -c Release -r win-x64
 
 ## Supported Instruments and Pricing Algorithms
 
-| Instrument | Pricing Algorithms |
-| :--- | :--- |
-| **Vanilla European Option** | Analytical, Finite Difference, Monte Carlo, Binomial Tree, Numerical Integration |
-| **Vanilla American Option** | Bjerksund-Stensland Approximation, Finite Difference, Monte Carlo (Longstaff-Schwartz), Binomial Tree |
-| **Barrier Option** | Analytical, Finite Difference |
-| **Digital Option** | Analytical, Finite Difference, Numerical Integration |
-| **Binary Barrier Option** | Analytical |
-| **Autocallable Note (Snowball, Phoenix)** | Finite Difference, Monte Carlo |
-| **Accumulator** | Finite Difference, Monte Carlo |
+| Instrument Category | Sub-category | Pricing Algorithms |
+| :--- | :--- | :--- |
+| **Vanilla Option** | European, American | Analytical, Finite Difference, Monte Carlo, Binomial Tree, Numerical Integration |
+| **Barrier Option** | Standard | Analytical, Finite Difference |
+| **Digital Option** | Cash-or-Nothing, Asset-or-Nothing, Binary Barrier | Analytical, Finite Difference, Numerical Integration |
+| **Asian Option** | Geometric Average, Arithmetic Average | Analytical |
+| **Autocallable Note** | Snowball, Phoenix, FCN, DCN | Finite Difference, Monte Carlo |
+| **Accumulator** | KODA | Finite Difference, Monte Carlo |
 
 ## Performance Benchmarks
 
