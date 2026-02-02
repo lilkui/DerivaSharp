@@ -16,7 +16,7 @@ public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             return Max(sgn * (assetPrice - x), 0);
         }

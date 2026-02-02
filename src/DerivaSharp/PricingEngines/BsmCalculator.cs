@@ -7,7 +7,7 @@ internal static class BsmCalculator
 {
     public static double CalculateValue(int z, double spot, double strike, double tau, double vol, double r, double q)
     {
-        if (tau == 0)
+        if (tau <= 0)
         {
             return Max(z * (spot - strike), 0);
         }

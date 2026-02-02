@@ -16,7 +16,7 @@ public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             bool inTheMoney = z > 0 ? assetPrice > x : assetPrice < x;
             return option switch

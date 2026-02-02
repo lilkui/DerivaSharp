@@ -245,7 +245,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double value;
         double delta = 0, gamma = 0, speed = 0, theta = 0, charm = 0, color = 0, vega = 0, vanna = 0, zomma = 0, rho = 0;
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             value = Max(z * (s - x), 0);
         }

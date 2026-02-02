@@ -17,13 +17,13 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
         double vol = model.Volatility;
         double realizedAverage = option.RealizedAveragePrice;
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             return Max(z * (realizedAverage - strike), 0);
         }
 
         double averagePeriod = GetYearsBetween(option.AverageStartDate, option.ExpirationDate);
-        if (averagePeriod == 0)
+        if (averagePeriod <= 0)
         {
             return BsmCalculator.CalculateValue(z, assetPrice, strike, tau, vol, r, q);
         }

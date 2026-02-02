@@ -23,7 +23,7 @@ public sealed class AnalyticBarrierEngine : BsmPricingEngine<BarrierOption>
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             double intrinsic = Max(sgn * (s - x), 0);
             return option.BarrierType switch

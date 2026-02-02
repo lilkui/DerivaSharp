@@ -26,7 +26,7 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         double s0 = assetPrice;
         double tau = GetYearsToExpiration(option, valuationDate);
 
-        if (tau == 0)
+        if (tau <= 0)
         {
             return Math.Max(z * (s0 - x), 0);
         }
