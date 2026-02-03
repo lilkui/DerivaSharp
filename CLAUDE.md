@@ -9,13 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 dotnet build DerivaSharp.slnx
 
 # Run all tests
-dotnet test src/DerivaSharp.Tests/DerivaSharp.Tests.csproj
+dotnet test tests/DerivaSharp.Tests.csproj
 
 # Run a single test by name
-dotnet test src/DerivaSharp.Tests/DerivaSharp.Tests.csproj --filter "FullyQualifiedName~TestMethodName"
+dotnet test tests/DerivaSharp.Tests.csproj --filter "FullyQualifiedName~TestMethodName"
 
 # Run benchmarks
-dotnet run --project src/DerivaSharp.Benchmarks/DerivaSharp.Benchmarks.csproj -c Release
+dotnet run --project benchmarks/DerivaSharp.Benchmarks.csproj -c Release
 
 # Publish for notebooks (platform-specific)
 dotnet publish -c Release -r win-x64
