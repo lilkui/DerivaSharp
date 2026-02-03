@@ -2,7 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
-  <Project Path="src/DerivaSharp/DerivaSharp.csproj" />
-  <Project Path="src/DerivaSharp.Tests/DerivaSharp.Tests.csproj" />
-  <Project Path="src/DerivaSharp.Benchmarks/DerivaSharp.Benchmarks.csproj" />
+  <Project Path="src/DerivaSharp.csproj" />
+  <Project Path="tests/DerivaSharp.Tests.csproj" />
+  <Project Path="benchmarks/DerivaSharp.Benchmarks.csproj" />
 </Solution>

@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DerivaSharp\DerivaSharp.csproj" />
+    <ProjectReference Include="..\src\DerivaSharp.csproj" />
   </ItemGroup>
 
 </Project>
