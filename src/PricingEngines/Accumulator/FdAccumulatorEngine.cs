@@ -257,9 +257,24 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         protected override void SetBoundaryConditions(Accumulator option, BsmModelParameters parameters)
         {
+            ReadOnlySpan2D<double> unitValueMatrix = new(unitValues, TimeStepCount + 1, PriceStepCount + 1);
+            double acceleratedDailyQuantity = _dailyQuantity * _accelerationFactor;
+            double r = parameters.RiskFreeRate;
+
             for (int i = 0; i < TimeVector.Length - 1; i++)
             {
-                ValueMatrixSpan[i, 0] = 0.0;
+                double lowerBoundaryValue = 0.0;
+                for (int k = i + 1; k <= TimeStepCount; k++)
+                {
+                    if (_stepToObservationIndex[k] != -1)
+                    {
+                        double tau = TimeVector[k] - TimeVector[i];
+                        double df = Math.Exp(-r * tau);
+                        lowerBoundaryValue += df * acceleratedDailyQuantity * unitValueMatrix[k, 0];
+                    }
+                }
+
+                ValueMatrixSpan[i, 0] = lowerBoundaryValue;
                 ValueMatrixSpan[i, ^1] = 0.0;
             }
         }
