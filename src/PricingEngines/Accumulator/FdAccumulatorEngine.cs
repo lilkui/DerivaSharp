@@ -102,22 +102,11 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         return option.AccumulatedQuantity * unitValue + futureAccrualValue;
     }
 
-    private static void BuildObservationSteps(DateOnly valuationDate, DateOnly expirationDate, Span<int> stepToObservationIndex, int timeStepCount)
+    private static (double[] ObservationTimes, double TMax) BuildObservationTimes(DateOnly valuationDate, DateOnly expirationDate)
     {
-        stepToObservationIndex.Fill(-1);
-
-        if (timeStepCount <= 0)
-        {
-            return;
-        }
-
         DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
-        if (tradingDays.Length == 0)
-        {
-            return;
-        }
-
         double[] observationTimes = new double[tradingDays.Length];
+
         int t0 = valuationDate.DayNumber;
         for (int i = 0; i < tradingDays.Length; i++)
         {
@@ -125,17 +114,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         }
 
         double tMax = (expirationDate.DayNumber - t0) / 365.0;
-        double dt = tMax / timeStepCount;
-
-        for (int k = 0; k < observationTimes.Length; k++)
-        {
-            double tObs = observationTimes[k];
-            int step = (int)Math.Round(tObs / dt);
-            if (step >= 0 && step <= timeStepCount && Math.Abs(step * dt - tObs) < dt / 2.0)
-            {
-                stepToObservationIndex[step] = k;
-            }
-        }
+        return (observationTimes, tMax);
     }
 
     private sealed class AccumulatorUnitValueEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
@@ -170,7 +149,8 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
             base.InitializeCoefficients(option, parameters, valuationDate);
 
-            BuildObservationSteps(valuationDate, option.ExpirationDate, _stepToObservationIndex, TimeStepCount);
+            (double[] observationTimes, double tMax) = BuildObservationTimes(valuationDate, option.ExpirationDate);
+            MapObservationSteps(observationTimes, _stepToObservationIndex, tMax);
         }
 
         protected override void SetTerminalCondition(Accumulator option)
@@ -244,7 +224,8 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
             base.InitializeCoefficients(option, parameters, valuationDate);
 
-            BuildObservationSteps(valuationDate, option.ExpirationDate, _stepToObservationIndex, TimeStepCount);
+            (double[] observationTimes, double tMax) = BuildObservationTimes(valuationDate, option.ExpirationDate);
+            MapObservationSteps(observationTimes, _stepToObservationIndex, tMax);
         }
 
         protected override void SetTerminalCondition(Accumulator option)
