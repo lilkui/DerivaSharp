@@ -1,35 +1,27 @@
-# DerivaSharp Copilot Instructions
+# Copilot instructions for DerivaSharp
 
 ## Big picture
 
-- DerivaSharp is a .NET 10 pricing library: instruments are immutable `sealed record` types in [src/Instruments](src/Instruments), models in [src/Models](src/Models), and engines in [src/PricingEngines](src/PricingEngines).
-- Pricing engines follow a template method pattern: base `PricingEngine<TOption, TModel>` validates inputs, calls `CalculateValue()`, and computes Greeks via finite differences; BSM-specific engines extend `BsmPricingEngine<TOption>` (see [src/PricingEngines](src/PricingEngines)).
-- Engine families: analytic formulas in `BsmCalculator`; finite-difference engines share `BsmFiniteDifferenceEngine<TOption>`; Monte Carlo engines use TorchSharp tensors with `RandomNumberSource` and `PathGenerator`.
+- Core library lives in [src/](src/) with domain types in [src/Instruments/](src/Instruments/), models in [src/Models/](src/Models/), and pricing engines in [src/PricingEngines/](src/PricingEngines/).
+- Pricing engines share a common workflow: `PricingEngine<TOption, TModel>` handles argument validation + numerical Greeks, while concrete engines implement `CalculateValue(...)` (see [src/PricingEngines/PricingEngine.cs](src/PricingEngines/PricingEngine.cs)).
+- BSM-specific engines extend `BsmPricingEngine<TOption>` for extra Greeks and implied vol (see [src/PricingEngines/BsmPricingEngine.cs](src/PricingEngines/BsmPricingEngine.cs)).
+- Finite-difference engines extend `BsmFiniteDifferenceEngine<TOption>` and use `TridiagonalMatrix` and `LinearInterpolation` for PDE stepping and pricing interpolation (see [src/PricingEngines/BsmFiniteDifferenceEngine.cs](src/PricingEngines/BsmFiniteDifferenceEngine.cs), [src/Numerics/TridiagonalMatrix.cs](src/Numerics/TridiagonalMatrix.cs), [src/Numerics/LinearInterpolation.cs](src/Numerics/LinearInterpolation.cs)).
+- Monte Carlo path generation uses TorchSharp tensors with optional CUDA; random numbers are antithetic via `RandomNumberSource` (see [src/PricingEngines/PathGenerator.cs](src/PricingEngines/PathGenerator.cs), [src/PricingEngines/RandomNumberSource.cs](src/PricingEngines/RandomNumberSource.cs), [src/PricingEngines/TorchUtils.cs](src/PricingEngines/TorchUtils.cs)).
 
-## Core data flow (example)
+## Conventions and patterns
 
-- Create an instrument → create model parameters (`BsmModelParameters`) → create `PricingContext<TModel>` → call `engine.Value()`/`engine.Delta()` (see example in [README.md](README.md)).
+- Domain entities are immutable `record`/`record struct` types and often use `DateOnly` for valuation/expiry (examples in [src/Instruments/Option.cs](src/Instruments/Option.cs) and [src/Models/BsmModelParameters.cs](src/Models/BsmModelParameters.cs)).
+- `OptionType` encodes sign (`Call = 1`, `Put = -1`) and is used directly in formulas (see [src/Instruments/OptionType.cs](src/Instruments/OptionType.cs) and [src/PricingEngines/BsmCalculator.cs](src/PricingEngines/BsmCalculator.cs)).
+- Guard clauses use `CommunityToolkit.Diagnostics.Guard` and errors are centralized in `ExceptionMessages` (see [src/Instruments/Option.cs](src/Instruments/Option.cs) and [src/ExceptionMessages.cs](src/ExceptionMessages.cs)).
+- Pricing APIs typically accept `PricingContext<TModel>` which bundles model params, asset price, and valuation date (see [src/PricingEngines/PricingContext.cs](src/PricingEngines/PricingContext.cs)).
 
-## Conventions to follow
+## Build, test, notebooks
 
-- Use `DateOnly` for all valuation/effective/expiration dates; year fractions are $\text{dayCount}/365.0$ (see `GetYearsToExpiration` in `PricingEngine`).
-- Observation intervals for barriers are expressed in years (days/365.0), not days.
-- Constructor validation uses `Guard`/`ThrowHelper` from CommunityToolkit.Diagnostics.
-- Instruments remain immutable; add new instruments as `sealed record` types under [src/Instruments](src/Instruments).
+- Target framework is .NET 10; StyleCop analyzers are enforced via [Directory.Build.props](Directory.Build.props) and package references in [src/DerivaSharp.csproj](src/DerivaSharp.csproj).
+- Run unit tests with `dotnet test` on [tests/DerivaSharp.Tests.csproj](tests/DerivaSharp.Tests.csproj); tests use xUnit with shared test data classes (example: [tests/Vanilla/AnalyticEuropeanEngineTest.cs](tests/Vanilla/AnalyticEuropeanEngineTest.cs)).
+- Notebooks under [notebooks/](notebooks/) use Python.NET; build the library before running them (README shows `dotnet publish -c Release -r win-x64`) in [README.md](README.md).
 
-## Engine implementation notes
+## External dependencies and integration points
 
-- Finite-difference engines: override `MinPrice`/`MaxPrice`, terminal and boundary conditions, and PDE step logic in `BsmFiniteDifferenceEngine<TOption>`.
-- Monte Carlo: select device with `TorchUtils.GetDevice(useCuda: true)` and scope tensors with `torch.NewDisposeScope()`.
-
-## Tests and workflows
-
-- Build: dotnet build DerivaSharp.slnx
-- Tests: dotnet test tests/DerivaSharp.Tests.csproj (filter with FullyQualifiedName)
-- Benchmarks: dotnet run --project benchmarks/DerivaSharp.Benchmarks.csproj -c Release
-- Notebooks require a publish build: dotnet publish -c Release -r win-x64 (see [notebooks](notebooks)).
-- Tests are organized by instrument category under [tests](tests) with per-instrument *TestData.cs and `[MemberData]`.
-
-## External dependencies
-
-- MathNet.Numerics (distributions, root finding), TorchSharp + libtorch-cuda (Monte Carlo/GPU), CommunityToolkit.Diagnostics/HighPerformance (validation, `Span2D`).
+- Math primitives use MathNet.Numerics (BSM calculators, root finding), TorchSharp for GPU-accelerated Monte Carlo, and CommunityToolkit for diagnostics/high-performance spans (see [src/DerivaSharp.csproj](src/DerivaSharp.csproj)).
+- CUDA-enabled builds rely on platform-specific libtorch packages; check for GPU availability using `TorchUtils.GetDevice(...)` (see [src/PricingEngines/TorchUtils.cs](src/PricingEngines/TorchUtils.cs)).
