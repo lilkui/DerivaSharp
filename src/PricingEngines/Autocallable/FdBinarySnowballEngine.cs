@@ -8,7 +8,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {
-    private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
+    private int[] _stepToObservationIndex = [];
     private double[]? _observationTimes;
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
@@ -46,8 +46,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
             return 0.0;
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
-        InitializeParameters(option, context);
+        InitializeParameters(option, valuationDate);
 
         return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
@@ -111,9 +110,25 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         }
     }
 
-    private void InitializeParameters(BinarySnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override void InitializeCoefficients(BinarySnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        DateOnly valDate = context.ValuationDate;
+        if (_observationTimes is null)
+        {
+            InitializeParameters(option, valuationDate);
+        }
+
+        base.InitializeCoefficients(option, parameters, valuationDate);
+
+        if (_stepToObservationIndex.Length != TimeStepCount + 1)
+        {
+            _stepToObservationIndex = new int[TimeStepCount + 1];
+        }
+
+        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
+    }
+
+    private void InitializeParameters(BinarySnowballOption option, DateOnly valuationDate)
+    {
         DateOnly effDate = option.EffectiveDate;
         DateOnly[] obsDates = option.KnockOutObservationDates;
         int n = obsDates.Length;
@@ -125,7 +140,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
 
         for (int i = 0; i < n; i++)
         {
-            _observationTimes[i] = (obsDates[i].DayNumber - valDate.DayNumber) / 365.0;
+            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
             _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
         }
 
@@ -136,7 +151,6 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
         MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
 
-        double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
-        MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
+        SetEventTimes(_observationTimes);
     }
 }

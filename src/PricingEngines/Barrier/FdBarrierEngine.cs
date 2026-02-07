@@ -9,6 +9,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     : BsmFiniteDifferenceEngine<BarrierOption>(scheme, priceStepCount, timeStepCount)
 {
     private bool[]? _isObservationTime;
+    private double[]? _observationTimes;
 
     protected override double CalculateValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
@@ -63,11 +64,23 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
         }
 
+        if (option.ObservationInterval > 0)
+        {
+            double tau = GetYearsToExpiration(option, valuationDate);
+            _observationTimes = BuildObservationTimes(tau, option.ObservationInterval);
+            SetEventTimes(_observationTimes);
+        }
+        else
+        {
+            _observationTimes = null;
+            SetEventTimes(ReadOnlySpan<double>.Empty);
+        }
+
         base.InitializeCoefficients(option, parameters, valuationDate);
 
         if (option.ObservationInterval > 0)
         {
-            BuildObservationSchedule(option);
+            BuildObservationSchedule();
         }
         else
         {
@@ -246,27 +259,38 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private void BuildObservationSchedule(BarrierOption option)
+    private static double[] BuildObservationTimes(double tau, double interval)
     {
-        double interval = option.ObservationInterval;
         Debug.Assert(interval > 0);
+
+        double tol = Math.Max(1e-12, tau * 1e-12);
+        int maxObs = (int)Math.Floor((tau + tol) / interval);
+        List<double> times = new(maxObs + 1);
+
+        for (int obs = 1; obs <= maxObs; obs++)
+        {
+            times.Add(obs * interval);
+        }
+
+        if (times.Count == 0 || Math.Abs(times[^1] - tau) > tol)
+        {
+            times.Add(tau);
+        }
+
+        return times.ToArray();
+    }
+
+    private void BuildObservationSchedule()
+    {
+        Debug.Assert(_observationTimes is not null);
 
         int nTimes = TimeVector.Length;
         Debug.Assert(nTimes >= 2);
 
-        _isObservationTime = new bool[nTimes];
+        _isObservationTime = _isObservationTime is { Length: var length } && length == nTimes
+            ? _isObservationTime
+            : new bool[nTimes];
 
-        double tau = TimeVector[^1];
-        double dt = TimeVector[1] - TimeVector[0];
-
-        int maxObs = (int)Math.Floor((tau + 1e-12) / interval);
-        for (int obs = 1; obs <= maxObs; obs++)
-        {
-            int gridIndex = (int)Math.Round(obs * interval / dt);
-            gridIndex = Math.Clamp(gridIndex, 0, nTimes - 1);
-            _isObservationTime[gridIndex] = true;
-        }
-
-        _isObservationTime[^1] = true;
+        MapObservationFlags(_observationTimes, _isObservationTime);
     }
 }

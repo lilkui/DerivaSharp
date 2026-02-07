@@ -37,7 +37,7 @@ public class FdTernarySnowballEngineTest
             BarrierTouchStatus.NoTouch,
             _effectiveDate,
             _expirationDate);
-        const double expected = 0.02;
+        const double expected = 0.0201;
         double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }

@@ -8,12 +8,13 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {
-    private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
-    private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
-    private readonly bool[] _stepToKnockInObservation = new bool[timeStepCount + 1];
+    private double[] _knockedInValues = [];
+    private int[] _stepToObservationIndex = [];
+    private bool[] _stepToKnockInObservation = [];
     private bool _isSolvingKnockedIn;
     private bool _hasDailyKnockIn;
     private double[]? _observationTimes;
+    private double[]? _knockInTimes;
     private double[]? _observationPrices;
     private double[]? _couponBarriers;
     private double _couponAmount;
@@ -26,8 +27,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             return 0.0;
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
-        InitializeParameters(option, context);
+        InitializeParameters(option, valuationDate);
 
         if (!_hasDailyKnockIn)
         {
@@ -140,9 +140,45 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
-    private void InitializeParameters(PhoenixOption option, PricingContext<BsmModelParameters> context)
+    protected override void InitializeCoefficients(PhoenixOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        DateOnly valDate = context.ValuationDate;
+        if (_observationTimes is null)
+        {
+            InitializeParameters(option, valuationDate);
+        }
+
+        base.InitializeCoefficients(option, parameters, valuationDate);
+
+        if (_stepToObservationIndex.Length != TimeStepCount + 1)
+        {
+            _stepToObservationIndex = new int[TimeStepCount + 1];
+        }
+
+        if (_stepToKnockInObservation.Length != TimeStepCount + 1)
+        {
+            _stepToKnockInObservation = new bool[TimeStepCount + 1];
+        }
+
+        int requiredKnockedInValues = (TimeStepCount + 1) * (PriceStepCount + 1);
+        if (_knockedInValues.Length != requiredKnockedInValues)
+        {
+            _knockedInValues = new double[requiredKnockedInValues];
+        }
+
+        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
+
+        if (_hasDailyKnockIn && _knockInTimes is not null)
+        {
+            MapObservationFlags(_knockInTimes, _stepToKnockInObservation);
+        }
+        else
+        {
+            Array.Clear(_stepToKnockInObservation);
+        }
+    }
+
+    private void InitializeParameters(PhoenixOption option, DateOnly valuationDate)
+    {
         DateOnly[] obsDates = option.KnockOutObservationDates;
         int n = obsDates.Length;
 
@@ -158,7 +194,21 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
         for (int i = 0; i < n; i++)
         {
-            _observationTimes[i] = (obsDates[i].DayNumber - valDate.DayNumber) / 365.0;
+            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
+        }
+
+        if (_hasDailyKnockIn)
+        {
+            DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
+            _knockInTimes = new double[tradingDays.Length];
+            for (int i = 0; i < tradingDays.Length; i++)
+            {
+                _knockInTimes[i] = (tradingDays[i].DayNumber - valuationDate.DayNumber) / 365.0;
+            }
+        }
+        else
+        {
+            _knockInTimes = null;
         }
 
         _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
@@ -167,23 +217,9 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         double maxBarrier = Math.Max(option.InitialPrice, Math.Max(_observationPrices.Max(), _couponBarriers.Max()));
         MaxPrice = maxBarrier * 4.0;
 
-        double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
-        MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
-
-        if (_hasDailyKnockIn)
-        {
-            DateOnly[] tradingDays = DateUtils.GetTradingDays(valDate, option.ExpirationDate).ToArray();
-            double[] tradingTimes = new double[tradingDays.Length];
-            for (int i = 0; i < tradingDays.Length; i++)
-            {
-                tradingTimes[i] = (tradingDays[i].DayNumber - valDate.DayNumber) / 365.0;
-            }
-
-            MapKnockInSteps(tradingTimes, _stepToKnockInObservation, tMax);
-        }
-        else
-        {
-            Array.Clear(_stepToKnockInObservation);
-        }
+        double[] events = _hasDailyKnockIn && _knockInTimes is not null
+            ? MergeEventTimes(_observationTimes, _knockInTimes)
+            : _observationTimes;
+        SetEventTimes(events);
     }
 }

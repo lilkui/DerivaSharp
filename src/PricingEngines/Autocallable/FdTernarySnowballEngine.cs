@@ -1,15 +1,18 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
 public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<TernarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {
-    private readonly double[] _knockedInValues = new double[(timeStepCount + 1) * (priceStepCount + 1)];
-    private readonly int[] _stepToObservationIndex = new int[timeStepCount + 1];
+    private double[] _knockedInValues = [];
+    private int[] _stepToObservationIndex = [];
+    private bool[] _stepToKnockInObservation = [];
     private bool _isSolvingKnockedIn;
     private double[]? _observationTimes;
+    private double[]? _knockInTimes;
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
@@ -23,8 +26,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
             return 0.0;
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
-        InitializeParameters(option, context);
+        InitializeParameters(option, valuationDate);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
@@ -111,13 +113,51 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
             }
         }
 
-        bool applyKnockIn = !_isSolvingKnockedIn && option.KnockInObservationFrequency == ObservationFrequency.Daily;
+        bool applyKnockIn = !_isSolvingKnockedIn
+                            && option.KnockInObservationFrequency == ObservationFrequency.Daily
+                            && _stepToKnockInObservation[i];
         ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
-    private void InitializeParameters(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override void InitializeCoefficients(TernarySnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        DateOnly valDate = context.ValuationDate;
+        if (_observationTimes is null)
+        {
+            InitializeParameters(option, valuationDate);
+        }
+
+        base.InitializeCoefficients(option, parameters, valuationDate);
+
+        if (_stepToObservationIndex.Length != TimeStepCount + 1)
+        {
+            _stepToObservationIndex = new int[TimeStepCount + 1];
+        }
+
+        if (_stepToKnockInObservation.Length != TimeStepCount + 1)
+        {
+            _stepToKnockInObservation = new bool[TimeStepCount + 1];
+        }
+
+        int requiredKnockedInValues = (TimeStepCount + 1) * (PriceStepCount + 1);
+        if (_knockedInValues.Length != requiredKnockedInValues)
+        {
+            _knockedInValues = new double[requiredKnockedInValues];
+        }
+
+        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
+
+        if (option.KnockInObservationFrequency == ObservationFrequency.Daily && _knockInTimes is not null)
+        {
+            MapObservationFlags(_knockInTimes, _stepToKnockInObservation);
+        }
+        else
+        {
+            Array.Clear(_stepToKnockInObservation);
+        }
+    }
+
+    private void InitializeParameters(TernarySnowballOption option, DateOnly valuationDate)
+    {
         DateOnly effDate = option.EffectiveDate;
         DateOnly[] obsDates = option.KnockOutObservationDates;
         int n = obsDates.Length;
@@ -129,7 +169,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
 
         for (int i = 0; i < n; i++)
         {
-            _observationTimes[i] = (obsDates[i].DayNumber - valDate.DayNumber) / 365.0;
+            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
             _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
         }
 
@@ -141,7 +181,23 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
         MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
 
-        double tMax = (option.ExpirationDate.DayNumber - valDate.DayNumber) / 365.0;
-        MapObservationSteps(_observationTimes, _stepToObservationIndex, tMax);
+        if (option.KnockInObservationFrequency == ObservationFrequency.Daily)
+        {
+            DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
+            _knockInTimes = new double[tradingDays.Length];
+            for (int i = 0; i < tradingDays.Length; i++)
+            {
+                _knockInTimes[i] = (tradingDays[i].DayNumber - valuationDate.DayNumber) / 365.0;
+            }
+        }
+        else
+        {
+            _knockInTimes = null;
+        }
+
+        double[] events = option.KnockInObservationFrequency == ObservationFrequency.Daily && _knockInTimes is not null
+            ? MergeEventTimes(_observationTimes, _knockInTimes)
+            : _observationTimes;
+        SetEventTimes(events);
     }
 }

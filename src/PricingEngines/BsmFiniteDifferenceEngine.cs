@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
@@ -11,6 +10,7 @@ namespace DerivaSharp.PricingEngines;
 public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOption>
     where TOption : Option
 {
+    private readonly int _targetTimeStepCount;
     private readonly double[] _lower1;
     private readonly double[] _lower2;
     private readonly double[] _main1;
@@ -19,10 +19,10 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     private readonly double[] _rhs;
     private readonly double[] _upper1;
     private readonly double[] _upper2;
-    private readonly double[] _valueMatrixBuffer;
-
-    private TridiagonalMatrix? _m1;
-    private TridiagonalMatrix? _m2;
+    private readonly TridiagonalMatrix _m1;
+    private readonly TridiagonalMatrix _m2;
+    private double[] _valueMatrixBuffer;
+    private double[] _eventTimes = [];
 
     protected BsmFiniteDifferenceEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
@@ -32,8 +32,9 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         Scheme = scheme;
         PriceStepCount = priceStepCount;
         TimeStepCount = timeStepCount;
-
+        _targetTimeStepCount = timeStepCount;
         _valueMatrixBuffer = new double[(priceStepCount + 1) * (timeStepCount + 1)];
+
         int innerSize = priceStepCount - 1;
         _lower1 = new double[innerSize];
         _main1 = new double[innerSize];
@@ -43,11 +44,13 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         _upper2 = new double[innerSize];
         _rhs = new double[innerSize];
         _result = new double[innerSize];
+        _m1 = new TridiagonalMatrix(_lower1, _main1, _upper1);
+        _m2 = new TridiagonalMatrix(_lower2, _main2, _upper2);
     }
 
     protected int PriceStepCount { get; }
 
-    protected int TimeStepCount { get; }
+    protected int TimeStepCount { get; private set; }
 
     protected double MinPrice { get; set; }
 
@@ -60,6 +63,24 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     protected FiniteDifferenceScheme Scheme { get; }
 
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
+
+    protected static double[] MergeEventTimes(ReadOnlySpan<double> first, ReadOnlySpan<double> second)
+    {
+        if (first.IsEmpty)
+        {
+            return second.ToArray();
+        }
+
+        if (second.IsEmpty)
+        {
+            return first.ToArray();
+        }
+
+        double[] combined = new double[first.Length + second.Length];
+        first.CopyTo(combined);
+        second.CopyTo(combined.AsSpan(first.Length));
+        return combined;
+    }
 
     protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
@@ -74,52 +95,23 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
         double tau = GetYearsToExpiration(option, valuationDate);
         PriceVector = Generate.LinearSpaced(PriceStepCount + 1, MinPrice, MaxPrice);
-        TimeVector = Generate.LinearSpaced(TimeStepCount + 1, 0, tau);
 
-        double ds = PriceVector[1] - PriceVector[0];
-        double dt = TimeVector[1] - TimeVector[0];
-        double r = parameters.RiskFreeRate;
-        double q = parameters.DividendYield;
-        double v = parameters.Volatility;
+        SchemeCoefficients coefficients = GetSchemeCoefficients(parameters);
 
-        double theta = Scheme switch
-        {
-            FiniteDifferenceScheme.ExplicitEuler => 0.0,
-            FiniteDifferenceScheme.ImplicitEuler => 1.0,
-            FiniteDifferenceScheme.CrankNicolson => 0.5,
-            _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidFiniteDifferenceScheme),
-        };
+        double maxDt = tau / _targetTimeStepCount;
 
         if (Scheme == FiniteDifferenceScheme.ExplicitEuler)
         {
-            double maxDiffusionSquare = v * v * MaxPrice * MaxPrice / ds / ds;
-            if (dt * (maxDiffusionSquare + r) > 1.0)
+            double maxDiffusionSquare = coefficients.V * coefficients.V * MaxPrice * MaxPrice / coefficients.Ds / coefficients.Ds;
+            if (maxDt * (maxDiffusionSquare + coefficients.R) > 1.0)
             {
                 ThrowHelper.ThrowArgumentException(ExceptionMessages.ExplicitSchemeUnstable);
             }
         }
 
-        for (int j = 1; j < PriceStepCount; j++)
-        {
-            double s = PriceVector[j];
-            double drift = (r - q) * s / ds;
-            double diffusionSquare = v * v * s * s / ds / ds;
-
-            double a = 0.5 * dt * (diffusionSquare - drift);
-            double b = dt * (diffusionSquare + r);
-            double c = 0.5 * dt * (diffusionSquare + drift);
-
-            _lower1[j - 1] = -theta * a;
-            _main1[j - 1] = 1.0 + theta * b;
-            _upper1[j - 1] = -theta * c;
-
-            _lower2[j - 1] = (1 - theta) * a;
-            _main2[j - 1] = 1.0 - (1 - theta) * b;
-            _upper2[j - 1] = (1 - theta) * c;
-        }
-
-        _m1 = new TridiagonalMatrix(_lower1, _main1, _upper1);
-        _m2 = new TridiagonalMatrix(_lower2, _main2, _upper2);
+        TimeVector = BuildTimeGrid(tau, _eventTimes, maxDt);
+        TimeStepCount = TimeVector.Length - 1;
+        EnsureValueMatrixBuffer();
     }
 
     protected abstract void SetTerminalCondition(TOption option);
@@ -128,41 +120,181 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     protected abstract void ApplyStepConditions(int i, TOption option, BsmModelParameters parameters);
 
-    protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex, double tMax)
+    protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex)
     {
         Guard.IsEqualTo(stepToObservationIndex.Length, TimeStepCount + 1);
         stepToObservationIndex.Fill(-1);
 
-        double dt = tMax / TimeStepCount;
-        for (int k = 0; k < observationTimes.Length; k++)
+        foreach ((int step, int observationIndex) in new ObservationStepEnumerable(this, observationTimes))
         {
-            double tObs = observationTimes[k];
-
-            // Find nearest step
-            int step = (int)Math.Round(tObs / dt);
-            step = Math.Clamp(step, 0, TimeStepCount);
-
-            // Check if observation time is close enough to the grid point
-            const double tolerance = 1e-3;
-            if (Math.Abs(step * dt - tObs) > tolerance)
-            {
-                ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
-            }
-
-            // Check for collision
             if (stepToObservationIndex[step] != -1)
             {
                 ThrowHelper.ThrowArgumentException(ExceptionMessages.MultipleObservationsAtSameStep);
             }
 
-            stepToObservationIndex[step] = k;
+            stepToObservationIndex[step] = observationIndex;
         }
     }
 
-    private void SolveSingleStep(int i, Span<double> rhs, Span<double> result)
+    protected void MapObservationFlags(ReadOnlySpan<double> observationTimes, Span<bool> stepFlags)
     {
-        Debug.Assert(_m1 is not null);
-        Debug.Assert(_m2 is not null);
+        Guard.IsEqualTo(stepFlags.Length, TimeStepCount + 1);
+        stepFlags.Clear();
+
+        foreach ((int step, int _) in new ObservationStepEnumerable(this, observationTimes))
+        {
+            stepFlags[step] = true;
+        }
+    }
+
+    protected void SetEventTimes(ReadOnlySpan<double> eventTimes)
+    {
+        _eventTimes = eventTimes.IsEmpty ? [] : eventTimes.ToArray();
+    }
+
+    private static double[] BuildTimeGrid(double tMax, ReadOnlySpan<double> eventTimes, double maxDt)
+    {
+        if (tMax <= 0.0)
+        {
+            return [0.0];
+        }
+
+        List<double> keyTimes = new(eventTimes.Length + 2)
+        {
+            0.0,
+            tMax,
+        };
+        double tol = GetTimeTolerance(tMax);
+
+        foreach (double t in eventTimes)
+        {
+            if (t < -tol)
+            {
+                continue;
+            }
+
+            if (t > tMax + tol)
+            {
+                ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
+            }
+
+            keyTimes.Add(Math.Clamp(t, 0.0, tMax));
+        }
+
+        keyTimes.Sort();
+        List<double> grid = new(keyTimes.Count + Math.Max(0, keyTimes.Count - 1));
+        bool hasPrev = false;
+        double prev = 0.0;
+
+        foreach (double t in keyTimes)
+        {
+            if (!hasPrev)
+            {
+                grid.Add(t);
+                prev = t;
+                hasPrev = true;
+                continue;
+            }
+
+            if (t - prev <= tol)
+            {
+                continue;
+            }
+
+            double start = prev;
+            double end = t;
+            double length = end - start;
+            int steps = Math.Max(1, (int)Math.Ceiling(length / maxDt));
+            double dt = length / steps;
+
+            for (int k = 1; k < steps; k++)
+            {
+                grid.Add(start + k * dt);
+            }
+
+            grid.Add(end);
+            prev = end;
+        }
+
+        return grid.ToArray();
+    }
+
+    private static double GetTimeTolerance(double tMax)
+    {
+        return Math.Max(1e-12, tMax * 1e-12);
+    }
+
+    private void EnsureValueMatrixBuffer()
+    {
+        int required = (PriceStepCount + 1) * (TimeStepCount + 1);
+        if (_valueMatrixBuffer.Length != required)
+        {
+            Array.Resize(ref _valueMatrixBuffer, required);
+        }
+    }
+
+    private bool TryGetTimeIndex(double time, out int index)
+    {
+        if (TimeVector.Length == 0)
+        {
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
+        }
+
+        double tMax = TimeVector[^1];
+        double tol = GetTimeTolerance(tMax);
+
+        if (time < -tol)
+        {
+            index = 0;
+            return false;
+        }
+
+        if (time < 0.0)
+        {
+            time = 0.0;
+        }
+        else if (time > tMax + tol)
+        {
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
+        }
+        else if (time > tMax)
+        {
+            time = tMax;
+        }
+
+        int candidate = TimeVector.BinarySearch(time);
+
+        if (candidate < 0)
+        {
+            int insert = ~candidate;
+            if (insert <= 0)
+            {
+                candidate = 0;
+            }
+            else if (insert >= TimeVector.Length)
+            {
+                candidate = TimeVector.Length - 1;
+            }
+            else
+            {
+                double left = TimeVector[insert - 1];
+                double right = TimeVector[insert];
+                candidate = Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
+            }
+        }
+
+        if (Math.Abs(TimeVector[candidate] - time) > tol)
+        {
+            ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
+        }
+
+        index = candidate;
+        return true;
+    }
+
+    private void SolveSingleStep(int i, double dt, in SchemeCoefficients coefficients, Span<double> rhs, Span<double> result)
+    {
+        UpdateTridiagonalCoefficients(dt, coefficients);
 
         int length = PriceStepCount - 1;
         ReadOnlySpan<double> prevStepValues = ValueMatrixSpan.GetRowSpan(i + 1).Slice(1, length);
@@ -184,6 +316,30 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         result.CopyTo(ValueMatrixSpan.GetRowSpan(i).Slice(1, length));
     }
 
+    private void UpdateTridiagonalCoefficients(double dt, in SchemeCoefficients coefficients)
+    {
+        double oneMinusTheta = 1.0 - coefficients.Theta;
+
+        for (int j = 1; j < PriceStepCount; j++)
+        {
+            double s = PriceVector[j];
+            double drift = (coefficients.R - coefficients.Q) * s / coefficients.Ds;
+            double diffusionSquare = coefficients.V * coefficients.V * s * s / coefficients.Ds / coefficients.Ds;
+
+            double a = 0.5 * dt * (diffusionSquare - drift);
+            double b = dt * (diffusionSquare + coefficients.R);
+            double c = 0.5 * dt * (diffusionSquare + drift);
+
+            _lower1[j - 1] = -coefficients.Theta * a;
+            _main1[j - 1] = 1.0 + coefficients.Theta * b;
+            _upper1[j - 1] = -coefficients.Theta * c;
+
+            _lower2[j - 1] = oneMinusTheta * a;
+            _main2[j - 1] = 1.0 - oneMinusTheta * b;
+            _upper2[j - 1] = oneMinusTheta * c;
+        }
+    }
+
     private void SolvePde(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         InitializeCoefficients(option, parameters, valuationDate);
@@ -191,10 +347,69 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         SetBoundaryConditions(option, parameters);
         ApplyStepConditions(TimeStepCount, option, parameters);
 
+        SchemeCoefficients coefficients = GetSchemeCoefficients(parameters);
+
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
-            SolveSingleStep(i, _rhs, _result);
+            double dt = TimeVector[i + 1] - TimeVector[i];
+            SolveSingleStep(i, dt, coefficients, _rhs, _result);
             ApplyStepConditions(i, option, parameters);
+        }
+    }
+
+    private SchemeCoefficients GetSchemeCoefficients(BsmModelParameters parameters)
+    {
+        double ds = PriceVector[1] - PriceVector[0];
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
+        double v = parameters.Volatility;
+
+        double theta = Scheme switch
+        {
+            FiniteDifferenceScheme.ExplicitEuler => 0.0,
+            FiniteDifferenceScheme.ImplicitEuler => 1.0,
+            FiniteDifferenceScheme.CrankNicolson => 0.5,
+            _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidFiniteDifferenceScheme),
+        };
+
+        return new SchemeCoefficients(ds, r, q, v, theta);
+    }
+
+    private readonly record struct SchemeCoefficients(double Ds, double R, double Q, double V, double Theta);
+
+    private readonly ref struct ObservationStepEnumerable(BsmFiniteDifferenceEngine<TOption> engine, ReadOnlySpan<double> observationTimes)
+    {
+        private readonly ReadOnlySpan<double> _observationTimes = observationTimes;
+
+        public ObservationStepEnumerator GetEnumerator()
+        {
+            return new ObservationStepEnumerator(engine, _observationTimes);
+        }
+    }
+
+    private ref struct ObservationStepEnumerator(BsmFiniteDifferenceEngine<TOption> engine, ReadOnlySpan<double> observationTimes)
+    {
+        private readonly ReadOnlySpan<double> _observationTimes = observationTimes;
+        private readonly int _count = observationTimes.Length;
+        private int _index = -1;
+
+        public (int Step, int ObservationIndex) Current { get; private set; } = default;
+
+        public bool MoveNext()
+        {
+            while (++_index < _count)
+            {
+                double tObs = _observationTimes[_index];
+                if (!engine.TryGetTimeIndex(tObs, out int step))
+                {
+                    continue;
+                }
+
+                Current = (step, _index);
+                return true;
+            }
+
+            return false;
         }
     }
 }
