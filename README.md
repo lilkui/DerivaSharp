@@ -83,16 +83,16 @@ dotnet publish -c Release -r win-x64
 
 | Instrument | Pricing Algorithm | Parameters | Time (JIT) | Time (AOT) |
 | :--- | :--- | :--- | ---: | ---: |
-| **Vanilla European** | Analytical | - | 45.6 ns | 54.5 ns |
-| | Finite Difference | 1000×1000 grid (CN) | 12.0 ms | 11.8 ms |
-| | Monte Carlo | 500000 paths | 5.9 ms | 7.0 ms |
-| | Binomial Tree | 1000 steps | 477 μs | 543 μs |
-| | Numerical Integration | - | 104 μs | 106 μs |
-| **Vanilla American** | Bjerksund-Stensland | - | 6.2 μs | 6.9 μs |
-| | Finite Difference | 1000×1000 grid (CN) | 12.9 ms | 13.0 ms |
-| | Monte Carlo | 100000 paths, 250 steps | 900 ms | 965 ms |
-| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 26.1 ms | 25.4 ms |
-| | Monte Carlo | 500000 paths | 1.71 s | 1.95 s |
-| | Monte Carlo | 500000 paths, GPU-accelerated | 40.8 ms | 40.9 ms |
+| **Vanilla European** | Analytical | - | 46.0 ns | 56.3 ns |
+| | Finite Difference | 1000×1000 grid (CN) | 11.75 ms | 11.94 ms |
+| | Monte Carlo | 500000 paths | 6.09 ms | 7.06 ms |
+| | Binomial Tree | 1000 steps | 441 μs | 546 μs |
+| | Numerical Integration | - | 100 μs | 108 μs |
+| **Vanilla American** | Bjerksund-Stensland | - | 6.23 μs | 6.98 μs |
+| | Finite Difference | 1000×1000 grid (CN) | 12.95 ms | 13.04 ms |
+| | Monte Carlo | 100000 paths, 250 steps | 907 ms | 965 ms |
+| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 34.51 ms | 35.01 ms |
+| | Monte Carlo | 500000 paths | 1.72 s | 1.96 s |
+| | Monte Carlo | 500000 paths, GPU-accelerated | 40.90 ms | 40.73 ms |
 
 *CN = Crank-Nicolson scheme*
