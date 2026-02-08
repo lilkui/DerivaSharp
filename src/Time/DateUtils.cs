@@ -5,6 +5,16 @@ namespace DerivaSharp.Time;
 public static class DateUtils
 {
     /// <summary>
+    ///     Determines whether the specified date is a trading day.
+    /// </summary>
+    /// <param name="date">The date to evaluate.</param>
+    /// <returns><c>true</c> if the date is a trading day; otherwise, <c>false</c>.</returns>
+    public static bool IsTradingDay(DateOnly date)
+    {
+        return date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday) && !TradingCalendar.Holidays.Contains(date);
+    }
+
+    /// <summary>
     ///     Gets all trading days between a specified start and end date, inclusive.
     /// </summary>
     /// <param name="startDate">The start date of the period.</param>
