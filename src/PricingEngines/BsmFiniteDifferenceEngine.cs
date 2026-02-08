@@ -133,6 +133,11 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     protected virtual double[] BuildTimeGrid(TOption option, DateOnly valuationDate, double tMax, double maxDt)
     {
+        if (tMax <= 0.0)
+        {
+            return [0.0];
+        }
+
         return UseTradingDayGrid
             ? BuildTradingDayTimeGrid(valuationDate, option.ExpirationDate, tMax, maxDt)
             : BuildUniformTimeGrid(tMax, _targetTimeStepCount);
@@ -140,21 +145,11 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     private static double[] BuildUniformTimeGrid(double tMax, int stepCount)
     {
-        if (tMax <= 0.0)
-        {
-            return [0.0];
-        }
-
         return Generate.LinearSpaced(stepCount + 1, 0.0, tMax);
     }
 
     private static double[] BuildTradingDayTimeGrid(DateOnly valuationDate, DateOnly expirationDate, double tMax, double maxDt)
     {
-        if (tMax <= 0.0)
-        {
-            return [0.0];
-        }
-
         DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
         double[] tradingTimes = new double[tradingDays.Length];
 
@@ -169,11 +164,6 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     private static double[] BuildTimeGridFromKeyTimes(double tMax, ReadOnlySpan<double> keyTimes, double maxDt)
     {
-        if (tMax <= 0.0)
-        {
-            return [0.0];
-        }
-
         List<double> keyTimesList = new(keyTimes.Length + 2)
         {
             0.0,
