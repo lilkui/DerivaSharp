@@ -267,26 +267,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
             time = tMax;
         }
 
-        int candidate = TimeVector.BinarySearch(time);
-
-        if (candidate < 0)
-        {
-            int insert = ~candidate;
-            if (insert <= 0)
-            {
-                candidate = 0;
-            }
-            else if (insert >= TimeVector.Length)
-            {
-                candidate = TimeVector.Length - 1;
-            }
-            else
-            {
-                double left = TimeVector[insert - 1];
-                double right = TimeVector[insert];
-                candidate = Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
-            }
-        }
+        int candidate = GetNearestTimeIndex(time);
 
         if (Math.Abs(TimeVector[candidate] - time) > tol)
         {
@@ -295,6 +276,31 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
         index = candidate;
         return true;
+    }
+
+    private int GetNearestTimeIndex(double time)
+    {
+        int candidate = TimeVector.BinarySearch(time);
+
+        if (candidate >= 0)
+        {
+            return candidate;
+        }
+
+        int insert = ~candidate;
+        if (insert <= 0)
+        {
+            return 0;
+        }
+
+        if (insert >= TimeVector.Length)
+        {
+            return TimeVector.Length - 1;
+        }
+
+        double left = TimeVector[insert - 1];
+        double right = TimeVector[insert];
+        return Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
     }
 
     private void SolveSingleStep(int i, double dt, in SchemeCoefficients coefficients, Span<double> rhs, Span<double> result)
