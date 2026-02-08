@@ -303,9 +303,12 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
     }
 
-    private void SolveSingleStep(int i, double dt, in SchemeCoefficients coefficients, Span<double> rhs, Span<double> result)
+    private void SolveSingleStep(int i, double dt, in SchemeCoefficients coefficients, Span<double> rhs, Span<double> result, bool updateCoefficients)
     {
-        UpdateTridiagonalCoefficients(dt, coefficients);
+        if (updateCoefficients)
+        {
+            UpdateTridiagonalCoefficients(dt, coefficients);
+        }
 
         int length = PriceStepCount - 1;
         ReadOnlySpan<double> prevStepValues = ValueMatrixSpan.GetRowSpan(i + 1).Slice(1, length);
@@ -359,11 +362,16 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         ApplyStepConditions(TimeStepCount, option, parameters);
 
         SchemeCoefficients coefficients = GetSchemeCoefficients(parameters);
+        if (!UseTradingDayGrid)
+        {
+            double dt = TimeVector[1] - TimeVector[0];
+            UpdateTridiagonalCoefficients(dt, coefficients);
+        }
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
             double dt = TimeVector[i + 1] - TimeVector[i];
-            SolveSingleStep(i, dt, coefficients, _rhs, _result);
+            SolveSingleStep(i, dt, coefficients, _rhs, _result, UseTradingDayGrid);
             ApplyStepConditions(i, option, parameters);
         }
     }
