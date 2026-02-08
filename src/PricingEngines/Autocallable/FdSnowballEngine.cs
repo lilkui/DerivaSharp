@@ -221,10 +221,5 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         {
             _knockInTimes = null;
         }
-
-        double[] events = option.KnockInObservationFrequency == ObservationFrequency.Daily && _knockInTimes is not null
-            ? MergeEventTimes(_observationTimes, _knockInTimes)
-            : _observationTimes;
-        SetEventTimes(events);
     }
 }

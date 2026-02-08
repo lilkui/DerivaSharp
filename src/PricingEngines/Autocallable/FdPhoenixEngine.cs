@@ -216,10 +216,5 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         MinPrice = 0.0;
         double maxBarrier = Math.Max(option.InitialPrice, Math.Max(_observationPrices.Max(), _couponBarriers.Max()));
         MaxPrice = maxBarrier * 4.0;
-
-        double[] events = _hasDailyKnockIn && _knockInTimes is not null
-            ? MergeEventTimes(_observationTimes, _knockInTimes)
-            : _observationTimes;
-        SetEventTimes(events);
     }
 }

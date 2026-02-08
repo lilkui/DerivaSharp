@@ -3,6 +3,7 @@ using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
+using DerivaSharp.Time;
 using MathNet.Numerics;
 
 namespace DerivaSharp.PricingEngines;
@@ -22,7 +23,6 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     private readonly TridiagonalMatrix _m1;
     private readonly TridiagonalMatrix _m2;
     private double[] _valueMatrixBuffer;
-    private double[] _eventTimes = [];
 
     protected BsmFiniteDifferenceEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
@@ -64,23 +64,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
-    protected static double[] MergeEventTimes(ReadOnlySpan<double> first, ReadOnlySpan<double> second)
-    {
-        if (first.IsEmpty)
-        {
-            return second.ToArray();
-        }
-
-        if (second.IsEmpty)
-        {
-            return first.ToArray();
-        }
-
-        double[] combined = new double[first.Length + second.Length];
-        first.CopyTo(combined);
-        second.CopyTo(combined.AsSpan(first.Length));
-        return combined;
-    }
+    protected virtual bool UseTradingDayGrid => false;
 
     protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
@@ -109,7 +93,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
             }
         }
 
-        TimeVector = BuildTimeGrid(tau, _eventTimes, maxDt);
+        TimeVector = BuildTimeGrid(option, valuationDate, tau, maxDt);
         TimeStepCount = TimeVector.Length - 1;
         EnsureValueMatrixBuffer();
     }
@@ -147,26 +131,57 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         }
     }
 
-    protected void SetEventTimes(ReadOnlySpan<double> eventTimes)
+    protected virtual double[] BuildTimeGrid(TOption option, DateOnly valuationDate, double tMax, double maxDt)
     {
-        _eventTimes = eventTimes.IsEmpty ? [] : eventTimes.ToArray();
+        return UseTradingDayGrid
+            ? BuildTradingDayTimeGrid(valuationDate, option.ExpirationDate, tMax, maxDt)
+            : BuildUniformTimeGrid(tMax, _targetTimeStepCount);
     }
 
-    private static double[] BuildTimeGrid(double tMax, ReadOnlySpan<double> eventTimes, double maxDt)
+    private static double[] BuildUniformTimeGrid(double tMax, int stepCount)
     {
         if (tMax <= 0.0)
         {
             return [0.0];
         }
 
-        List<double> keyTimes = new(eventTimes.Length + 2)
+        return Generate.LinearSpaced(stepCount + 1, 0.0, tMax);
+    }
+
+    private static double[] BuildTradingDayTimeGrid(DateOnly valuationDate, DateOnly expirationDate, double tMax, double maxDt)
+    {
+        if (tMax <= 0.0)
+        {
+            return [0.0];
+        }
+
+        DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
+        double[] tradingTimes = new double[tradingDays.Length];
+
+        int t0 = valuationDate.DayNumber;
+        for (int i = 0; i < tradingDays.Length; i++)
+        {
+            tradingTimes[i] = (tradingDays[i].DayNumber - t0) / 365.0;
+        }
+
+        return BuildTimeGridFromKeyTimes(tMax, tradingTimes, maxDt);
+    }
+
+    private static double[] BuildTimeGridFromKeyTimes(double tMax, ReadOnlySpan<double> keyTimes, double maxDt)
+    {
+        if (tMax <= 0.0)
+        {
+            return [0.0];
+        }
+
+        List<double> keyTimesList = new(keyTimes.Length + 2)
         {
             0.0,
             tMax,
         };
         double tol = GetTimeTolerance(tMax);
 
-        foreach (double t in eventTimes)
+        foreach (double t in keyTimes)
         {
             if (t < -tol)
             {
@@ -178,15 +193,15 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
                 ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
             }
 
-            keyTimes.Add(Math.Clamp(t, 0.0, tMax));
+            keyTimesList.Add(Math.Clamp(t, 0.0, tMax));
         }
 
-        keyTimes.Sort();
-        List<double> grid = new(keyTimes.Count + Math.Max(0, keyTimes.Count - 1));
+        keyTimesList.Sort();
+        List<double> grid = new(keyTimesList.Count + Math.Max(0, keyTimesList.Count - 1));
         bool hasPrev = false;
         double prev = 0.0;
 
-        foreach (double t in keyTimes)
+        foreach (double t in keyTimesList)
         {
             if (!hasPrev)
             {

@@ -15,6 +15,8 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
     private double[]? _observationAccruedTimes;
     private double _maturityPayoff;
 
+    protected override bool UseTradingDayGrid => true;
+
     public override double[] Values(BinarySnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
@@ -150,7 +152,5 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         MinPrice = 0.0;
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
         MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
-
-        SetEventTimes(_observationTimes);
     }
 }

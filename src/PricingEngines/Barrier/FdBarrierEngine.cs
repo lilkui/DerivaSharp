@@ -11,6 +11,8 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     private bool[]? _isObservationTime;
     private double[]? _observationTimes;
 
+    protected override bool UseTradingDayGrid => true;
+
     protected override double CalculateValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {
         if (valuationDate == option.ExpirationDate)
@@ -64,17 +66,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
         }
 
-        if (option.ObservationInterval > 0)
-        {
-            double tau = GetYearsToExpiration(option, valuationDate);
-            _observationTimes = BuildObservationTimes(tau, option.ObservationInterval);
-            SetEventTimes(_observationTimes);
-        }
-        else
-        {
-            _observationTimes = null;
-            SetEventTimes(ReadOnlySpan<double>.Empty);
-        }
+        _observationTimes = option.ObservationInterval > 0 ? BuildObservationTimes(option.ObservationDates, valuationDate) : null;
 
         base.InitializeCoefficients(option, parameters, valuationDate);
 
@@ -259,25 +251,22 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private static double[] BuildObservationTimes(double tau, double interval)
+    private static double[] BuildObservationTimes(DateOnly[] observationDates, DateOnly valuationDate)
     {
-        Debug.Assert(interval > 0);
-
-        double tol = Math.Max(1e-12, tau * 1e-12);
-        int maxObs = (int)Math.Floor((tau + tol) / interval);
-        List<double> times = new(maxObs + 1);
-
-        for (int obs = 1; obs <= maxObs; obs++)
+        if (observationDates.Length == 0)
         {
-            times.Add(obs * interval);
+            return [];
         }
 
-        if (times.Count == 0 || Math.Abs(times[^1] - tau) > tol)
+        double[] times = new double[observationDates.Length];
+        int t0 = valuationDate.DayNumber;
+
+        for (int i = 0; i < observationDates.Length; i++)
         {
-            times.Add(tau);
+            times[i] = (observationDates[i].DayNumber - t0) / 365.0;
         }
 
-        return times.ToArray();
+        return times;
     }
 
     private void BuildObservationSchedule()

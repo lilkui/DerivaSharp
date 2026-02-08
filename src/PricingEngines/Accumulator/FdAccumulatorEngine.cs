@@ -102,7 +102,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         return option.AccumulatedQuantity * unitValue + futureAccrualValue;
     }
 
-    private static (double[] ObservationTimes, double TMax) BuildObservationTimes(DateOnly valuationDate, DateOnly expirationDate)
+    private static double[] BuildObservationTimes(DateOnly valuationDate, DateOnly expirationDate)
     {
         DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
         double[] observationTimes = new double[tradingDays.Length];
@@ -113,8 +113,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             observationTimes[i] = (tradingDays[i].DayNumber - t0) / 365.0;
         }
 
-        double tMax = (expirationDate.DayNumber - t0) / 365.0;
-        return (observationTimes, tMax);
+        return observationTimes;
     }
 
     private sealed class AccumulatorUnitValueEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
@@ -126,10 +125,17 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         public double[] PriceGrid => PriceVector;
 
-        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate) =>
-            CalculateValue(option, parameters, assetPrice, valuationDate);
+        protected override bool UseTradingDayGrid => true;
 
-        public ReadOnlySpan<double> GetRow0Span() => ValueMatrixSpan.GetRowSpan(0);
+        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+        {
+            return CalculateValue(option, parameters, assetPrice, valuationDate);
+        }
+
+        public ReadOnlySpan<double> GetRow0Span()
+        {
+            return ValueMatrixSpan.GetRowSpan(0);
+        }
 
         public double[] GetValueMatrixCopy()
         {
@@ -147,8 +153,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             double maxRef = Math.Max(option.StrikePrice, option.KnockOutPrice);
             MaxPrice = 4.0 * maxRef;
 
-            (double[] observationTimes, _) = BuildObservationTimes(valuationDate, option.ExpirationDate);
-            SetEventTimes(observationTimes);
+            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
             base.InitializeCoefficients(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)
@@ -212,10 +217,17 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         private double _dailyQuantity;
         private double _accelerationFactor;
 
-        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate) =>
-            CalculateValue(option, parameters, assetPrice, valuationDate);
+        protected override bool UseTradingDayGrid => true;
 
-        public ReadOnlySpan<double> GetRow0Span() => ValueMatrixSpan.GetRowSpan(0);
+        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+        {
+            return CalculateValue(option, parameters, assetPrice, valuationDate);
+        }
+
+        public ReadOnlySpan<double> GetRow0Span()
+        {
+            return ValueMatrixSpan.GetRowSpan(0);
+        }
 
         protected override void InitializeCoefficients(Accumulator option, BsmModelParameters parameters, DateOnly valuationDate)
         {
@@ -228,8 +240,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             double maxRef = Math.Max(option.StrikePrice, option.KnockOutPrice);
             MaxPrice = 4.0 * maxRef;
 
-            (double[] observationTimes, _) = BuildObservationTimes(valuationDate, option.ExpirationDate);
-            SetEventTimes(observationTimes);
+            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
             base.InitializeCoefficients(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)

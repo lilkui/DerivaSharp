@@ -10,6 +10,8 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : KiAutocallableNote
 {
+    protected override bool UseTradingDayGrid => true;
+
     public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
