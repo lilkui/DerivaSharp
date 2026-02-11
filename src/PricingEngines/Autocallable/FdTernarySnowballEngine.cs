@@ -4,6 +4,9 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Finite difference pricing engine for ternary snowball options.
+/// </summary>
 public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<TernarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {

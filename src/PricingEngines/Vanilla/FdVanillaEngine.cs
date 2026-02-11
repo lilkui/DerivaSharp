@@ -4,6 +4,10 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Base class for finite difference pricing engines for vanilla options.
+/// </summary>
+/// <typeparam name="TOption">The type of vanilla option to price.</typeparam>
 public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : VanillaOption
@@ -70,5 +74,13 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
         }
     }
 
+    /// <summary>
+    ///     Calculates the lower boundary condition for put options.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="minPrice">The minimum price in the grid.</param>
+    /// <param name="dfq">The dividend discount factor.</param>
+    /// <param name="dfr">The risk-free discount factor.</param>
+    /// <returns>The value at the lower boundary.</returns>
     protected abstract double GetPutLowerBoundary(TOption option, double minPrice, double dfq, double dfr);
 }

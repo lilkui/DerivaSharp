@@ -6,6 +6,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for binary barrier options using closed-form analytical formulas with discrete barrier adjustment.
+/// </summary>
 public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrierOption>
 {
     private const double Beta = 0.5825971579390107; // Correction factor for discrete barriers

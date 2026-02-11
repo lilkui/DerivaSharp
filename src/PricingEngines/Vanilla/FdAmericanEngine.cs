@@ -3,6 +3,12 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for American options using finite difference methods with early exercise.
+/// </summary>
+/// <param name="scheme">The finite difference scheme to use.</param>
+/// <param name="priceStepCount">The number of price steps in the grid.</param>
+/// <param name="timeStepCount">The number of time steps in the grid.</param>
 public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdVanillaEngine<AmericanOption>(scheme, priceStepCount, timeStepCount)
 {

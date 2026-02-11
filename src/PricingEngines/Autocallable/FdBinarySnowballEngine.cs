@@ -5,6 +5,9 @@ using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Finite difference pricing engine for binary snowball options.
+/// </summary>
 public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {

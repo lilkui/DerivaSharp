@@ -3,8 +3,18 @@ using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Generates asset price paths for Monte Carlo simulations under the Black-Scholes-Merton model.
+/// </summary>
 public static class PathGenerator
 {
+    /// <summary>
+    ///     Generates asset price paths using geometric Brownian motion.
+    /// </summary>
+    /// <param name="context">The pricing context containing model parameters and initial asset price.</param>
+    /// <param name="dtVector">A tensor of time step sizes.</param>
+    /// <param name="source">The random number source.</param>
+    /// <returns>A tensor of shape [pathCount, stepCount + 1] containing simulated asset prices.</returns>
     public static torch.Tensor Generate(PricingContext<BsmModelParameters> context, torch.Tensor dtVector, RandomNumberSource source)
     {
         BsmModelParameters parameters = context.ModelParameters;

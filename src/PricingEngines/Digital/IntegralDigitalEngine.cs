@@ -6,6 +6,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for digital options using numerical integration of the risk-neutral expectation.
+/// </summary>
 public sealed class IntegralDigitalEngine : BsmPricingEngine<DigitalOption>
 {
     protected override double CalculateValue(DigitalOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)

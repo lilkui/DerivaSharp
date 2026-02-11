@@ -5,6 +5,12 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for barrier options using finite difference methods with barrier monitoring.
+/// </summary>
+/// <param name="scheme">The finite difference scheme to use.</param>
+/// <param name="priceStepCount">The number of price steps in the grid.</param>
+/// <param name="timeStepCount">The number of time steps in the grid.</param>
 public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<BarrierOption>(scheme, priceStepCount, timeStepCount)
 {

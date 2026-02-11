@@ -4,27 +4,40 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
-// A Snowball has two economic “states”: (1) not-knocked-in yet, and (2) already knocked-in.
-// Once knock-in has occurred, future cashflows no longer depend on the pre-knock-in path;
-// the contract from that time onward is fully described by (t, S) under the “knocked-in” rules.
-// That makes the valuation Markov in (t, S, KI-flag), and the PDE/FD backward induction can be
-// done separately per state and then linked by a state-switch condition at the knock-in barrier.
-//
-// Pass 1 (knocked-in surface):
-//   Solve the FD grid assuming KI-flag = true from the start. This produces V_KI(t, S) on the
-//   entire (time, price) grid, with terminal/boundary/step conditions consistent with being
-//   knocked in (but still applying knock-out at observation dates). Store this surface.
-//
-// Pass 2 (not-knocked-in surface):
-//   Solve again with KI-flag = false. At each time step, apply knock-out step conditions as usual.
-//   Then, wherever the price process triggers knock-in (e.g., daily monitoring and S < KI barrier),
-//   “switch regimes” by substituting the continuation value with the precomputed knocked-in value:
-//       V_NKI(t, S) := V_KI(t, S) on the knock-in region.
-//   This enforces the correct dynamic programming condition: immediately after knock-in, the option’s
-//   value must equal the value of the same contract in the knocked-in state at the same (t, S).
-//
-// In other words, the two passes implement a coupled two-state PDE by solving the KI state first
-// and using it as a boundary/interface condition for the NKI state.
+/// <summary>
+///     Pricing engine for snowball options using finite difference methods with knock-in and knock-out features.
+/// </summary>
+/// <param name="scheme">The finite difference scheme to use.</param>
+/// <param name="priceStepCount">The number of price steps in the grid.</param>
+/// <param name="timeStepCount">The number of time steps in the grid.</param>
+/// <remarks>
+///     <para>
+///         A Snowball has two economic "states": (1) not-knocked-in yet, and (2) already knocked-in.
+///         Once knock-in has occurred, future cashflows no longer depend on the pre-knock-in path;
+///         the contract from that time onward is fully described by (t, S) under the "knocked-in" rules.
+///         That makes the valuation Markov in (t, S, KI-flag), and the PDE/FD backward induction can be
+///         done separately per state and then linked by a state-switch condition at the knock-in barrier.
+///     </para>
+///     <para>
+///         Pass 1 (knocked-in surface):
+///         Solve the FD grid assuming KI-flag = true from the start. This produces V_KI(t, S) on the
+///         entire (time, price) grid, with terminal/boundary/step conditions consistent with being
+///         knocked in (but still applying knock-out at observation dates). Store this surface.
+///     </para>
+///     <para>
+///         Pass 2 (not-knocked-in surface):
+///         Solve again with KI-flag = false. At each time step, apply knock-out step conditions as usual.
+///         Then, wherever the price process triggers knock-in (e.g., daily monitoring and S &lt; KI barrier),
+///         "switch regimes" by substituting the continuation value with the precomputed knocked-in value:
+///         V_NKI(t, S) := V_KI(t, S) on the knock-in region.
+///         This enforces the correct dynamic programming condition: immediately after knock-in, the option's
+///         value must equal the value of the same contract in the knocked-in state at the same (t, S).
+///     </para>
+///     <para>
+///         In other words, the two passes implement a coupled two-state PDE by solving the KI state first
+///         and using it as a boundary/interface condition for the NKI state.
+///     </para>
+/// </remarks>
 public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
 {

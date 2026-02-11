@@ -5,6 +5,9 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Finite difference pricing engine for Phoenix autocallable options.
+/// </summary>
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {

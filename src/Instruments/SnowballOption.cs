@@ -1,7 +1,25 @@
 namespace DerivaSharp.Instruments;
 
+/// <summary>
+///     Represents a snowball autocallable note with knock-in feature and various structural variations.
+/// </summary>
 public sealed record SnowballOption : KiAutocallableNote
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="SnowballOption" /> class.
+    /// </summary>
+    /// <param name="knockOutCouponRates">The coupon rates paid at each knock-out observation date.</param>
+    /// <param name="maturityCouponRate">The coupon rate paid at maturity if not knocked out.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInPrice">The knock-in barrier price.</param>
+    /// <param name="knockOutPrices">The barrier prices for early termination at each observation date.</param>
+    /// <param name="upperStrikePrice">The upper strike price for payoff calculation.</param>
+    /// <param name="lowerStrikePrice">The lower strike price for payoff calculation.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="knockInObservationFrequency">How frequently the knock-in barrier is observed.</param>
+    /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
     public SnowballOption(
         double[] knockOutCouponRates,
         double maturityCouponRate,
@@ -31,11 +49,19 @@ public sealed record SnowballOption : KiAutocallableNote
         MaturityCouponRate = maturityCouponRate;
     }
 
+    /// <summary>
+    ///     Gets the coupon rates paid at each knock-out observation date.
+    /// </summary>
     public double[] KnockOutCouponRates { get; init; }
 
+    /// <summary>
+    ///     Gets the coupon rate paid at maturity if not knocked out.
+    /// </summary>
     public double MaturityCouponRate { get; init; }
 
-    // 平敲
+    /// <summary>
+    ///     Creates a standard snowball with uniform knock-out levels and coupon rates.
+    /// </summary>
     public static SnowballOption CreateStandardSnowball(
         double couponRate,
         double initialPrice,
@@ -62,7 +88,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 降敲
+    /// <summary>
+    ///     Creates a step-down snowball with decreasing knock-out levels over time.
+    /// </summary>
     public static SnowballOption CreateStepDownSnowball(
         double couponRate,
         double initialPrice,
@@ -92,7 +120,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 双降
+    /// <summary>
+    ///     Creates a both-down snowball with decreasing knock-out levels and coupon rates.
+    /// </summary>
     public static SnowballOption CreateBothDownSnowball(
         double knockOutCouponRateStart,
         double knockOutCouponRateStep,
@@ -129,7 +159,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 红利
+    /// <summary>
+    ///     Creates a dual-coupon snowball with different knock-out and maturity coupon rates.
+    /// </summary>
     public static SnowballOption CreateDualCouponSnowball(
         double knockOutCouponRate,
         double maturityCouponRate,
@@ -157,7 +189,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 降落伞
+    /// <summary>
+    ///     Creates a parachute snowball with a lower final knock-out level.
+    /// </summary>
     public static SnowballOption CreateParachuteSnowball(
         double couponRate,
         double initialPrice,
@@ -187,7 +221,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // OTM
+    /// <summary>
+    ///     Creates an out-of-the-money snowball with an upper strike above the initial price.
+    /// </summary>
     public static SnowballOption CreateOtmSnowball(
         double couponRate,
         double initialPrice,
@@ -215,7 +251,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 限损
+    /// <summary>
+    ///     Creates a loss-capped snowball with a floor level limiting downside.
+    /// </summary>
     public static SnowballOption CreateLossCappedSnowball(
         double couponRate,
         double initialPrice,
@@ -243,7 +281,9 @@ public sealed record SnowballOption : KiAutocallableNote
             expirationDate);
     }
 
-    // 欧式
+    /// <summary>
+    ///     Creates a European-style snowball with knock-in observed only at expiry.
+    /// </summary>
     public static SnowballOption CreateEuropeanSnowball(
         double couponRate,
         double initialPrice,

@@ -1,5 +1,8 @@
 ﻿namespace DerivaSharp;
 
+/// <summary>
+///     Provides standard exception messages used throughout the library.
+/// </summary>
 internal static class ExceptionMessages
 {
     internal const string CudaUnavailable = "CUDA is not available on this system.";

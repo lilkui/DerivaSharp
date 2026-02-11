@@ -4,8 +4,14 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for European options using the Black-Scholes-Merton closed-form solution.
+/// </summary>
 public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
+    /// <summary>
+    ///     Gets or sets a value indicating whether to use numerical differentiation for Greeks instead of analytical formulas.
+    /// </summary>
     public bool UseNumericalGreeks { get; set; } = false;
 
     public override double Delta(EuropeanOption option, PricingContext<BsmModelParameters> context)

@@ -6,6 +6,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for American options using the Bjerksund-Stensland 2002 approximation.
+/// </summary>
 public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<AmericanOption>
 {
     protected override double CalculateValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
@@ -23,7 +26,11 @@ public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<American
 
         // Use the put-call transformation for American put options
         AmericanOption transformedOption = new(OptionType.Call, assetPrice, option.EffectiveDate, option.ExpirationDate);
-        BsmModelParameters transformedParameters = parameters with { RiskFreeRate = parameters.DividendYield, DividendYield = parameters.RiskFreeRate };
+        BsmModelParameters transformedParameters = parameters with
+        {
+            RiskFreeRate = parameters.DividendYield,
+            DividendYield = parameters.RiskFreeRate,
+        };
 
         return AmericanCallValue(transformedOption, transformedParameters, assetPrice, valuationDate);
     }

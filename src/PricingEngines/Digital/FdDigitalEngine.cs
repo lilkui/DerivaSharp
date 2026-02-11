@@ -4,6 +4,12 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for digital options using finite difference methods.
+/// </summary>
+/// <param name="scheme">The finite difference scheme to use.</param>
+/// <param name="priceStepCount">The number of price steps in the grid.</param>
+/// <param name="timeStepCount">The number of time steps in the grid.</param>
 public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<DigitalOption>(scheme, priceStepCount, timeStepCount)
 {

@@ -2,11 +2,19 @@ using System.Collections.Frozen;
 
 namespace DerivaSharp.Time;
 
+/// <summary>
+///     Provides trading calendar information for the Shanghai Stock Exchange.
+/// </summary>
 public static class TradingCalendar
 {
+    /// <summary>
+    ///     Gets the standard number of trading days per year.
+    /// </summary>
     public static int TradingDaysPerYear => 243;
 
-    // https://github.com/gerrymanoim/exchange_calendars/blob/master/exchange_calendars/exchange_calendar_xshg.py
+    /// <summary>
+    ///     Gets the set of holidays for the Shanghai Stock Exchange.
+    /// </summary>
     public static FrozenSet<DateOnly> Holidays { get; } =
     [
         new(1991, 01, 01),

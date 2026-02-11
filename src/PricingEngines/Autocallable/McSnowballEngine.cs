@@ -6,6 +6,11 @@ using Tensor = TorchSharp.torch.Tensor;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for snowball options using Monte Carlo simulation.
+/// </summary>
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
 public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<SnowballOption>
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);

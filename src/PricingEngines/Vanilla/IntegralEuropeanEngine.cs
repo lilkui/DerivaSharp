@@ -5,6 +5,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for European options using numerical integration of the risk-neutral expectation.
+/// </summary>
 public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
     protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)

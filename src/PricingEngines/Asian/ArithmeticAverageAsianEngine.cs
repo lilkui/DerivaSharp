@@ -4,6 +4,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for arithmetic average Asian options using the Turnbull-Wakeman approximation.
+/// </summary>
 public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAverageOption>
 {
     protected override double CalculateValue(ArithmeticAverageOption option, BsmModelParameters model, double assetPrice, DateOnly valuationDate)

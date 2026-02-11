@@ -5,10 +5,23 @@ using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for American options using Monte Carlo simulation with Longstaff-Schwartz regression.
+/// </summary>
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="stepCount">The number of time steps per path.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
 public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda = false) : BsmPricingEngine<AmericanOption>
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
+    /// <summary>
+    ///     Computes the option value using a provided random number source.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <param name="source">The random number source.</param>
+    /// <returns>The option value.</returns>
     public double Value(AmericanOption option, PricingContext<BsmModelParameters> context, RandomNumberSource source)
     {
         Guard.IsGreaterThan(stepCount, 2);

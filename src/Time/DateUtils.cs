@@ -2,6 +2,9 @@ using CommunityToolkit.Diagnostics;
 
 namespace DerivaSharp.Time;
 
+/// <summary>
+///     Provides utility methods for working with trading days and dates.
+/// </summary>
 public static class DateUtils
 {
     /// <summary>

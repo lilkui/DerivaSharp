@@ -3,14 +3,34 @@ using CommunityToolkit.HighPerformance.Buffers;
 
 namespace DerivaSharp.Numerics;
 
+/// <summary>
+///     Represents a tridiagonal matrix and provides operations for solving linear systems.
+/// </summary>
+/// <param name="lower">The lower diagonal elements.</param>
+/// <param name="main">The main diagonal elements.</param>
+/// <param name="upper">The upper diagonal elements.</param>
 public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] upper)
 {
+    /// <summary>
+    ///     Gets the lower diagonal elements of the matrix.
+    /// </summary>
     public double[] Lower { get; } = lower;
 
+    /// <summary>
+    ///     Gets the main diagonal elements of the matrix.
+    /// </summary>
     public double[] Main { get; } = main;
 
+    /// <summary>
+    ///     Gets the upper diagonal elements of the matrix.
+    /// </summary>
     public double[] Upper { get; } = upper;
 
+    /// <summary>
+    ///     Multiplies the tridiagonal matrix by a vector.
+    /// </summary>
+    /// <param name="vector">The vector to multiply.</param>
+    /// <param name="result">The span to store the result.</param>
     public void Multiply(ReadOnlySpan<double> vector, Span<double> result)
     {
         int n = Main.Length;
@@ -45,6 +65,11 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
         }
     }
 
+    /// <summary>
+    ///     Solves the linear system Ax = b using the Thomas algorithm.
+    /// </summary>
+    /// <param name="rhs">The right-hand side vector b.</param>
+    /// <param name="result">The span to store the solution vector x.</param>
     public void Solve(ReadOnlySpan<double> rhs, Span<double> result)
     {
         int n = Main.Length;

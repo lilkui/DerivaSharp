@@ -4,12 +4,26 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Base class for option pricing engines.
+/// </summary>
+/// <typeparam name="TOption">The type of option to price.</typeparam>
+/// <typeparam name="TModel">The type of model parameters.</typeparam>
 public abstract class PricingEngine<TOption, TModel>
     where TOption : Option
     where TModel : IModelParameters
 {
+    /// <summary>
+    ///     Gets or initializes the shift parameters used for numerical differentiation.
+    /// </summary>
     protected NumericalShiftParameters ShiftParameters { get; init; } = NumericalShiftParameters.Default;
 
+    /// <summary>
+    ///     Computes the option value.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The option value.</returns>
     public double Value(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -17,7 +31,12 @@ public abstract class PricingEngine<TOption, TModel>
         return CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
     }
 
-    // DValueDSpot
+    /// <summary>
+    ///     Computes delta using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of value with respect to the asset price.</returns>
     public virtual double Delta(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -32,7 +51,12 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlus - vSpotMinus) / (2 * ds);
     }
 
-    // DDeltaDSpot
+    /// <summary>
+    ///     Computes gamma using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of delta with respect to the asset price.</returns>
     public virtual double Gamma(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -48,7 +72,12 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlus - 2 * v0 + vSpotMinus) / (ds * ds);
     }
 
-    // DGammaDSpot
+    /// <summary>
+    ///     Computes speed using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of gamma with respect to the asset price.</returns>
     public virtual double Speed(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -65,7 +94,12 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlusPlus - 3 * vSpotPlus + 3 * v0 - vSpotMinus) / (ds * ds * ds);
     }
 
-    // DValueDTime (per day)
+    /// <summary>
+    ///     Computes theta using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of value with respect to time (per day).</returns>
     public virtual double Theta(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -81,7 +115,12 @@ public abstract class PricingEngine<TOption, TModel>
         return vNext - v0;
     }
 
-    // DDeltaDTime (per day)
+    /// <summary>
+    ///     Computes charm using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of delta with respect to time (per day).</returns>
     public virtual double Charm(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -101,7 +140,12 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlusNext - vSpotPlus - vSpotMinusNext + vSpotMinus) / (2 * ds);
     }
 
-    // DGammaDTime (per day)
+    /// <summary>
+    ///     Computes color using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of gamma with respect to time (per day).</returns>
     public virtual double Color(TOption option, PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
@@ -123,6 +167,13 @@ public abstract class PricingEngine<TOption, TModel>
         return (vSpotPlusNext - 2 * vNext + vSpotMinusNext - vSpotPlus + 2 * v0 - vSpotMinus) / (ds * ds);
     }
 
+    /// <summary>
+    ///     Computes option values across a range of asset prices.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <param name="assetPrices">The array of asset prices.</param>
+    /// <returns>An array of option values corresponding to each asset price.</returns>
     public virtual double[] Values(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
@@ -136,6 +187,13 @@ public abstract class PricingEngine<TOption, TModel>
         return values;
     }
 
+    /// <summary>
+    ///     Computes deltas across a range of asset prices using finite differences.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <param name="assetPrices">The array of asset prices.</param>
+    /// <returns>An array of deltas corresponding to each asset price.</returns>
     public virtual double[] Deltas(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
@@ -154,6 +212,13 @@ public abstract class PricingEngine<TOption, TModel>
         return deltas;
     }
 
+    /// <summary>
+    ///     Computes gammas across a range of asset prices using finite differences.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <param name="assetPrices">The array of asset prices.</param>
+    /// <returns>An array of gammas corresponding to each asset price.</returns>
     public virtual double[] Gammas(TOption option, PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
@@ -173,8 +238,22 @@ public abstract class PricingEngine<TOption, TModel>
         return gammas;
     }
 
+    /// <summary>
+    ///     Computes the option value for the given parameters.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="model">The model parameters.</param>
+    /// <param name="assetPrice">The asset price.</param>
+    /// <param name="valuationDate">The valuation date.</param>
+    /// <returns>The option value.</returns>
     protected abstract double CalculateValue(TOption option, TModel model, double assetPrice, DateOnly valuationDate);
 
+    /// <summary>
+    ///     Computes the time to expiration in years.
+    /// </summary>
+    /// <param name="option">The option.</param>
+    /// <param name="valuationDate">The valuation date.</param>
+    /// <returns>The time to expiration in years.</returns>
     protected double GetYearsToExpiration(TOption option, DateOnly valuationDate)
     {
         Guard.IsLessThanOrEqualTo(valuationDate, option.ExpirationDate);
@@ -182,6 +261,11 @@ public abstract class PricingEngine<TOption, TModel>
         return (option.ExpirationDate.DayNumber - valuationDate.DayNumber) / 365.0;
     }
 
+    /// <summary>
+    ///     Validates the option and pricing context.
+    /// </summary>
+    /// <param name="option">The option to validate.</param>
+    /// <param name="context">The pricing context to validate.</param>
     protected virtual void ValidateArguments(TOption option, PricingContext<TModel> context)
     {
         Guard.IsNotNull(option);

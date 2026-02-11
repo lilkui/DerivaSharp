@@ -3,8 +3,18 @@ using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Builds trading day grids for finite difference pricing engines.
+/// </summary>
 internal static class TradingDayGridBuilder
 {
+    /// <summary>
+    ///     Builds a trading day grid between valuation and expiration dates.
+    /// </summary>
+    /// <param name="valuationDate">The valuation date.</param>
+    /// <param name="expirationDate">The expiration date.</param>
+    /// <param name="device">The torch device to use for tensor allocation.</param>
+    /// <returns>A trading day grid containing time points and step sizes.</returns>
     public static TradingDayGrid Build(DateOnly valuationDate, DateOnly expirationDate, torch.Device device)
     {
         DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();

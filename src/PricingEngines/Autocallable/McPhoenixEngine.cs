@@ -6,6 +6,9 @@ using Tensor = TorchSharp.torch.Tensor;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Monte Carlo pricing engine for Phoenix autocallable options.
+/// </summary>
 public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<PhoenixOption>
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);

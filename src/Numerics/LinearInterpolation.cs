@@ -2,6 +2,9 @@
 
 namespace DerivaSharp.Numerics;
 
+/// <summary>
+///     Provides methods for linear interpolation of data points.
+/// </summary>
 public sealed class LinearInterpolation
 {
     /// <summary>

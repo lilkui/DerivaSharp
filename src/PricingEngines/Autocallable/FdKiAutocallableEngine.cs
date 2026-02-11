@@ -6,6 +6,10 @@ using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Base class for finite difference pricing engines for knock-in autocallable notes.
+/// </summary>
+/// <typeparam name="TOption">The type of knock-in autocallable note to price.</typeparam>
 public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : KiAutocallableNote
@@ -36,6 +40,13 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
         return values;
     }
 
+    /// <summary>
+    ///     Applies knock-in substitution by replacing values below the knock-in price with knocked-in values.
+    /// </summary>
+    /// <param name="i">The time step index.</param>
+    /// <param name="knockInPrice">The knock-in barrier price.</param>
+    /// <param name="apply">Whether to apply the substitution.</param>
+    /// <param name="knockedInValues">The values to use when knocked in.</param>
     protected void ApplyKnockInSubstitution(int i, double knockInPrice, bool apply, double[] knockedInValues)
     {
         if (!apply)

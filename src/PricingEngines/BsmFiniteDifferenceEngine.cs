@@ -8,6 +8,10 @@ using MathNet.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Base class for pricing engines that solve the Black-Scholes PDE using finite difference methods.
+/// </summary>
+/// <typeparam name="TOption">The type of option to price.</typeparam>
 public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOption>
     where TOption : Option
 {
@@ -25,6 +29,12 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     private readonly TridiagonalMatrix _m2;
     private double[] _valueMatrixBuffer;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BsmFiniteDifferenceEngine{TOption}" /> class.
+    /// </summary>
+    /// <param name="scheme">The finite difference scheme to use.</param>
+    /// <param name="priceStepCount">The number of price steps in the grid.</param>
+    /// <param name="timeStepCount">The target number of time steps in the grid.</param>
     protected BsmFiniteDifferenceEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     {
         Guard.IsGreaterThanOrEqualTo(priceStepCount, 2);
@@ -56,22 +66,49 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         _m2 = new TridiagonalMatrix(_lower2, _main2, _upper2);
     }
 
+    /// <summary>
+    ///     Gets the number of price steps in the grid.
+    /// </summary>
     protected int PriceStepCount { get; }
 
+    /// <summary>
+    ///     Gets the actual number of time steps in the grid.
+    /// </summary>
     protected int TimeStepCount { get; private set; }
 
+    /// <summary>
+    ///     Gets or sets the minimum price in the grid.
+    /// </summary>
     protected double MinPrice { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the maximum price in the grid.
+    /// </summary>
     protected double MaxPrice { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the price grid points.
+    /// </summary>
     protected double[] PriceVector { get; set; } = [];
 
+    /// <summary>
+    ///     Gets or sets the time grid points.
+    /// </summary>
     protected double[] TimeVector { get; set; } = [];
 
+    /// <summary>
+    ///     Gets the finite difference scheme.
+    /// </summary>
     protected FiniteDifferenceScheme Scheme { get; }
 
+    /// <summary>
+    ///     Gets a 2D span view of the value matrix with dimensions [timeStepCount + 1, priceStepCount + 1].
+    /// </summary>
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
+    /// <summary>
+    ///     Gets a value indicating whether to use a trading day grid instead of a uniform time grid.
+    /// </summary>
     protected virtual bool UseTradingDayGrid => false;
 
     protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
@@ -80,6 +117,12 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return LinearInterpolation.InterpolateSorted(assetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
+    /// <summary>
+    ///     Initializes the price and time grids for the PDE solver.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="parameters">The model parameters.</param>
+    /// <param name="valuationDate">The valuation date.</param>
     protected virtual void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
@@ -105,12 +148,32 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         EnsureValueMatrixBuffer();
     }
 
+    /// <summary>
+    ///     Sets the terminal condition (payoff at expiration) in the value matrix.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
     protected abstract void SetTerminalCondition(TOption option);
 
+    /// <summary>
+    ///     Sets the boundary conditions at the minimum and maximum prices for all time steps.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="parameters">The model parameters.</param>
     protected abstract void SetBoundaryConditions(TOption option, BsmModelParameters parameters);
 
+    /// <summary>
+    ///     Applies any step-specific conditions (e.g., early exercise, barriers) at a given time step.
+    /// </summary>
+    /// <param name="i">The time step index.</param>
+    /// <param name="option">The option to price.</param>
+    /// <param name="parameters">The model parameters.</param>
     protected abstract void ApplyStepConditions(int i, TOption option, BsmModelParameters parameters);
 
+    /// <summary>
+    ///     Maps observation times to time step indices and stores the observation index at each step.
+    /// </summary>
+    /// <param name="observationTimes">The observation times in years.</param>
+    /// <param name="stepToObservationIndex">A span to store the observation index for each step (-1 if no observation).</param>
     protected void MapObservationSteps(ReadOnlySpan<double> observationTimes, Span<int> stepToObservationIndex)
     {
         Guard.IsEqualTo(stepToObservationIndex.Length, TimeStepCount + 1);
@@ -127,6 +190,11 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         }
     }
 
+    /// <summary>
+    ///     Maps observation times to time step indices and sets a flag for each step that has an observation.
+    /// </summary>
+    /// <param name="observationTimes">The observation times in years.</param>
+    /// <param name="stepFlags">A span to store flags indicating whether each step has an observation.</param>
     protected void MapObservationFlags(ReadOnlySpan<double> observationTimes, Span<bool> stepFlags)
     {
         Guard.IsEqualTo(stepFlags.Length, TimeStepCount + 1);
@@ -138,6 +206,14 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         }
     }
 
+    /// <summary>
+    ///     Builds the time grid for the PDE solver.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="valuationDate">The valuation date.</param>
+    /// <param name="tMax">The maximum time (time to expiration).</param>
+    /// <param name="maxDt">The maximum time step size.</param>
+    /// <returns>An array of time grid points.</returns>
     protected virtual double[] BuildTimeGrid(TOption option, DateOnly valuationDate, double tMax, double maxDt)
     {
         if (tMax <= 0.0)

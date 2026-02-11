@@ -5,6 +5,9 @@ using MathNet.Numerics.Distributions;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for digital options using closed-form analytical formulas.
+/// </summary>
 public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
     protected override double CalculateValue(DigitalOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)

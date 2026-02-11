@@ -5,6 +5,9 @@ using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for geometric average Asian options using closed-form analytical formulas.
+/// </summary>
 public sealed class GeometricAverageAsianEngine : BsmPricingEngine<GeometricAverageOption>
 {
     protected override double CalculateValue(GeometricAverageOption option, BsmModelParameters model, double assetPrice, DateOnly valuationDate)

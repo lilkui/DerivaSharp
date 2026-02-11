@@ -5,10 +5,19 @@ using MathNet.Numerics.RootFinding;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Base class for pricing engines using the Black-Scholes-Merton model.
+/// </summary>
+/// <typeparam name="TOption">The type of option to price.</typeparam>
 public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmModelParameters>
     where TOption : Option
 {
-    // DValueDVol (per 1%)
+    /// <summary>
+    ///     Computes vega using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of value with respect to volatility (per 1%).</returns>
     public virtual double Vega(TOption option, PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -25,7 +34,12 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return (vVolPlus - vVolMinus) / (2 * dvol) / 100;
     }
 
-    // DDeltaDVol (per 1%)
+    /// <summary>
+    ///     Computes vanna using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of delta with respect to volatility (per 1%).</returns>
     public virtual double Vanna(TOption option, PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -46,7 +60,12 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return (vSpotPlusVolPlus - vSpotPlusVolMinus - vSpotMinusVolPlus + vSpotMinusVolMinus) / (4 * ds * dvol) / 100;
     }
 
-    // DGammaDVol (per 1%)
+    /// <summary>
+    ///     Computes zomma using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of gamma with respect to volatility (per 1%).</returns>
     public virtual double Zomma(TOption option, PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -70,7 +89,12 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return (vSpotPlusVolPlus - 2 * vVolPlus + vSpotMinusVolPlus - vSpotPlusVolMinus + 2 * vVolMinus - vSpotMinusVolMinus) / (2 * dvol * ds * ds) / 100;
     }
 
-    // DValueDRate (per 1%)
+    /// <summary>
+    ///     Computes rho using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>The rate of change of value with respect to the risk-free rate (per 1%).</returns>
     public virtual double Rho(TOption option, PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -87,6 +111,12 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return (vRatePlus - vRateMinus) / (2 * dr) / 100;
     }
 
+    /// <summary>
+    ///     Computes the option value and all Greeks using numerical differentiation.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <returns>A <see cref="PricingResult" /> containing the value and Greeks.</returns>
     public virtual PricingResult ValueAndGreeks(TOption option, PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -147,6 +177,16 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return new PricingResult(v0, delta, gamma, speed, theta, charm, color, vega, vanna, zomma, rho);
     }
 
+    /// <summary>
+    ///     Computes the implied volatility for a given option price using Brent's method.
+    /// </summary>
+    /// <param name="option">The option to price.</param>
+    /// <param name="context">The pricing context.</param>
+    /// <param name="optionPrice">The observed option price.</param>
+    /// <param name="lowerBound">The lower bound for the volatility search.</param>
+    /// <param name="upperBound">The upper bound for the volatility search.</param>
+    /// <param name="accuracy">The desired accuracy.</param>
+    /// <returns>The implied volatility, or <see cref="double.NaN" /> if the root-finding fails to converge.</returns>
     public virtual double ImpliedVolatility(
         TOption option,
         PricingContext<BsmModelParameters> context,

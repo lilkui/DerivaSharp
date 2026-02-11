@@ -7,30 +7,38 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
-// This FD engine prices an Accumulator by exploiting linearity of the BSM PDE and the
-// fact that the contract value is affine in the already-accumulated quantity q.
-//
-// We write the value as
-//   V(t, S, q) = q * A(t, S) + B(t, S)
-//
-// A(t, S): "unit accumulated value"
-//   - Value of ONE already-accrued unit.
-//   - Terminal payoff: (S - K).
-//   - On each observation date, enforce knock-out by applying a jump/step condition:
-//       if S >= KO, set A to intrinsic (S - K).
-//   - Between observation dates, A evolves under the standard BSM PDE with usual
-//     boundary/terminal conditions.
-//
-// B(t, S): "future accrual value" (value when q = 0)
-//   - Terminal payoff: 0.
-//   - On each observation date, if S < KO, add the value of the newly accrued
-//     quantity dq(S) (daily or accelerated) using the already-solved A:
-//       B += dq(S) * A(t, S)
-//     and if S >= KO, set B = 0 (knocked out).
-//   - Between observation dates, B also evolves under the BSM PDE.
-//
-// Solve A first on the grid, then solve B using A as input. Final price:
-//   V(t,S) = q_accumulated * A(t,S) + B(t,S).
+/// <summary>
+///     Pricing engine for accumulator contracts using finite difference methods.
+/// </summary>
+/// <remarks>
+///     This FD engine prices an Accumulator by exploiting linearity of the BSM PDE and the
+///     fact that the contract value is affine in the already-accumulated quantity q.
+///     <para>
+///         We write the value as V(t, S, q) = q * A(t, S) + B(t, S).
+///     </para>
+///     <para>
+///         A(t, S): "unit accumulated value"
+///         - Value of ONE already-accrued unit.
+///         - Terminal payoff: (S - K).
+///         - On each observation date, enforce knock-out by applying a jump/step condition:
+///         if S >= KO, set A to intrinsic (S - K).
+///         - Between observation dates, A evolves under the standard BSM PDE with usual
+///         boundary/terminal conditions.
+///     </para>
+///     <para>
+///         B(t, S): "future accrual value" (value when q = 0)
+///         - Terminal payoff: 0.
+///         - On each observation date, if S &lt; KO, add the value of the newly accrued
+///         quantity dq(S) (daily or accelerated) using the already-solved A:
+///         B += dq(S) * A(t, S)
+///         and if S >= KO, set B = 0 (knocked out).
+///         - Between observation dates, B also evolves under the BSM PDE.
+///     </para>
+///     <para>
+///         Solve A first on the grid, then solve B using A as input. Final price:
+///         V(t,S) = q_accumulated * A(t,S) + B(t,S).
+///     </para>
+/// </remarks>
 public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 {
     private readonly FiniteDifferenceScheme _scheme;

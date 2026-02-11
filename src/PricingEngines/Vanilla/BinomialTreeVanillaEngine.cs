@@ -4,12 +4,19 @@ using DerivaSharp.Models;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Pricing engine for vanilla options using the Cox-Ross-Rubinstein binomial tree model.
+/// </summary>
 public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
 {
     private readonly int _stepCount;
     private readonly double[] _prices;
     private readonly double[] _values;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="BinomialTreeVanillaEngine" /> class.
+    /// </summary>
+    /// <param name="stepCount">The number of time steps in the binomial tree.</param>
     public BinomialTreeVanillaEngine(int stepCount)
     {
         Guard.IsGreaterThan(stepCount, 0);

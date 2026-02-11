@@ -6,6 +6,9 @@ using Tensor = TorchSharp.torch.Tensor;
 
 namespace DerivaSharp.PricingEngines;
 
+/// <summary>
+///     Monte Carlo pricing engine for ternary snowball options.
+/// </summary>
 public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<TernarySnowballOption>
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);

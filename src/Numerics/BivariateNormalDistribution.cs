@@ -56,7 +56,7 @@ public static class BivariateNormalDistribution
     /// </returns>
     public static double Cdf(double x, double y, double rho)
     {
-        Guard.IsBetweenOrEqualTo(rho, -1, 1, nameof(rho));
+        Guard.IsBetweenOrEqualTo(rho, -1, 1);
 
         // Select the appropriate column (ng) in the quadrature arrays and
         // the number of points (lg) based on the absolute value of correlation
