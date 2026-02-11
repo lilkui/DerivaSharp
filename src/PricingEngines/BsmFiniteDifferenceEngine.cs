@@ -12,14 +12,15 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     where TOption : Option
 {
     private readonly int _targetTimeStepCount;
+    private readonly double _theta;
     private readonly double[] _lower1;
     private readonly double[] _lower2;
     private readonly double[] _main1;
     private readonly double[] _main2;
-    private readonly double[] _result;
-    private readonly double[] _rhs;
     private readonly double[] _upper1;
     private readonly double[] _upper2;
+    private readonly double[] _rhs;
+    private readonly double[] _result;
     private readonly TridiagonalMatrix _m1;
     private readonly TridiagonalMatrix _m2;
     private double[] _valueMatrixBuffer;
@@ -30,6 +31,13 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         Guard.IsGreaterThanOrEqualTo(timeStepCount, 2);
 
         Scheme = scheme;
+        _theta = scheme switch
+        {
+            FiniteDifferenceScheme.ExplicitEuler => 0.0,
+            FiniteDifferenceScheme.ImplicitEuler => 1.0,
+            FiniteDifferenceScheme.CrankNicolson => 0.5,
+            _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidFiniteDifferenceScheme),
+        };
         PriceStepCount = priceStepCount;
         TimeStepCount = timeStepCount;
         _targetTimeStepCount = timeStepCount;
@@ -80,14 +88,13 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         double tau = GetYearsToExpiration(option, valuationDate);
         PriceVector = Generate.LinearSpaced(PriceStepCount + 1, MinPrice, MaxPrice);
 
-        SchemeCoefficients coefficients = GetSchemeCoefficients(parameters);
-
         double maxDt = tau / _targetTimeStepCount;
 
         if (Scheme == FiniteDifferenceScheme.ExplicitEuler)
         {
-            double maxDiffusionSquare = coefficients.V * coefficients.V * MaxPrice * MaxPrice / coefficients.Ds / coefficients.Ds;
-            if (maxDt * (maxDiffusionSquare + coefficients.R) > 1.0)
+            double ds = PriceVector[1] - PriceVector[0];
+            double maxDiffusionSquare = parameters.Volatility * parameters.Volatility * MaxPrice * MaxPrice / ds / ds;
+            if (maxDt * (maxDiffusionSquare + parameters.RiskFreeRate) > 1.0)
             {
                 ThrowHelper.ThrowArgumentException(ExceptionMessages.ExplicitSchemeUnstable);
             }
@@ -188,19 +195,12 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
         keyTimesList.Sort();
         List<double> grid = new(keyTimesList.Count + Math.Max(0, keyTimesList.Count - 1));
-        bool hasPrev = false;
-        double prev = 0.0;
+        grid.Add(keyTimesList[0]);
+        double prev = keyTimesList[0];
 
-        foreach (double t in keyTimesList)
+        for (int i = 1; i < keyTimesList.Count; i++)
         {
-            if (!hasPrev)
-            {
-                grid.Add(t);
-                prev = t;
-                hasPrev = true;
-                continue;
-            }
-
+            double t = keyTimesList[i];
             if (t - prev <= tol)
             {
                 continue;
@@ -234,7 +234,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         int required = (PriceStepCount + 1) * (TimeStepCount + 1);
         if (_valueMatrixBuffer.Length != required)
         {
-            Array.Resize(ref _valueMatrixBuffer, required);
+            _valueMatrixBuffer = new double[required];
         }
     }
 
@@ -254,18 +254,12 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
             return false;
         }
 
-        if (time < 0.0)
-        {
-            time = 0.0;
-        }
-        else if (time > tMax + tol)
+        if (time > tMax + tol)
         {
             ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
         }
-        else if (time > tMax)
-        {
-            time = tMax;
-        }
+
+        time = Math.Clamp(time, 0.0, tMax);
 
         int candidate = GetNearestTimeIndex(time);
 
@@ -303,11 +297,11 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
     }
 
-    private void SolveSingleStep(int i, double dt, in SchemeCoefficients coefficients, Span<double> rhs, Span<double> result, bool updateCoefficients)
+    private void SolveSingleStep(int i, double dt, double ds, BsmModelParameters parameters, Span<double> rhs, Span<double> result, bool updateCoefficients)
     {
         if (updateCoefficients)
         {
-            UpdateTridiagonalCoefficients(dt, coefficients);
+            UpdateTridiagonalCoefficients(dt, ds, parameters);
         }
 
         int length = PriceStepCount - 1;
@@ -330,23 +324,26 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         result.CopyTo(ValueMatrixSpan.GetRowSpan(i).Slice(1, length));
     }
 
-    private void UpdateTridiagonalCoefficients(double dt, in SchemeCoefficients coefficients)
+    private void UpdateTridiagonalCoefficients(double dt, double ds, BsmModelParameters parameters)
     {
-        double oneMinusTheta = 1.0 - coefficients.Theta;
+        double r = parameters.RiskFreeRate;
+        double q = parameters.DividendYield;
+        double v = parameters.Volatility;
+        double oneMinusTheta = 1.0 - _theta;
 
         for (int j = 1; j < PriceStepCount; j++)
         {
             double s = PriceVector[j];
-            double drift = (coefficients.R - coefficients.Q) * s / coefficients.Ds;
-            double diffusionSquare = coefficients.V * coefficients.V * s * s / coefficients.Ds / coefficients.Ds;
+            double drift = (r - q) * s / ds;
+            double diffusionSquare = v * v * s * s / ds / ds;
 
             double a = 0.5 * dt * (diffusionSquare - drift);
-            double b = dt * (diffusionSquare + coefficients.R);
+            double b = dt * (diffusionSquare + r);
             double c = 0.5 * dt * (diffusionSquare + drift);
 
-            _lower1[j - 1] = -coefficients.Theta * a;
-            _main1[j - 1] = 1.0 + coefficients.Theta * b;
-            _upper1[j - 1] = -coefficients.Theta * c;
+            _lower1[j - 1] = -_theta * a;
+            _main1[j - 1] = 1.0 + _theta * b;
+            _upper1[j - 1] = -_theta * c;
 
             _lower2[j - 1] = oneMinusTheta * a;
             _main2[j - 1] = 1.0 - oneMinusTheta * b;
@@ -361,40 +358,20 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         SetBoundaryConditions(option, parameters);
         ApplyStepConditions(TimeStepCount, option, parameters);
 
-        SchemeCoefficients coefficients = GetSchemeCoefficients(parameters);
+        double ds = PriceVector[1] - PriceVector[0];
         if (!UseTradingDayGrid)
         {
             double dt = TimeVector[1] - TimeVector[0];
-            UpdateTridiagonalCoefficients(dt, coefficients);
+            UpdateTridiagonalCoefficients(dt, ds, parameters);
         }
 
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
             double dt = TimeVector[i + 1] - TimeVector[i];
-            SolveSingleStep(i, dt, coefficients, _rhs, _result, UseTradingDayGrid);
+            SolveSingleStep(i, dt, ds, parameters, _rhs, _result, UseTradingDayGrid);
             ApplyStepConditions(i, option, parameters);
         }
     }
-
-    private SchemeCoefficients GetSchemeCoefficients(BsmModelParameters parameters)
-    {
-        double ds = PriceVector[1] - PriceVector[0];
-        double r = parameters.RiskFreeRate;
-        double q = parameters.DividendYield;
-        double v = parameters.Volatility;
-
-        double theta = Scheme switch
-        {
-            FiniteDifferenceScheme.ExplicitEuler => 0.0,
-            FiniteDifferenceScheme.ImplicitEuler => 1.0,
-            FiniteDifferenceScheme.CrankNicolson => 0.5,
-            _ => ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidFiniteDifferenceScheme),
-        };
-
-        return new SchemeCoefficients(ds, r, q, v, theta);
-    }
-
-    private readonly record struct SchemeCoefficients(double Ds, double R, double Q, double V, double Theta);
 
     private readonly ref struct ObservationStepEnumerable(BsmFiniteDifferenceEngine<TOption> engine, ReadOnlySpan<double> observationTimes)
     {
