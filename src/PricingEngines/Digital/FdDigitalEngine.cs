@@ -25,7 +25,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(DigitalOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(DigitalOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
         double strike = option.StrikePrice;
@@ -35,7 +35,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         int strikeIndex = Math.Max(1, (int)Math.Round(rawIndex));
         MaxPrice = strike * PriceStepCount / strikeIndex;
 
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
     }
 
     protected override void SetTerminalCondition(DigitalOption option)

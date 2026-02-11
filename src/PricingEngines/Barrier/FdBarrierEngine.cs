@@ -37,7 +37,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (option.ObservationInterval == 0) // continuous observation
         {
@@ -68,7 +68,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
         _observationTimes = option.ObservationInterval > 0 ? BuildObservationTimes(option.ObservationDates, valuationDate) : null;
 
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
 
         if (option.ObservationInterval > 0)
         {

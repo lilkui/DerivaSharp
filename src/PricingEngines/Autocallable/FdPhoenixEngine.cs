@@ -140,14 +140,14 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
-    protected override void InitializeCoefficients(PhoenixOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(PhoenixOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (_observationTimes is null)
         {
             InitializeParameters(option, valuationDate);
         }
 
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
 
         if (_stepToObservationIndex.Length != TimeStepCount + 1)
         {

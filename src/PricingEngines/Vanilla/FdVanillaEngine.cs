@@ -19,11 +19,11 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
         return base.CalculateValue(option, parameters, assetPrice, valuationDate);
     }
 
-    protected override void InitializeCoefficients(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
         MaxPrice = 4 * option.StrikePrice;
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
     }
 
     protected override void SetTerminalCondition(TOption option)

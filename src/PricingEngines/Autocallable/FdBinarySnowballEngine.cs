@@ -112,14 +112,14 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         }
     }
 
-    protected override void InitializeCoefficients(BinarySnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(BinarySnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (_observationTimes is null)
         {
             InitializeParameters(option, valuationDate);
         }
 
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
 
         if (_stepToObservationIndex.Length != TimeStepCount + 1)
         {

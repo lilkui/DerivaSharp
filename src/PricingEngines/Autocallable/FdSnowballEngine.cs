@@ -146,14 +146,14 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
     }
 
-    protected override void InitializeCoefficients(SnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected override void InitializeGrid(SnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (_observationTimes is null)
         {
             InitializeParameters(option, valuationDate);
         }
 
-        base.InitializeCoefficients(option, parameters, valuationDate);
+        base.InitializeGrid(option, parameters, valuationDate);
 
         if (_stepToObservationIndex.Length != TimeStepCount + 1)
         {

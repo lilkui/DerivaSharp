@@ -80,7 +80,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return LinearInterpolation.InterpolateSorted(assetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
 
-    protected virtual void InitializeCoefficients(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
+    protected virtual void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
         Guard.IsGreaterThan(MaxPrice, MinPrice);
@@ -238,7 +238,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         }
     }
 
-    private bool TryGetTimeIndex(double time, out int index)
+    private int GetTimeIndex(double time)
     {
         if (TimeVector.Length == 0)
         {
@@ -250,8 +250,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
         if (time < -tol)
         {
-            index = 0;
-            return false;
+            return -1;
         }
 
         if (time > tMax + tol)
@@ -261,18 +260,17 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
         time = Math.Clamp(time, 0.0, tMax);
 
-        int candidate = GetNearestTimeIndex(time);
+        int candidate = FindNearestTimeIndex(time);
 
         if (Math.Abs(TimeVector[candidate] - time) > tol)
         {
             ThrowHelper.ThrowArgumentException(ExceptionMessages.ObservationTimeNotOnGrid);
         }
 
-        index = candidate;
-        return true;
+        return candidate;
     }
 
-    private int GetNearestTimeIndex(double time)
+    private int FindNearestTimeIndex(double time)
     {
         int candidate = TimeVector.BinarySearch(time);
 
@@ -297,7 +295,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return Math.Abs(time - left) <= Math.Abs(time - right) ? insert - 1 : insert;
     }
 
-    private void SolveSingleStep(int i, double dt, double ds, BsmModelParameters parameters, Span<double> rhs, Span<double> result, bool updateCoefficients)
+    private void SolveTimeStep(int i, double dt, double ds, BsmModelParameters parameters, Span<double> rhs, Span<double> result, bool updateCoefficients)
     {
         if (updateCoefficients)
         {
@@ -353,7 +351,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
 
     private void SolvePde(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        InitializeCoefficients(option, parameters, valuationDate);
+        InitializeGrid(option, parameters, valuationDate);
         SetTerminalCondition(option);
         SetBoundaryConditions(option, parameters);
         ApplyStepConditions(TimeStepCount, option, parameters);
@@ -368,7 +366,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         for (int i = TimeStepCount - 1; i >= 0; i--)
         {
             double dt = TimeVector[i + 1] - TimeVector[i];
-            SolveSingleStep(i, dt, ds, parameters, _rhs, _result, UseTradingDayGrid);
+            SolveTimeStep(i, dt, ds, parameters, _rhs, _result, UseTradingDayGrid);
             ApplyStepConditions(i, option, parameters);
         }
     }
@@ -396,7 +394,8 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
             while (++_index < _count)
             {
                 double tObs = _observationTimes[_index];
-                if (!engine.TryGetTimeIndex(tObs, out int step))
+                int step = engine.GetTimeIndex(tObs);
+                if (step < 0)
                 {
                     continue;
                 }

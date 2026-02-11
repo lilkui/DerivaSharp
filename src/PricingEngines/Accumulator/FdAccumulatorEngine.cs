@@ -144,7 +144,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             return buffer;
         }
 
-        protected override void InitializeCoefficients(Accumulator option, BsmModelParameters parameters, DateOnly valuationDate)
+        protected override void InitializeGrid(Accumulator option, BsmModelParameters parameters, DateOnly valuationDate)
         {
             _strike = option.StrikePrice;
             _knockOut = option.KnockOutPrice;
@@ -154,7 +154,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             MaxPrice = 4.0 * maxRef;
 
             double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
-            base.InitializeCoefficients(option, parameters, valuationDate);
+            base.InitializeGrid(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)
             {
@@ -229,7 +229,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             return ValueMatrixSpan.GetRowSpan(0);
         }
 
-        protected override void InitializeCoefficients(Accumulator option, BsmModelParameters parameters, DateOnly valuationDate)
+        protected override void InitializeGrid(Accumulator option, BsmModelParameters parameters, DateOnly valuationDate)
         {
             _strike = option.StrikePrice;
             _knockOut = option.KnockOutPrice;
@@ -241,7 +241,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             MaxPrice = 4.0 * maxRef;
 
             double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
-            base.InitializeCoefficients(option, parameters, valuationDate);
+            base.InitializeGrid(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)
             {
