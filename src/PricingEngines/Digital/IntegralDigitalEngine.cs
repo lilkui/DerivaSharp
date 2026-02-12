@@ -45,7 +45,8 @@ public sealed class IntegralDigitalEngine : BsmPricingEngine<DigitalOption>
             return 0.0;
         }
 
-        double result = DoubleExponentialTransformation.Integrate(Integrand, a, b, 1e-8);
+        const int gaussLegendreOrder = 32;
+        double result = GaussLegendreRule.Integrate(Integrand, a, b, gaussLegendreOrder);
         return Exp(-r * tau) * result;
 
         double Integrand(double z)

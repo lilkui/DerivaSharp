@@ -24,13 +24,28 @@ public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
             return Max(sgn * (assetPrice - x), 0);
         }
 
-        double result = DoubleExponentialTransformation.Integrate(Integrand, -10, 10, 1e-8);
+        double zStar = (Log(x / assetPrice) - (r - q - 0.5 * vol * vol) * tau) / (vol * Sqrt(tau));
+
+        const double zLower = -10.0;
+        const double zUpper = 10.0;
+
+        (double a, double b) = sgn > 0
+            ? (Max(zStar, zLower), zUpper)
+            : (zLower, Min(zStar, zUpper));
+
+        if (a >= b)
+        {
+            return 0.0;
+        }
+
+        const int gaussLegendreOrder = 32;
+        double result = GaussLegendreRule.Integrate(Integrand, a, b, gaussLegendreOrder);
         return Exp(-r * tau) * result;
 
         double Integrand(double z)
         {
             double st = assetPrice * Exp((r - q - 0.5 * vol * vol) * tau + vol * Sqrt(tau) * z);
-            double payoff = Max(sgn * (st - x), 0);
+            double payoff = sgn * (st - x);
             double pdf = Exp(-0.5 * z * z) / Sqrt(2 * PI);
             return payoff * pdf;
         }
