@@ -3,9 +3,9 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Stage: Experimental](https://img.shields.io/badge/stage-experimental-orange)
 
-DerivaSharp is a high-performance C# library for financial derivatives pricing. It provides a comprehensive suite of instruments and sophisticated pricing algorithms.
+DerivaSharp is a modern, performance-oriented C# library for financial derivatives pricing. It provides a comprehensive suite of instruments and sophisticated pricing algorithms.
 
-> [!WARNING]
+> [!NOTE]
 > This project is currently in an experimental stage. Expect frequent breaking changes and API instability.
 
 ## Quick Start
@@ -53,7 +53,7 @@ Console.WriteLine($"Delta: {delta:F4}");
 
 ### Interactive Notebooks
 
-Explore the [notebooks/](notebooks/) folder for interactive examples. These notebooks demonstrate how to use the library within Jupyter using Python via [Python.NET](http://pythonnet.github.io/).
+Explore the [notebooks/](notebooks/) folder for interactive examples. These notebooks demonstrate how to use the library within Jupyter using Python via [Python.NET](https://pythonnet.github.io/).
 
 Before using the notebooks, build the library for your target platform to generate the required binaries. For example, on Windows:
 
@@ -79,20 +79,20 @@ dotnet publish -c Release -r win-x64
 - **CPU**: AMD Ryzen 9 5900X @ 3.70GHz
 - **GPU**: NVIDIA GeForce RTX 3090
 - **OS**: Windows 11 (25H2)
-- **Runtime**: .NET 10.0
+- **Runtime**: .NET 10.0.2
 
 | Instrument | Pricing Algorithm | Parameters | Time (JIT) | Time (AOT) |
 | :--- | :--- | :--- | ---: | ---: |
-| **Vanilla European** | Analytical | - | 46.0 ns | 56.3 ns |
-| | Finite Difference | 1000×1000 grid (CN) | 11.75 ms | 11.94 ms |
-| | Monte Carlo | 500000 paths | 6.09 ms | 7.06 ms |
-| | Binomial Tree | 1000 steps | 441 μs | 546 μs |
-| | Numerical Integration | - | 100 μs | 108 μs |
-| **Vanilla American** | Bjerksund-Stensland | - | 6.23 μs | 6.98 μs |
-| | Finite Difference | 1000×1000 grid (CN) | 12.95 ms | 13.04 ms |
-| | Monte Carlo | 100000 paths, 250 steps | 907 ms | 965 ms |
-| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 34.51 ms | 35.01 ms |
-| | Monte Carlo | 500000 paths | 1.72 s | 1.96 s |
-| | Monte Carlo | 500000 paths, GPU-accelerated | 40.90 ms | 40.73 ms |
+| **Vanilla European** | Analytical | - | 28.5 ns | 40.7 ns |
+| | Finite Difference | 1000×1000 grid (CN) | 11.75 ms | 11.90 ms |
+| | Monte Carlo | 500000 paths | 6.24 ms | 7.17 ms |
+| | Binomial Tree | 1000 steps | 445 μs | 549 μs |
+| | Numerical Integration | - | 333 ns | 464 ns |
+| **Vanilla American** | Bjerksund-Stensland | - | 5.83 μs | 6.49 μs |
+| | Finite Difference | 1000×1000 grid (CN) | 13.06 ms | 13.04 ms |
+| | Monte Carlo | 100000 paths, 250 steps | 976 ms | 959 ms |
+| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 34.12 ms | 34.61 ms |
+| | Monte Carlo | 500000 paths | 1.70 s | 1.94 s |
+| | Monte Carlo | 500000 paths, GPU-accelerated | 40.92 ms | 40.75 ms |
 
 *CN = Crank-Nicolson scheme*
