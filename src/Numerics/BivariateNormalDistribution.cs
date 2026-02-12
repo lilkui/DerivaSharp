@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Diagnostics;
-using MathNet.Numerics.Distributions;
 
 namespace DerivaSharp.Numerics;
 
@@ -102,7 +101,7 @@ public static class BivariateNormalDistribution
                 bvn *= asr / (4 * Math.PI);
             }
 
-            bvn += StdNormCdf(-h) * StdNormCdf(-k);
+            bvn += StandardNormalDistribution.Cdf(-h) * StandardNormalDistribution.Cdf(-k);
         }
         else
         {
@@ -129,7 +128,7 @@ public static class BivariateNormalDistribution
                 if (-hk < 100)
                 {
                     double b = Math.Sqrt(bs);
-                    bvn -= Math.Exp(-hk / 2) * Math.Sqrt(2 * Math.PI) * StdNormCdf(-b / a) * b * (1 - c * bs * (1 - d * bs / 5) / 3);
+                    bvn -= Math.Exp(-hk / 2) * Math.Sqrt(2 * Math.PI) * StandardNormalDistribution.Cdf(-b / a) * b * (1 - c * bs * (1 - d * bs / 5) / 3);
                 }
 
                 a /= 2;
@@ -154,20 +153,18 @@ public static class BivariateNormalDistribution
 
             if (rho > 0)
             {
-                bvn += StdNormCdf(-Math.Max(h, k));
+                bvn += StandardNormalDistribution.Cdf(-Math.Max(h, k));
             }
             else
             {
                 bvn = -bvn;
                 if (k > h)
                 {
-                    bvn += StdNormCdf(k) - StdNormCdf(h);
+                    bvn += StandardNormalDistribution.Cdf(k) - StandardNormalDistribution.Cdf(h);
                 }
             }
         }
 
         return bvn;
     }
-
-    private static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
 }

@@ -1,7 +1,6 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
-using MathNet.Numerics.Distributions;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -64,12 +63,10 @@ public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<American
         double lambda = (-r + gamma * b + 0.5 * gamma * (gamma - 1) * v * v) * t;
         double d = -(Log(s / h) + (b + (gamma - 0.5) * v * v) * t) / (v * Sqrt(t));
         double kappa = 2 * b / (v * v) + 2 * gamma - 1;
-        double phi = Exp(lambda) * Pow(s, gamma) * (StdNormCdf(d) - Pow(i / s, kappa) * StdNormCdf(d - 2 * Log(i / s) / (v * Sqrt(t))));
+        double phi = Exp(lambda) * Pow(s, gamma) * (StandardNormalDistribution.Cdf(d) - Pow(i / s, kappa) * StandardNormalDistribution.Cdf(d - 2 * Log(i / s) / (v * Sqrt(t))));
 
         return phi;
     }
-
-    private static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
 
     private double AmericanCallValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
     {

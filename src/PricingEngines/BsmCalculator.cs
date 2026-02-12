@@ -1,4 +1,4 @@
-using MathNet.Numerics.Distributions;
+using DerivaSharp.Numerics;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -36,7 +36,7 @@ internal static class BsmCalculator
         double d1 = (Log(spot / strike) + (r - q + vol * vol / 2) * tau) / (vol * sqrtT);
         double d2 = d1 - vol * sqrtT;
 
-        return z * (spot * Exp(-q * tau) * StdNormCdf(z * d1) - strike * Exp(-r * tau) * StdNormCdf(z * d2));
+        return z * (spot * Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d1) - strike * Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d2));
     }
 
     /// <summary>
@@ -57,18 +57,4 @@ internal static class BsmCalculator
 
         return (d1, d2);
     }
-
-    /// <summary>
-    ///     Calculates the cumulative distribution function of the standard normal distribution.
-    /// </summary>
-    /// <param name="x">The value at which to evaluate the CDF.</param>
-    /// <returns>The cumulative probability.</returns>
-    public static double StdNormCdf(double x) => Normal.CDF(0, 1, x);
-
-    /// <summary>
-    ///     Calculates the probability density function of the standard normal distribution.
-    /// </summary>
-    /// <param name="x">The value at which to evaluate the PDF.</param>
-    /// <returns>The probability density.</returns>
-    public static double StdNormPdf(double x) => Normal.PDF(0, 1, x);
 }
