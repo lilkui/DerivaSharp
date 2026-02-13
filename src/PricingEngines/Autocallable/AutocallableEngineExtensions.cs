@@ -1,8 +1,7 @@
 using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics;
-using MathNet.Numerics.RootFinding;
+using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -49,7 +48,7 @@ public static class AutocallableEngineExtensions
 
             try
             {
-                return Brent.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+                return BrentRootFinder.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
             }
             catch (NonConvergenceException)
             {
@@ -103,7 +102,7 @@ public static class AutocallableEngineExtensions
 
             try
             {
-                return Brent.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+                return BrentRootFinder.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
             }
             catch (NonConvergenceException)
             {
