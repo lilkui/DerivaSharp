@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
+using DerivaSharp.Numerics;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -64,13 +64,16 @@ public sealed class AnalyticBarrierEngine : BsmPricingEngine<BarrierOption>
 
         (double, double, double, double, double, double) CommonFactors(double eta, double phi)
         {
-            double a = phi * s * expQt * N(phi * x1) - phi * x * expRt * N(phi * x1 - phi * vSqrtT);
-            double b = phi * s * expQt * N(phi * x2) - phi * x * expRt * N(phi * x2 - phi * vSqrtT);
-            double c = phi * s * expQt * Pow(h / s, 2 * (mu + 1)) * N(eta * y1) - phi * x * expRt * Pow(h / s, 2 * mu) * N(eta * y1 - eta * vSqrtT);
-            double d = phi * s * expQt * Pow(h / s, 2 * (mu + 1)) * N(eta * y2) - phi * x * expRt * Pow(h / s, 2 * mu) * N(eta * y2 - eta * vSqrtT);
-            double e = k * expRt * (N(eta * x2 - eta * vSqrtT) - Pow(h / s, 2 * mu) * N(eta * y2 - eta * vSqrtT));
+            double a = phi * s * expQt * StandardNormalDistribution.Cdf(phi * x1) - phi * x * expRt * StandardNormalDistribution.Cdf(phi * x1 - phi * vSqrtT);
+            double b = phi * s * expQt * StandardNormalDistribution.Cdf(phi * x2) - phi * x * expRt * StandardNormalDistribution.Cdf(phi * x2 - phi * vSqrtT);
+            double c = phi * s * expQt * Pow(h / s, 2 * (mu + 1)) * StandardNormalDistribution.Cdf(eta * y1) -
+                       phi * x * expRt * Pow(h / s, 2 * mu) * StandardNormalDistribution.Cdf(eta * y1 - eta * vSqrtT);
+            double d = phi * s * expQt * Pow(h / s, 2 * (mu + 1)) * StandardNormalDistribution.Cdf(eta * y2) -
+                       phi * x * expRt * Pow(h / s, 2 * mu) * StandardNormalDistribution.Cdf(eta * y2 - eta * vSqrtT);
+            double e = k * expRt * (StandardNormalDistribution.Cdf(eta * x2 - eta * vSqrtT) - Pow(h / s, 2 * mu) * StandardNormalDistribution.Cdf(eta * y2 - eta * vSqrtT));
             double f = option.RebatePaymentType == PaymentType.PayAtHit
-                ? k * (Pow(h / s, mu + lambda) * N(eta * z) + Pow(h / s, mu - lambda) * N(eta * z - 2 * eta * lambda * vSqrtT))
+                ? k * (Pow(h / s, mu + lambda) * StandardNormalDistribution.Cdf(eta * z) +
+                       Pow(h / s, mu - lambda) * StandardNormalDistribution.Cdf(eta * z - 2 * eta * lambda * vSqrtT))
                 : k * expRt - e;
 
             return (a, b, c, d, e, f);
@@ -148,6 +151,4 @@ public sealed class AnalyticBarrierEngine : BsmPricingEngine<BarrierOption>
                 return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidOptionType);
         }
     }
-
-    private static double N(double x) => Normal.CDF(0, 1, x);
 }

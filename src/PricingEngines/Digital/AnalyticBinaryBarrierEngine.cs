@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
+using DerivaSharp.Numerics;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -298,15 +298,16 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
 
         Factors CommonFactors(double eta, double phi)
         {
-            double a1 = s * expQt * N(phi * x1);
-            double b1 = k * expRt * N(phi * x1 - phi * vSqrtT);
-            double a2 = s * expQt * N(phi * x2);
-            double b2 = k * expRt * N(phi * x2 - phi * vSqrtT);
-            double a3 = s * expQt * Pow(h / s, 2 * (mu + 1)) * N(eta * y1);
-            double b3 = k * expRt * Pow(h / s, 2 * mu) * N(eta * y1 - eta * vSqrtT);
-            double a4 = s * expQt * Pow(h / s, 2 * (mu + 1)) * N(eta * y2);
-            double b4 = k * expRt * Pow(h / s, 2 * mu) * N(eta * y2 - eta * vSqrtT);
-            double a5 = k * (Pow(h / s, mu + lambda) * N(eta * z) + Pow(h / s, mu - lambda) * N(eta * z - 2 * eta * lambda * vSqrtT));
+            double a1 = s * expQt * StandardNormalDistribution.Cdf(phi * x1);
+            double b1 = k * expRt * StandardNormalDistribution.Cdf(phi * x1 - phi * vSqrtT);
+            double a2 = s * expQt * StandardNormalDistribution.Cdf(phi * x2);
+            double b2 = k * expRt * StandardNormalDistribution.Cdf(phi * x2 - phi * vSqrtT);
+            double a3 = s * expQt * Pow(h / s, 2 * (mu + 1)) * StandardNormalDistribution.Cdf(eta * y1);
+            double b3 = k * expRt * Pow(h / s, 2 * mu) * StandardNormalDistribution.Cdf(eta * y1 - eta * vSqrtT);
+            double a4 = s * expQt * Pow(h / s, 2 * (mu + 1)) * StandardNormalDistribution.Cdf(eta * y2);
+            double b4 = k * expRt * Pow(h / s, 2 * mu) * StandardNormalDistribution.Cdf(eta * y2 - eta * vSqrtT);
+            double a5 = k * (Pow(h / s, mu + lambda) * StandardNormalDistribution.Cdf(eta * z) +
+                             Pow(h / s, mu - lambda) * StandardNormalDistribution.Cdf(eta * z - 2 * eta * lambda * vSqrtT));
 
             return new Factors(a1, b1, a2, b2, a3, b3, a4, b4, a5);
         }
@@ -375,8 +376,6 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
                 return ThrowHelper.ThrowArgumentException<double>(ExceptionMessages.InvalidBinaryBarrierOption);
         }
     }
-
-    private static double N(double x) => Normal.CDF(0, 1, x);
 
     private record struct Factors(double A1, double B1, double A2, double B2, double A3, double B3, double A4, double B4, double A5);
 }

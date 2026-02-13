@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Distributions;
+using DerivaSharp.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -36,13 +36,13 @@ public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
             {
                 double k = con.Rebate;
                 double d = (Math.Log(assetPrice / x) + (r - q - 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
-                return k * Math.Exp(-r * tau) * Normal.CDF(0, 1, z * d);
+                return k * Math.Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d);
             }
 
             case AssetOrNothingOption:
             {
                 double d = (Math.Log(assetPrice / x) + (r - q + 0.5 * vol * vol) * tau) / (vol * Math.Sqrt(tau));
-                return assetPrice * Math.Exp(-q * tau) * Normal.CDF(0, 1, z * d);
+                return assetPrice * Math.Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d);
             }
 
             default:
