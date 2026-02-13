@@ -1,6 +1,6 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using MathNet.Numerics.Integration;
+using DerivaSharp.Numerics;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -39,7 +39,7 @@ public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
         }
 
         const int gaussLegendreOrder = 32;
-        double result = GaussLegendreRule.Integrate(Integrand, a, b, gaussLegendreOrder);
+        double result = GaussLegendreQuadrature.Integrate(Integrand, a, b, gaussLegendreOrder);
         return Exp(-r * tau) * result;
 
         double Integrand(double z)
