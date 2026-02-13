@@ -1,27 +1,70 @@
-# Copilot instructions for DerivaSharp
+# Copilot Instructions — DerivaSharp
 
-## Big picture
+## Project Overview
 
-- Core library lives in [src/](src/) with domain types in [src/Instruments/](src/Instruments/), models in [src/Models/](src/Models/), and pricing engines in [src/PricingEngines/](src/PricingEngines/).
-- Pricing engines share a common workflow: `PricingEngine<TOption, TModel>` handles argument validation + numerical Greeks, while concrete engines implement `CalculateValue(...)` (see [src/PricingEngines/PricingEngine.cs](src/PricingEngines/PricingEngine.cs)).
-- BSM-specific engines extend `BsmPricingEngine<TOption>` for extra Greeks and implied vol (see [src/PricingEngines/BsmPricingEngine.cs](src/PricingEngines/BsmPricingEngine.cs)).
-- Finite-difference engines extend `BsmFiniteDifferenceEngine<TOption>` and use `TridiagonalMatrix` and `LinearInterpolation` for PDE stepping and pricing interpolation (see [src/PricingEngines/BsmFiniteDifferenceEngine.cs](src/PricingEngines/BsmFiniteDifferenceEngine.cs), [src/Numerics/TridiagonalMatrix.cs](src/Numerics/TridiagonalMatrix.cs), [src/Numerics/LinearInterpolation.cs](src/Numerics/LinearInterpolation.cs)).
-- Monte Carlo path generation uses TorchSharp tensors with optional CUDA; random numbers are antithetic via `RandomNumberSource` (see [src/PricingEngines/PathGenerator.cs](src/PricingEngines/PathGenerator.cs), [src/PricingEngines/RandomNumberSource.cs](src/PricingEngines/RandomNumberSource.cs), [src/PricingEngines/TorchUtils.cs](src/PricingEngines/TorchUtils.cs)).
+DerivaSharp is a .NET 10 C# library for financial derivatives pricing. It uses the Black-Scholes-Merton (BSM) framework with analytic, finite-difference (FD), Monte Carlo (MC), binomial-tree, and numerical-integration engines. GPU acceleration is provided via TorchSharp (CUDA).
 
-## Conventions and patterns
+## Architecture
 
-- Domain entities are immutable `record`/`record struct` types and often use `DateOnly` for valuation/expiry (examples in [src/Instruments/Option.cs](src/Instruments/Option.cs) and [src/Models/BsmModelParameters.cs](src/Models/BsmModelParameters.cs)).
-- `OptionType` encodes sign (`Call = 1`, `Put = -1`) and is used directly in formulas (see [src/Instruments/OptionType.cs](src/Instruments/OptionType.cs) and [src/PricingEngines/BsmCalculator.cs](src/PricingEngines/BsmCalculator.cs)).
-- Guard clauses use `CommunityToolkit.Diagnostics.Guard` and errors are centralized in `ExceptionMessages` (see [src/Instruments/Option.cs](src/Instruments/Option.cs) and [src/ExceptionMessages.cs](src/ExceptionMessages.cs)).
-- Pricing APIs typically accept `PricingContext<TModel>` which bundles model params, asset price, and valuation date (see [src/PricingEngines/PricingContext.cs](src/PricingEngines/PricingContext.cs)).
+```
+src/Instruments/   – Immutable record hierarchy defining derivative contracts
+src/Models/        – Market model parameters (BsmModelParameters)
+src/PricingEngines/– Strategy-pattern engines: one engine per (instrument, method) pair
+src/Numerics/      – Math primitives (distributions, root-finding, quadrature, tridiagonal solver)
+src/Time/          – Trading calendar (SSE holidays), date utilities, trading-day grids
+```
 
-## Build, test, notebooks
+**Key generic constraint chain:** `PricingEngine<TOption, TModel> where TOption : Option where TModel : IModelParameters` → `BsmPricingEngine<TOption>` (fixes `TModel = BsmModelParameters`) → `BsmFiniteDifferenceEngine<TOption>` → `FdKiAutocallableEngine<TOption>`.
 
-- Target framework is .NET 10; StyleCop analyzers are enforced via [Directory.Build.props](Directory.Build.props) and package references in [src/DerivaSharp.csproj](src/DerivaSharp.csproj).
-- Run unit tests with `dotnet test` on [tests/DerivaSharp.Tests.csproj](tests/DerivaSharp.Tests.csproj); tests use xUnit with shared test data classes (example: [tests/Vanilla/AnalyticEuropeanEngineTest.cs](tests/Vanilla/AnalyticEuropeanEngineTest.cs)).
-- Notebooks under [notebooks/](notebooks/) use Python.NET; build the library before running them (README shows `dotnet publish -c Release -r win-x64`) in [README.md](README.md).
+**Instruments are `record` types** (immutable, positional or nominal). Intermediate types are `abstract record`; leaf instruments are `sealed record`. Models and pricing context are `readonly record struct`. Engines are `abstract class`/`sealed class`.
 
-## External dependencies and integration points
+**Template Method pattern** drives engines: override `CalculateValue()` for basic engines; override `SetTerminalCondition()`, `SetBoundaryConditions()`, `ApplyStepConditions()` for FD engines.
 
-- Math primitives use MathNet.Numerics (BSM calculators, root finding), TorchSharp for GPU-accelerated Monte Carlo, and CommunityToolkit for diagnostics/high-performance spans (see [src/DerivaSharp.csproj](src/DerivaSharp.csproj)).
-- CUDA-enabled builds rely on platform-specific libtorch packages; check for GPU availability using `TorchUtils.GetDevice(...)` (see [src/PricingEngines/TorchUtils.cs](src/PricingEngines/TorchUtils.cs)).
+## Code Conventions
+
+- **Explicit types** — avoid `var`; use `double`, `int`, concrete type names.
+- **File-scoped namespaces** — `namespace DerivaSharp.Instruments;` (no braces).
+- **Field naming** — `_camelCase` for instance fields, `s_camelCase` for static fields, `PascalCase` for constants.
+- **No `this.`** — actively discouraged (SX1101).
+- **Guard clauses** — use `CommunityToolkit.Diagnostics.Guard` (e.g., `Guard.IsGreaterThan(price, 0)`), not manual `if`/`throw`.
+- **`OptionType` enum** — `Call = 1`, `Put = -1`; used as a sign multiplier in formulas (`z * (spot - strike)`).
+- **`with` expressions** for parameter bumping in Greeks: `context with { AssetPrice = s + ds }`, `parameters with { Volatility = vol + dvol }`.
+- **Target-typed `new()`** — preferred: `new(0.3, 0.04, 0.01)` instead of `new BsmModelParameters(0.3, 0.04, 0.01)`.
+- **Trailing commas** required in multi-line initializers.
+- **XML docs** on all public source types/members (4-space indented `///`). No docs on test code.
+- **Year fractions** — `days / 365.0` (calendar days), not trading days. See `PricingEngine.GetYearsToExpiration()`.
+- **`DateOnly`** exclusively — never `DateTime`.
+- **`sealed`** on all leaf classes and records.
+- **Using directives** outside namespace, System first, alphabetically sorted.
+
+## Adding a New Instrument
+
+1. Create a `sealed record` in `src/Instruments/` inheriting from the appropriate base (`StrikedTypePayoffOption`, `AutocallableNote`, etc.).
+2. Add guard clauses in the constructor via `Guard.*` methods.
+3. Add static factory methods for common configurations (see `SnowballOption.CreateStandardSnowball`).
+
+## Adding a New Pricing Engine
+
+1. Inherit from `BsmPricingEngine<TOption>` (analytic/MC) or `BsmFiniteDifferenceEngine<TOption>` (FD).
+2. Override `CalculateValue()`. For FD, override the three template hooks instead.
+3. For analytic engines, override individual Greek methods (e.g., `Delta()`, `Gamma()`) with closed-form implementations and add a `UseNumericalGreeks` toggle (see `AnalyticEuropeanEngine`).
+4. MC engines use `PathGenerator` and `RandomNumberSource` from `PricingEngines/` with TorchSharp tensors; accept `useCuda` constructor parameter.
+
+## Build & Test
+
+```powershell
+dotnet build           # Build all projects
+dotnet test            # Run xUnit tests
+dotnet run --project benchmarks -c Release   # BenchmarkDotNet benchmarks
+dotnet publish -c Release -r win-x64         # AOT-compatible publish (needed for notebooks)
+```
+
+## Test Conventions
+
+- Framework: **xUnit** with global `using Xunit;` (declared in `.csproj`).
+- All test classes share namespace `DerivaSharp.Tests` regardless of subfolder.
+- Naming: `{EngineClass}Test` → `MethodUnderTest_Condition_ExpectedOutcome`.
+- Shared test data in static classes (e.g., `EuropeanOptionTestData`) exposing `TheoryData<...>` properties, imported via `using static`.
+- Precision: `Assert.Equal(expected, actual, precision)` where `precision` is decimal digits (typically 6 for analytic, 2-4 for MC/FD).
+- MC tolerance: relative `Math.Abs(expected) * 0.01` to `0.03`, with a floor via `Math.Max(floor, relative)`.
+- No test base classes; constructor-based fixture setup with `_`-prefixed `readonly` fields.
