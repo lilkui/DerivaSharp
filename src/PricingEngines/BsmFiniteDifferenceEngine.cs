@@ -4,7 +4,6 @@ using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
 using DerivaSharp.Time;
-using MathNet.Numerics;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -129,7 +128,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         Guard.IsGreaterThan(MaxPrice, MinPrice);
 
         double tau = GetYearsToExpiration(option, valuationDate);
-        PriceVector = Generate.LinearSpaced(PriceStepCount + 1, MinPrice, MaxPrice);
+        PriceVector = BuildLinearSpace(PriceStepCount + 1, MinPrice, MaxPrice);
 
         double maxDt = tau / _targetTimeStepCount;
 
@@ -226,9 +225,22 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
             : BuildUniformTimeGrid(tMax, _targetTimeStepCount);
     }
 
-    private static double[] BuildUniformTimeGrid(double tMax, int stepCount)
+    private static double[] BuildUniformTimeGrid(double tMax, int stepCount) => BuildLinearSpace(stepCount + 1, 0.0, tMax);
+
+    private static double[] BuildLinearSpace(int count, double start, double end)
     {
-        return Generate.LinearSpaced(stepCount + 1, 0.0, tMax);
+        Guard.IsGreaterThanOrEqualTo(count, 2);
+
+        double[] result = new double[count];
+        double step = (end - start) / (count - 1);
+
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = start + i * step;
+        }
+
+        result[^1] = end;
+        return result;
     }
 
     private static double[] BuildTradingDayTimeGrid(DateOnly valuationDate, DateOnly expirationDate, double tMax, double maxDt)
@@ -300,10 +312,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return grid.ToArray();
     }
 
-    private static double GetTimeTolerance(double tMax)
-    {
-        return Math.Max(1e-12, tMax * 1e-12);
-    }
+    private static double GetTimeTolerance(double tMax) => Math.Max(1e-12, tMax * 1e-12);
 
     private void EnsureValueMatrixBuffer()
     {
@@ -451,10 +460,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     {
         private readonly ReadOnlySpan<double> _observationTimes = observationTimes;
 
-        public ObservationStepEnumerator GetEnumerator()
-        {
-            return new ObservationStepEnumerator(engine, _observationTimes);
-        }
+        public ObservationStepEnumerator GetEnumerator() => new(engine, _observationTimes);
     }
 
     private ref struct ObservationStepEnumerator(BsmFiniteDifferenceEngine<TOption> engine, ReadOnlySpan<double> observationTimes)
