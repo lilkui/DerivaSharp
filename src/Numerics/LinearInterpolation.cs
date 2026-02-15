@@ -5,7 +5,7 @@ namespace DerivaSharp.Numerics;
 /// <summary>
 ///     Provides methods for linear interpolation of data points.
 /// </summary>
-public sealed class LinearInterpolation
+public static class LinearInterpolation
 {
     /// <summary>
     ///     Performs linear interpolation on a given set of data points where the x-coordinates are monotonically increasing.
