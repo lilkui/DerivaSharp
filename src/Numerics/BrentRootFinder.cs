@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Diagnostics;
 
 namespace DerivaSharp.Numerics;
 
@@ -36,22 +37,10 @@ public static class BrentRootFinder
         int maxIterations,
         out double root)
     {
-        ArgumentNullException.ThrowIfNull(f);
-
-        if (lowerBound >= upperBound)
-        {
-            throw new ArgumentOutOfRangeException(nameof(lowerBound), "Must be strictly less than upper bound.");
-        }
-
-        if (!(accuracy > 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(accuracy), "Must be greater than zero.");
-        }
-
-        if (maxIterations <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxIterations), "Must be greater than zero.");
-        }
+        Guard.IsNotNull(f);
+        Guard.IsLessThan(lowerBound, upperBound);
+        Guard.IsGreaterThan(accuracy, 0d);
+        Guard.IsGreaterThan(maxIterations, 0);
 
         double fmin = f(lowerBound);
         if (fmin == 0)
