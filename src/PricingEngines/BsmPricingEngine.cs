@@ -196,14 +196,12 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     {
         ValidateArguments(option, context);
 
-        try
+        if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
         {
-            return BrentRootFinder.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+            return root;
         }
-        catch (NonConvergenceException)
-        {
-            return double.NaN;
-        }
+
+        return double.NaN;
 
         double ObjectiveFunction(double vol) =>
             CalculateValue(option, context.ModelParameters with { Volatility = vol }, context.AssetPrice, context.ValuationDate) - optionPrice;

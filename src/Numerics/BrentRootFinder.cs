@@ -13,39 +13,6 @@ public static class BrentRootFinder
     private const double PositiveDoublePrecision = 2.2204460492503131e-16;
 
     /// <summary>
-    ///     Finds a root of <c>f(x) = 0</c> in the interval [<paramref name="lowerBound" />, <paramref name="upperBound" />].
-    /// </summary>
-    /// <param name="f">Function to find the root of. Must have opposite signs at the bounds.</param>
-    /// <param name="lowerBound">Lower bound of the search interval.</param>
-    /// <param name="upperBound">Upper bound of the search interval.</param>
-    /// <param name="accuracy">Absolute tolerance for convergence.</param>
-    /// <param name="maxIterations">Maximum number of iterations allowed.</param>
-    /// <returns>An approximation of the root within the specified accuracy.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="f" /> is <see langword="null" />.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    ///     <paramref name="lowerBound" /> ≥ <paramref name="upperBound" />,
-    ///     <paramref name="accuracy" /> ≤ 0, or <paramref name="maxIterations" /> ≤ 0.
-    /// </exception>
-    /// <exception cref="NonConvergenceException">
-    ///     The function values at the bounds have the same sign, or convergence fails
-    ///     within <paramref name="maxIterations" />.
-    /// </exception>
-    public static double FindRoot(
-        Func<double, double> f,
-        double lowerBound,
-        double upperBound,
-        double accuracy = 1e-8,
-        int maxIterations = 100)
-    {
-        if (TryFindRoot(f, lowerBound, upperBound, accuracy, maxIterations, out double root))
-        {
-            return root;
-        }
-
-        throw new NonConvergenceException("Failed to converge or root not bracketed in interval.");
-    }
-
-    /// <summary>
     ///     Attempts to find a root of <c>f(x) = 0</c> in the interval [<paramref name="lowerBound" />,
     ///     <paramref name="upperBound" />].
     /// </summary>

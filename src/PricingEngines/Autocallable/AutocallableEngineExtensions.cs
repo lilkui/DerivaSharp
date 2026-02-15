@@ -46,14 +46,12 @@ public static class AutocallableEngineExtensions
                 offsets[i] = baseRates[i] - baseFirstRate;
             }
 
-            try
+            if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
-                return BrentRootFinder.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+                return root;
             }
-            catch (NonConvergenceException)
-            {
-                return double.NaN;
-            }
+
+            return double.NaN;
 
             double ObjectiveFunction(double koRate)
             {
@@ -100,14 +98,12 @@ public static class AutocallableEngineExtensions
             Guard.IsNotNull(option);
             Guard.IsLessThan(lowerBound, upperBound);
 
-            try
+            if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
-                return BrentRootFinder.FindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy);
+                return root;
             }
-            catch (NonConvergenceException)
-            {
-                return double.NaN;
-            }
+
+            return double.NaN;
 
             double ObjectiveFunction(double rate)
             {
