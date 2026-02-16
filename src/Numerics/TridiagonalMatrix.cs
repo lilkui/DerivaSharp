@@ -1,3 +1,4 @@
+using System.Numerics;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance.Buffers;
 
@@ -54,7 +55,23 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
             result[0] = Main[0] * vector[0];
         }
 
-        for (int i = 1; i < n - 1; i++)
+        int simdWidth = Vector<double>.Count;
+        int i = 1;
+
+        for (; i <= n - 1 - simdWidth; i += simdWidth)
+        {
+            Vector<double> lowerVector = new(Lower.AsSpan(i, simdWidth));
+            Vector<double> mainVector = new(Main.AsSpan(i, simdWidth));
+            Vector<double> upperVector = new(Upper.AsSpan(i, simdWidth));
+            Vector<double> previousVector = new(vector.Slice(i - 1, simdWidth));
+            Vector<double> currentVector = new(vector.Slice(i, simdWidth));
+            Vector<double> nextVector = new(vector.Slice(i + 1, simdWidth));
+
+            Vector<double> resultVector = lowerVector * previousVector + mainVector * currentVector + upperVector * nextVector;
+            resultVector.CopyTo(result.Slice(i, simdWidth));
+        }
+
+        for (; i < n - 1; i++)
         {
             result[i] = Lower[i] * vector[i - 1] + Main[i] * vector[i] + Upper[i] * vector[i + 1];
         }
