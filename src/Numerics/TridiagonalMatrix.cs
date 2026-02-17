@@ -55,20 +55,24 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
             result[0] = Main[0] * vector[0];
         }
 
-        int simdWidth = Vector<double>.Count;
         int i = 1;
-
-        for (; i <= n - 1 - simdWidth; i += simdWidth)
+        int interiorLength = n - 2;
+        int simdWidth = Vector<double>.Count;
+        if (Vector.IsHardwareAccelerated && interiorLength >= simdWidth)
         {
-            Vector<double> lowerVector = new(Lower.AsSpan(i, simdWidth));
-            Vector<double> mainVector = new(Main.AsSpan(i, simdWidth));
-            Vector<double> upperVector = new(Upper.AsSpan(i, simdWidth));
-            Vector<double> previousVector = new(vector.Slice(i - 1, simdWidth));
-            Vector<double> currentVector = new(vector.Slice(i, simdWidth));
-            Vector<double> nextVector = new(vector.Slice(i + 1, simdWidth));
+            int simdLength = interiorLength - interiorLength % simdWidth;
+            for (; i < 1 + simdLength; i += simdWidth)
+            {
+                Vector<double> lowerVector = new(Lower.AsSpan(i, simdWidth));
+                Vector<double> mainVector = new(Main.AsSpan(i, simdWidth));
+                Vector<double> upperVector = new(Upper.AsSpan(i, simdWidth));
+                Vector<double> previousVector = new(vector.Slice(i - 1, simdWidth));
+                Vector<double> currentVector = new(vector.Slice(i, simdWidth));
+                Vector<double> nextVector = new(vector.Slice(i + 1, simdWidth));
 
-            Vector<double> resultVector = lowerVector * previousVector + mainVector * currentVector + upperVector * nextVector;
-            resultVector.CopyTo(result.Slice(i, simdWidth));
+                Vector<double> resultVector = lowerVector * previousVector + mainVector * currentVector + upperVector * nextVector;
+                resultVector.CopyTo(result.Slice(i, simdWidth));
+            }
         }
 
         for (; i < n - 1; i++)
