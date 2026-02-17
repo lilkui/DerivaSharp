@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using CommunityToolkit.Diagnostics;
 
 namespace DerivaSharp.Numerics;
@@ -105,7 +104,7 @@ public static class BrentRootFinder
                 double p;
                 double q;
 
-                if (AlmostEqualRelative(lowerBound, upperBound))
+                if (lowerBound.AlmostEquals(upperBound))
                 {
                     p = 2 * xMid * s;
                     q = 1 - s;
@@ -143,7 +142,7 @@ public static class BrentRootFinder
 
             lowerBound = root;
             fmin = froot;
-            root += Math.Abs(d) > xAcc ? d : CopySigned(xAcc, xMid);
+            root += Math.Abs(d) > xAcc ? d : Math.CopySign(xAcc, xMid);
             froot = f(root);
             if (double.IsNaN(froot))
             {
@@ -152,18 +151,5 @@ public static class BrentRootFinder
         }
 
         return false;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool AlmostEqualRelative(double x, double y)
-    {
-        double scale = Math.Max(Math.Max(Math.Abs(x), Math.Abs(y)), 1);
-        return Math.Abs(x - y) <= PositiveDoublePrecision * scale;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static double CopySigned(double magnitude, double sign)
-    {
-        return sign >= 0 ? Math.Abs(magnitude) : -Math.Abs(magnitude);
     }
 }
