@@ -11,7 +11,7 @@ namespace DerivaSharp.Benchmarks;
 
 [SimpleJob(RuntimeMoniker.Net10_0)]
 [SimpleJob(RuntimeMoniker.NativeAot10_0)]
-public class AutocallableBenchmarks
+public class AutocallableEngineBenchmarks
 {
     private BsmModelParameters _modelParameters;
     private PricingContext<BsmModelParameters> _context;
