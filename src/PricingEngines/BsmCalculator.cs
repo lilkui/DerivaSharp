@@ -32,9 +32,7 @@ internal static class BsmCalculator
             return Max(z * (forward - strike), 0) * Exp(-r * tau);
         }
 
-        double sqrtT = Sqrt(tau);
-        double d1 = (Log(spot / strike) + (r - q + vol * vol / 2) * tau) / (vol * sqrtT);
-        double d2 = d1 - vol * sqrtT;
+        (double d1, double d2) = D1D2(spot, strike, tau, vol, r, q);
 
         return z * (spot * Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d1) - strike * Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d2));
     }
