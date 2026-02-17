@@ -1,3 +1,4 @@
+using System.Numerics;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using DerivaSharp.Instruments;
@@ -413,24 +414,68 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         double q = parameters.DividendYield;
         double v = parameters.Volatility;
         double oneMinusTheta = 1.0 - _theta;
+        double driftScale = (r - q) / ds;
+        double diffusionScale = v * v / (ds * ds);
 
-        for (int j = 1; j < PriceStepCount; j++)
+        double thetaHalfDt = 0.5 * dt * _theta;
+        double thetaDt = dt * _theta;
+        double thetaDtRiskFreeRate = thetaDt * r;
+
+        double oneMinusThetaHalfDt = 0.5 * dt * oneMinusTheta;
+        double oneMinusThetaDt = dt * oneMinusTheta;
+        double oneMinusThetaDtRiskFreeRate = oneMinusThetaDt * r;
+
+        ReadOnlySpan<double> prices = PriceVector.AsSpan(1, PriceStepCount - 1);
+        int length = prices.Length;
+
+        int i = 0;
+        int simdWidth = Vector<double>.Count;
+        if (Vector.IsHardwareAccelerated && length >= simdWidth)
         {
-            double s = PriceVector[j];
-            double drift = (r - q) * s / ds;
-            double diffusionSquare = v * v * s * s / ds / ds;
+            int simdLength = length - length % simdWidth;
 
-            double a = 0.5 * dt * (diffusionSquare - drift);
-            double b = dt * (diffusionSquare + r);
-            double c = 0.5 * dt * (diffusionSquare + drift);
+            Vector<double> driftScaleVector = new(driftScale);
+            Vector<double> diffusionScaleVector = new(diffusionScale);
+            Vector<double> thetaHalfDtVector = new(thetaHalfDt);
+            Vector<double> thetaDtVector = new(thetaDt);
+            Vector<double> thetaDtRiskFreeRateVector = new(thetaDtRiskFreeRate);
+            Vector<double> oneMinusThetaHalfDtVector = new(oneMinusThetaHalfDt);
+            Vector<double> oneMinusThetaDtVector = new(oneMinusThetaDt);
+            Vector<double> oneMinusThetaDtRiskFreeRateVector = new(oneMinusThetaDtRiskFreeRate);
+            Vector<double> oneVector = Vector<double>.One;
 
-            _lower1[j - 1] = -_theta * a;
-            _main1[j - 1] = 1.0 + _theta * b;
-            _upper1[j - 1] = -_theta * c;
+            for (; i < simdLength; i += simdWidth)
+            {
+                Vector<double> priceVector = new(prices.Slice(i, simdWidth));
+                Vector<double> driftVector = priceVector * driftScaleVector;
+                Vector<double> diffusionSquareVector = priceVector * priceVector * diffusionScaleVector;
 
-            _lower2[j - 1] = oneMinusTheta * a;
-            _main2[j - 1] = 1.0 - oneMinusTheta * b;
-            _upper2[j - 1] = oneMinusTheta * c;
+                Vector<double> diffusionMinusDriftVector = diffusionSquareVector - driftVector;
+                Vector<double> diffusionPlusDriftVector = diffusionSquareVector + driftVector;
+
+                (thetaHalfDtVector * (driftVector - diffusionSquareVector)).CopyTo(_lower1.AsSpan(i, simdWidth));
+                (oneVector + thetaDtVector * diffusionSquareVector + thetaDtRiskFreeRateVector).CopyTo(_main1.AsSpan(i, simdWidth));
+                (-thetaHalfDtVector * diffusionPlusDriftVector).CopyTo(_upper1.AsSpan(i, simdWidth));
+
+                (oneMinusThetaHalfDtVector * diffusionMinusDriftVector).CopyTo(_lower2.AsSpan(i, simdWidth));
+                (oneVector - oneMinusThetaDtVector * diffusionSquareVector - oneMinusThetaDtRiskFreeRateVector).CopyTo(_main2.AsSpan(i, simdWidth));
+                (oneMinusThetaHalfDtVector * diffusionPlusDriftVector).CopyTo(_upper2.AsSpan(i, simdWidth));
+            }
+        }
+
+        for (; i < length; i++)
+        {
+            double s = prices[i];
+            double drift = driftScale * s;
+            double diffusionSquare = diffusionScale * s * s;
+
+            _lower1[i] = thetaHalfDt * (drift - diffusionSquare);
+            _main1[i] = 1.0 + thetaDt * diffusionSquare + thetaDtRiskFreeRate;
+            _upper1[i] = -thetaHalfDt * (diffusionSquare + drift);
+
+            _lower2[i] = oneMinusThetaHalfDt * (diffusionSquare - drift);
+            _main2[i] = 1.0 - oneMinusThetaDt * diffusionSquare - oneMinusThetaDtRiskFreeRate;
+            _upper2[i] = oneMinusThetaHalfDt * (diffusionSquare + drift);
         }
     }
 
