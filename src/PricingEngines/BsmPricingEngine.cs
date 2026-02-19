@@ -196,7 +196,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     {
         ValidateArguments(option, context);
 
-        if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
+        if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
         {
             return root;
         }

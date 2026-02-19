@@ -5,7 +5,7 @@ namespace DerivaSharp.Numerics;
 /// <summary>
 ///     Brent-Dekker root-finding algorithm for continuous functions.
 /// </summary>
-public static class BrentRootFinder
+public static class BrentSolver
 {
     /// <summary>
     ///     Machine epsilon for positive <see cref="double" /> values.

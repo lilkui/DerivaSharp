@@ -46,7 +46,7 @@ public static class AutocallableEngineExtensions
                 offsets[i] = baseRates[i] - baseFirstRate;
             }
 
-            if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
+            if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
                 return root;
             }
@@ -98,7 +98,7 @@ public static class AutocallableEngineExtensions
             Guard.IsNotNull(option);
             Guard.IsLessThan(lowerBound, upperBound);
 
-            if (BrentRootFinder.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
+            if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
                 return root;
             }
