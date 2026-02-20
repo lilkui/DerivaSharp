@@ -10,8 +10,11 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<AmericanOption>
 {
-    protected override double CalculateValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(AmericanOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         if (valuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;

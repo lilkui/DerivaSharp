@@ -42,9 +42,8 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         return values;
     }
 
-    protected override double CalculateValue(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(Accumulator option, PricingContext<BsmModelParameters> context)
     {
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using DisposeScope scope = torch.NewDisposeScope();
 
         SimulationData simData = PrepareSimulationData(option, context);

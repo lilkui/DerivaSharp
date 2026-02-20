@@ -28,7 +28,7 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        return CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        return CalculateValue(option, context);
     }
 
     /// <summary>
@@ -41,12 +41,11 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
-        double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
-        double vSpotMinus = CalculateValue(option, model, s - ds, context.ValuationDate);
+        double vSpotPlus = CalculateValue(option, context with { AssetPrice = s + ds });
+        double vSpotMinus = CalculateValue(option, context with { AssetPrice = s - ds });
 
         return (vSpotPlus - vSpotMinus) / (2 * ds);
     }
@@ -61,13 +60,12 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
-        double v0 = CalculateValue(option, model, s, context.ValuationDate);
-        double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
-        double vSpotMinus = CalculateValue(option, model, s - ds, context.ValuationDate);
+        double v0 = CalculateValue(option, context);
+        double vSpotPlus = CalculateValue(option, context with { AssetPrice = s + ds });
+        double vSpotMinus = CalculateValue(option, context with { AssetPrice = s - ds });
 
         return (vSpotPlus - 2 * v0 + vSpotMinus) / (ds * ds);
     }
@@ -82,14 +80,13 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
-        double v0 = CalculateValue(option, model, s, context.ValuationDate);
-        double vSpotPlus = CalculateValue(option, model, s + ds, context.ValuationDate);
-        double vSpotPlusPlus = CalculateValue(option, model, s + 2 * ds, context.ValuationDate);
-        double vSpotMinus = CalculateValue(option, model, s - ds, context.ValuationDate);
+        double v0 = CalculateValue(option, context);
+        double vSpotPlus = CalculateValue(option, context with { AssetPrice = s + ds });
+        double vSpotPlusPlus = CalculateValue(option, context with { AssetPrice = s + 2 * ds });
+        double vSpotMinus = CalculateValue(option, context with { AssetPrice = s - ds });
 
         return (vSpotPlusPlus - 3 * vSpotPlus + 3 * v0 - vSpotMinus) / (ds * ds * ds);
     }
@@ -106,11 +103,10 @@ public abstract class PricingEngine<TOption, TModel>
 
         DateOnly t = context.ValuationDate;
 
-        TModel model = context.ModelParameters;
-        double v0 = CalculateValue(option, model, context.AssetPrice, context.ValuationDate);
+        double v0 = CalculateValue(option, context);
 
         bool atExpiry = t >= option.ExpirationDate;
-        double vNext = atExpiry ? 0 : CalculateValue(option, model, context.AssetPrice, t.AddDays(1));
+        double vNext = atExpiry ? 0 : CalculateValue(option, context with { ValuationDate = t.AddDays(1) });
 
         return vNext - v0;
     }
@@ -125,17 +121,28 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
         double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
-        double vSpotPlus = CalculateValue(option, model, s + ds, t);
-        double vSpotMinus = CalculateValue(option, model, s - ds, t);
+        double vSpotPlus = CalculateValue(option, context with { AssetPrice = s + ds });
+        double vSpotMinus = CalculateValue(option, context with { AssetPrice = s - ds });
 
         bool atExpiry = t >= option.ExpirationDate;
-        double vSpotPlusNext = atExpiry ? 0 : CalculateValue(option, model, s + ds, t.AddDays(1));
-        double vSpotMinusNext = atExpiry ? 0 : CalculateValue(option, model, s - ds, t.AddDays(1));
+        double vSpotPlusNext = atExpiry
+            ? 0
+            : CalculateValue(option, context with
+            {
+                AssetPrice = s + ds,
+                ValuationDate = t.AddDays(1),
+            });
+        double vSpotMinusNext = atExpiry
+            ? 0
+            : CalculateValue(option, context with
+            {
+                AssetPrice = s - ds,
+                ValuationDate = t.AddDays(1),
+            });
 
         return (vSpotPlusNext - vSpotPlus - vSpotMinusNext + vSpotMinus) / (2 * ds);
     }
@@ -150,19 +157,30 @@ public abstract class PricingEngine<TOption, TModel>
     {
         ValidateArguments(option, context);
 
-        TModel model = context.ModelParameters;
         double s = context.AssetPrice;
         DateOnly t = context.ValuationDate;
         double ds = s * ShiftParameters.AssetPriceShiftFactor;
 
-        double v0 = CalculateValue(option, model, s, t);
-        double vSpotPlus = CalculateValue(option, model, s + ds, t);
-        double vSpotMinus = CalculateValue(option, model, s - ds, t);
+        double v0 = CalculateValue(option, context);
+        double vSpotPlus = CalculateValue(option, context with { AssetPrice = s + ds });
+        double vSpotMinus = CalculateValue(option, context with { AssetPrice = s - ds });
 
         bool atExpiry = t >= option.ExpirationDate;
-        double vNext = atExpiry ? 0 : CalculateValue(option, model, s, t.AddDays(1));
-        double vSpotPlusNext = atExpiry ? 0 : CalculateValue(option, model, s + ds, t.AddDays(1));
-        double vSpotMinusNext = atExpiry ? 0 : CalculateValue(option, model, s - ds, t.AddDays(1));
+        double vNext = atExpiry ? 0 : CalculateValue(option, context with { ValuationDate = t.AddDays(1) });
+        double vSpotPlusNext = atExpiry
+            ? 0
+            : CalculateValue(option, context with
+            {
+                AssetPrice = s + ds,
+                ValuationDate = t.AddDays(1),
+            });
+        double vSpotMinusNext = atExpiry
+            ? 0
+            : CalculateValue(option, context with
+            {
+                AssetPrice = s - ds,
+                ValuationDate = t.AddDays(1),
+            });
 
         return (vSpotPlusNext - 2 * vNext + vSpotMinusNext - vSpotPlus + 2 * v0 - vSpotMinus) / (ds * ds);
     }
@@ -242,11 +260,9 @@ public abstract class PricingEngine<TOption, TModel>
     ///     Computes the option value for the given parameters.
     /// </summary>
     /// <param name="option">The option to price.</param>
-    /// <param name="model">The model parameters.</param>
-    /// <param name="assetPrice">The asset price.</param>
-    /// <param name="valuationDate">The valuation date.</param>
+    /// <param name="context">The pricing context.</param>
     /// <returns>The option value.</returns>
-    protected abstract double CalculateValue(TOption option, TModel model, double assetPrice, DateOnly valuationDate);
+    protected abstract double CalculateValue(TOption option, PricingContext<TModel> context);
 
     /// <summary>
     ///     Computes the time to expiration in years.

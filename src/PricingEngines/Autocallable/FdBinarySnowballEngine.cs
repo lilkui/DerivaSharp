@@ -30,7 +30,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        CalculateValue(option, context);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;
@@ -44,16 +44,16 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         return values;
     }
 
-    protected override double CalculateValue(BinarySnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(BinarySnowballOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        InitializeParameters(option, valuationDate);
+        InitializeParameters(option, context.ValuationDate);
 
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void SetTerminalCondition(BinarySnowballOption option)

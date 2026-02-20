@@ -26,8 +26,11 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         _values = new double[stepCount + 1];
     }
 
-    protected override double CalculateValue(VanillaOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(VanillaOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s0 = assetPrice;

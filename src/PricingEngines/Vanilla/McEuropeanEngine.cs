@@ -39,15 +39,14 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
         return averagePayoff * Math.Exp(-parameters.RiskFreeRate * tau);
     }
 
-    protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(EuropeanOption option, PricingContext<BsmModelParameters> context)
     {
-        if (valuationDate == option.ExpirationDate)
+        if (context.ValuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (context.AssetPrice - option.StrikePrice), 0);
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
         return Value(option, context, source);
     }

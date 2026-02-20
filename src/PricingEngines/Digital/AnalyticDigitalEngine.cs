@@ -10,8 +10,11 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
-    protected override double CalculateValue(DigitalOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(DigitalOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);

@@ -69,15 +69,14 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
-    protected override double CalculateValue(AmericanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(AmericanOption option, PricingContext<BsmModelParameters> context)
     {
-        if (valuationDate == option.ExpirationDate)
+        if (context.ValuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (context.AssetPrice - option.StrikePrice), 0);
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using RandomNumberSource source = new(pathCount, stepCount - 1, _device);
         return Value(option, context, source);
     }

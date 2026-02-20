@@ -12,15 +12,15 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : VanillaOption
 {
-    protected override double CalculateValue(TOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(TOption option, PricingContext<BsmModelParameters> context)
     {
-        if (valuationDate == option.ExpirationDate)
+        if (context.ValuationDate == option.ExpirationDate)
         {
             double z = (int)option.OptionType;
-            return Math.Max(z * (assetPrice - option.StrikePrice), 0);
+            return Math.Max(z * (context.AssetPrice - option.StrikePrice), 0);
         }
 
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)

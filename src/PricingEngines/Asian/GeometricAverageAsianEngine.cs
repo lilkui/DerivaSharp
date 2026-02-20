@@ -10,8 +10,11 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class GeometricAverageAsianEngine : BsmPricingEngine<GeometricAverageOption>
 {
-    protected override double CalculateValue(GeometricAverageOption option, BsmModelParameters model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(GeometricAverageOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters model = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);

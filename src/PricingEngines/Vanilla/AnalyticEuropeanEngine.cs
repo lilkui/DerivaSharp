@@ -296,11 +296,12 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         };
     }
 
-    protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(EuropeanOption option, PricingContext<BsmModelParameters> context)
     {
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         ValidateArguments(option, context);
 
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, context.ValuationDate);

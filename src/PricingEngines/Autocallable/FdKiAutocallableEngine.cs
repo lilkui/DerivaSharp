@@ -26,7 +26,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
 
-        CalculateValue(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        CalculateValue(option, context);
 
         double[] values = new double[count];
         ReadOnlySpan<double> priceSpan = PriceVector;

@@ -22,28 +22,28 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
     private double _maturityPayoff;
     private double _minimalPayoff;
 
-    protected override double CalculateValue(TernarySnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        InitializeParameters(option, valuationDate);
+        InitializeParameters(option, context.ValuationDate);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+            return base.CalculateValue(option, context);
         }
 
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        base.CalculateValue(option, context);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void SetTerminalCondition(TernarySnowballOption option)

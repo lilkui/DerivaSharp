@@ -23,33 +23,33 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double _couponAmount;
     private double _lossAtZero;
 
-    protected override double CalculateValue(PhoenixOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(PhoenixOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        InitializeParameters(option, valuationDate);
+        InitializeParameters(option, context.ValuationDate);
 
         if (!_hasDailyKnockIn)
         {
             _isSolvingKnockedIn = option.BarrierTouchStatus == BarrierTouchStatus.DownTouch;
-            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+            return base.CalculateValue(option, context);
         }
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+            return base.CalculateValue(option, context);
         }
 
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        base.CalculateValue(option, context);
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void SetTerminalCondition(PhoenixOption option)

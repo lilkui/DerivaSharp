@@ -10,8 +10,11 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
-    protected override double CalculateValue(EuropeanOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(EuropeanOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         double x = option.StrikePrice;
         double sgn = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);

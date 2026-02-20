@@ -19,14 +19,14 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
     protected override bool UseTradingDayGrid => true;
 
-    protected override double CalculateValue(BarrierOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(BarrierOption option, PricingContext<BsmModelParameters> context)
     {
-        if (valuationDate == option.ExpirationDate)
+        if (context.ValuationDate == option.ExpirationDate)
         {
             double x = option.StrikePrice;
             double h = option.BarrierPrice;
             double k = option.Rebate;
-            double s = assetPrice;
+            double s = context.AssetPrice;
             int z = (int)option.OptionType;
             double intrinsic = Math.Max(z * (s - x), 0);
 
@@ -40,7 +40,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             };
         }
 
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void InitializeGrid(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)

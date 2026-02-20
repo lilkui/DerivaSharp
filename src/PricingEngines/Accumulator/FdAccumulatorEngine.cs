@@ -93,12 +93,16 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         return values;
     }
 
-    protected override double CalculateValue(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(Accumulator option, PricingContext<BsmModelParameters> context)
     {
-        if (valuationDate == option.ExpirationDate)
+        if (context.ValuationDate == option.ExpirationDate)
         {
-            return option.AccumulatedQuantity * (assetPrice - option.StrikePrice);
+            return option.AccumulatedQuantity * (context.AssetPrice - option.StrikePrice);
         }
+
+        BsmModelParameters parameters = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
 
         AccumulatorUnitValueEngine unitValueEngine = new(_scheme, _priceStepCount, _timeStepCount);
         double unitValue = unitValueEngine.Solve(option, parameters, assetPrice, valuationDate);
@@ -137,7 +141,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
         {
-            return CalculateValue(option, parameters, assetPrice, valuationDate);
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate));
         }
 
         public ReadOnlySpan<double> GetRow0Span()
@@ -229,7 +233,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
         {
-            return CalculateValue(option, parameters, assetPrice, valuationDate);
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate));
         }
 
         public ReadOnlySpan<double> GetRow0Span()

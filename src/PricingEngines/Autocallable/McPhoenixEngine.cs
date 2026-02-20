@@ -45,14 +45,13 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPr
         return values;
     }
 
-    protected override double CalculateValue(PhoenixOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(PhoenixOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using DisposeScope scope = torch.NewDisposeScope();
 
         SimulationData simData = PrepareSimulationData(option, context);

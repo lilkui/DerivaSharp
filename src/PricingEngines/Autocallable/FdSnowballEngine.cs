@@ -53,30 +53,30 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    protected override double CalculateValue(SnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(SnowballOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        InitializeParameters(option, valuationDate);
+        InitializeParameters(option, context.ValuationDate);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
             _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+            return base.CalculateValue(option, context);
         }
 
         // First pass: solve the knocked-in scenario and store the resulting value surface.
         _isSolvingKnockedIn = true;
-        base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        base.CalculateValue(option, context);
 
         ValueMatrixSpan.CopyTo(_knockedInValues);
 
         // Second pass: solve the not-knocked-in scenario, applying the knock-in substitution.
         _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, parameters, assetPrice, valuationDate);
+        return base.CalculateValue(option, context);
     }
 
     protected override void SetTerminalCondition(SnowballOption option)

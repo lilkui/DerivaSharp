@@ -9,8 +9,11 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAverageOption>
 {
-    protected override double CalculateValue(ArithmeticAverageOption option, BsmModelParameters model, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(ArithmeticAverageOption option, PricingContext<BsmModelParameters> context)
     {
+        BsmModelParameters model = context.ModelParameters;
+        double assetPrice = context.AssetPrice;
+        DateOnly valuationDate = context.ValuationDate;
         double strike = option.StrikePrice;
         int z = (int)option.OptionType;
         double tau = GetYearsToExpiration(option, valuationDate);

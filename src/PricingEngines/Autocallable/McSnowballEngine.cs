@@ -47,14 +47,13 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         return values;
     }
 
-    protected override double CalculateValue(SnowballOption option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+    protected override double CalculateValue(SnowballOption option, PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
             return 0.0;
         }
 
-        PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
         using DisposeScope scope = torch.NewDisposeScope();
 
         SimulationData simData = PrepareSimulationData(option, context);
