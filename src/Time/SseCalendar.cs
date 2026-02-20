@@ -3,11 +3,11 @@ using System.Collections.Frozen;
 namespace DerivaSharp.Time;
 
 /// <summary>
-///     Provides trading calendar information for the Shanghai Stock Exchange.
+///     Trading calendar for the Shanghai Stock Exchange (SSE).
 /// </summary>
 public sealed class SseCalendar : ICalendar
 {
-    private readonly FrozenSet<DateOnly> _holidays =
+    private static readonly FrozenSet<DateOnly> s_holidays =
     [
         new(1991, 01, 01),
         new(1991, 02, 15),
@@ -597,8 +597,10 @@ public sealed class SseCalendar : ICalendar
         new(2025, 10, 08),
     ];
 
+    /// <inheritdoc />
     public int TradingDaysPerYear => 243;
 
+    /// <inheritdoc />
     public bool IsTradingDay(DateOnly date)
-        => date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday) && !_holidays.Contains(date);
+        => date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday) && !s_holidays.Contains(date);
 }
