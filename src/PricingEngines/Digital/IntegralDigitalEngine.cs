@@ -2,6 +2,7 @@ using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
+using DerivaSharp.Time;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -18,7 +19,7 @@ public sealed class IntegralDigitalEngine : BsmPricingEngine<DigitalOption>
         DateOnly valuationDate = context.ValuationDate;
         double x = option.StrikePrice;
         int sign = (int)option.OptionType;
-        double tau = GetYearsToExpiration(option, valuationDate);
+        double tau = DayCounter.YearFraction(valuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;

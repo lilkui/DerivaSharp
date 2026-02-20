@@ -2,6 +2,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
+using DerivaSharp.Time;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -23,7 +24,7 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
         double k = option.Rebate;
         double dt = option.ObservationInterval;
         double s = assetPrice;
-        double tau = GetYearsToExpiration(option, valuationDate);
+        double tau = DayCounter.YearFraction(valuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;

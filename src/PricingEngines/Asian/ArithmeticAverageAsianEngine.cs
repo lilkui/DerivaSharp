@@ -1,5 +1,6 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -16,7 +17,7 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
         DateOnly valuationDate = context.ValuationDate;
         double strike = option.StrikePrice;
         int z = (int)option.OptionType;
-        double tau = GetYearsToExpiration(option, valuationDate);
+        double tau = DayCounter.YearFraction(valuationDate, option.ExpirationDate);
         double r = model.RiskFreeRate;
         double q = model.DividendYield;
         double b = r - q;

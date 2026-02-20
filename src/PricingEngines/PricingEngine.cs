@@ -265,19 +265,6 @@ public abstract class PricingEngine<TOption, TModel>
     protected abstract double CalculateValue(TOption option, PricingContext<TModel> context);
 
     /// <summary>
-    ///     Computes the time to expiration in years.
-    /// </summary>
-    /// <param name="option">The option.</param>
-    /// <param name="valuationDate">The valuation date.</param>
-    /// <returns>The time to expiration in years.</returns>
-    protected double GetYearsToExpiration(TOption option, DateOnly valuationDate)
-    {
-        Guard.IsLessThanOrEqualTo(valuationDate, option.ExpirationDate);
-
-        return (option.ExpirationDate.DayNumber - valuationDate.DayNumber) / 365.0;
-    }
-
-    /// <summary>
     ///     Validates the option and pricing context.
     /// </summary>
     /// <param name="option">The option to validate.</param>

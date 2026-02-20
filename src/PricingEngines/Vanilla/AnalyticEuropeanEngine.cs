@@ -1,6 +1,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.Numerics;
+using DerivaSharp.Time;
 using static System.Math;
 
 namespace DerivaSharp.PricingEngines;
@@ -28,7 +29,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -49,7 +50,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -70,7 +71,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -92,7 +93,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -116,7 +117,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -137,7 +138,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -158,7 +159,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -179,7 +180,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -200,7 +201,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -222,7 +223,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -244,7 +245,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s = context.AssetPrice;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;
@@ -304,7 +305,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         double assetPrice = context.AssetPrice;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double vol = parameters.Volatility;
         double r = parameters.RiskFreeRate;
         double q = parameters.DividendYield;

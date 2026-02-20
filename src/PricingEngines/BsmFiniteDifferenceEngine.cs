@@ -128,7 +128,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         Guard.IsGreaterThanOrEqualTo(MinPrice, 0.0);
         Guard.IsGreaterThan(MaxPrice, MinPrice);
 
-        double tau = GetYearsToExpiration(option, valuationDate);
+        double tau = DayCounter.YearFraction(valuationDate, option.ExpirationDate);
         PriceVector = BuildLinearSpace(PriceStepCount + 1, MinPrice, MaxPrice);
 
         double maxDt = tau / _targetTimeStepCount;

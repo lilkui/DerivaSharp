@@ -1,5 +1,6 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
@@ -24,7 +25,7 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
     public double Value(EuropeanOption option, PricingContext<BsmModelParameters> context, RandomNumberSource source)
     {
         BsmModelParameters parameters = context.ModelParameters;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double dt = tau / (stepCount - 1);
 
         using torch.Tensor dtVector = torch.full([stepCount - 1], dt, torch.float64, _device);

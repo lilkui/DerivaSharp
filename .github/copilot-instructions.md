@@ -32,7 +32,7 @@ src/Time/          – Trading calendar (SSE holidays), date utilities, trading-
 - **Target-typed `new()`** — preferred: `new(0.3, 0.04, 0.01)` instead of `new BsmModelParameters(0.3, 0.04, 0.01)`.
 - **Trailing commas** required in multi-line initializers.
 - **XML docs** on all public source types/members (4-space indented `///`). No docs on test code.
-- **Year fractions** — `days / 365.0` (calendar days), not trading days. See `PricingEngine.GetYearsToExpiration()`.
+- **Year fractions** — `days / 365.0` (calendar days), not trading days. Use `DayCounter.YearFraction(valuationDate, expirationDate)` from `DerivaSharp.Time`.
 - **`DateOnly`** exclusively — never `DateTime`.
 - **`sealed`** on all leaf classes and records.
 - **Using directives** outside namespace, System first, alphabetically sorted.

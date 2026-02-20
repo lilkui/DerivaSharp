@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 using TorchSharp;
 
 namespace DerivaSharp.PricingEngines;
@@ -29,7 +30,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         BsmModelParameters parameters = context.ModelParameters;
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
-        double tau = GetYearsToExpiration(option, context.ValuationDate);
+        double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
         double dt = tau / (stepCount - 1);
         double df = Math.Exp(-parameters.RiskFreeRate * dt);
 

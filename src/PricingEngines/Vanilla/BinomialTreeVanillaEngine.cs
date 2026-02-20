@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -34,7 +35,7 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         double x = option.StrikePrice;
         int z = (int)option.OptionType;
         double s0 = assetPrice;
-        double tau = GetYearsToExpiration(option, valuationDate);
+        double tau = DayCounter.YearFraction(valuationDate, option.ExpirationDate);
 
         if (tau <= 0)
         {
