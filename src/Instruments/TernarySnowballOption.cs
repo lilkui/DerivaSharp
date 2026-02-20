@@ -83,7 +83,7 @@ public sealed record TernarySnowballOption : KiAutocallableNote
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
-        DateOnly[] knockOutObservationDates = DateUtils.GetObservationDates(effectiveDate, expirationDate, 0).ToArray();
+        DateOnly[] knockOutObservationDates = new SseCalendar().GetMonthlyObservationDates(effectiveDate, expirationDate, 0).ToArray();
         int n = knockOutObservationDates.Length;
         return new TernarySnowballOption(
             Enumerable.Repeat(knockOutCouponRate, n).ToArray(),

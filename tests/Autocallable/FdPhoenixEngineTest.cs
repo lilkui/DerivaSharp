@@ -18,7 +18,7 @@ public class FdPhoenixEngineTest
     {
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
-        _obsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
+        _obsDates = new SseCalendar().GetMonthlyObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
         _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
         _engine = new FdPhoenixEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);

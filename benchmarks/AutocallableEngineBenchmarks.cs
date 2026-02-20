@@ -27,7 +27,7 @@ public class AutocallableEngineBenchmarks
         _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, _effectiveDate);
 
         DateOnly expirationDate = _effectiveDate.AddYears(1);
-        DateOnly[] koObsDates = DateUtils.GetObservationDates(_effectiveDate, expirationDate, 3).ToArray();
+        DateOnly[] koObsDates = new SseCalendar().GetMonthlyObservationDates(_effectiveDate, expirationDate, 3).ToArray();
 
         _snowball = SnowballOption.CreateStandardSnowball(
             0.085,

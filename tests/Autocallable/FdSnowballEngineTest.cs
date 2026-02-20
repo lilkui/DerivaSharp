@@ -18,7 +18,7 @@ public class FdSnowballEngineTest
     {
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
-        _koObsDates = DateUtils.GetObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
+        _koObsDates = new SseCalendar().GetMonthlyObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
         _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
         _engine = new FdSnowballEngine(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
