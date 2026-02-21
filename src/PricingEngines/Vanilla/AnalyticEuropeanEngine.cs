@@ -16,7 +16,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
     /// </summary>
     public bool UseNumericalGreeks { get; set; } = false;
 
-    public override double Delta(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Delta(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -38,7 +38,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return z * Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d1);
     }
 
-    public override double Gamma(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Gamma(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -59,7 +59,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Exp(-q * tau) * StandardNormalDistribution.Pdf(d1) / (s * vol * Sqrt(tau));
     }
 
-    public override double Speed(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Speed(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -80,7 +80,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Gamma(option, context) * (1 + d1 / (vol * Sqrt(tau))) / s;
     }
 
-    public override double Theta(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Theta(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -104,7 +104,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return theta / 365;
     }
 
-    public override double Charm(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Charm(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -126,7 +126,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Exp(-q * tau) * (StandardNormalDistribution.Pdf(d1) * ((r - q) / (vol * Sqrt(tau)) - 0.5 * d2 / tau) - z * q * StandardNormalDistribution.Cdf(z * d1)) / 365;
     }
 
-    public override double Color(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Color(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -147,7 +147,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Gamma(option, context) * (q + (r - q) * d1 / (vol * Sqrt(tau)) + (1 - d1 * d2) / (2 * tau)) / 365;
     }
 
-    public override double Vega(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Vega(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -168,7 +168,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return s * Exp(-q * tau) * StandardNormalDistribution.Pdf(d1) * Sqrt(tau) / 100;
     }
 
-    public override double Vanna(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Vanna(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -189,7 +189,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Exp(-q * tau) * d2 / vol * StandardNormalDistribution.Pdf(d1) / 100;
     }
 
-    public override double Zomma(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Zomma(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -210,7 +210,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Gamma(option, context) * (d1 * d2 - 1) / vol / 100;
     }
 
-    public override double Rho(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override double Rho(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -232,7 +232,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return z * tau * x * Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d2) / 100;
     }
 
-    public override PricingResult ValueAndGreeks(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    public override PricingResult ValueAndGreeks(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
         {
@@ -297,7 +297,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         };
     }
 
-    protected override double CalculateValue(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 

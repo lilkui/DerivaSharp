@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.BarrierOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -24,7 +25,7 @@ public class FdBarrierEngineTest
             0,
             EffectiveDate,
             ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = _fdEngine.Value(option, ctx);
         double expected = _analyticEngine.Value(option, ctx);
         double tolerance = Math.Abs(expected) * 0.0001;
@@ -48,7 +49,7 @@ public class FdBarrierEngineTest
             ExpirationDate);
         BarrierOption koOption = kiOption with { BarrierType = BarrierType.UpAndOut };
         EuropeanOption eurOption = new(OptionType.Call, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double kiValue = _fdEngine.Value(kiOption, ctx);
         double koValue = _fdEngine.Value(koOption, ctx);
         double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);

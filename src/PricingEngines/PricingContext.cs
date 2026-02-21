@@ -1,4 +1,5 @@
 ﻿using DerivaSharp.Models;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -9,5 +10,6 @@ namespace DerivaSharp.PricingEngines;
 /// <param name="ModelParameters">The model parameters.</param>
 /// <param name="AssetPrice">The current asset price.</param>
 /// <param name="ValuationDate">The valuation date.</param>
-public readonly record struct PricingContext<TModelParameters>(TModelParameters ModelParameters, double AssetPrice, DateOnly ValuationDate)
+/// <param name="Calendar">The trading calendar used for date calculations.</param>
+public readonly record struct PricingContext<TModelParameters>(TModelParameters ModelParameters, double AssetPrice, DateOnly ValuationDate, ICalendar Calendar)
     where TModelParameters : IModelParameters;

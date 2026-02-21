@@ -17,7 +17,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of value with respect to volatility (per 1%).</returns>
-    public virtual double Vega(TOption option, PricingContext<BsmModelParameters> context)
+    public virtual double Vega(TOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -37,7 +37,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of delta with respect to volatility (per 1%).</returns>
-    public virtual double Vanna(TOption option, PricingContext<BsmModelParameters> context)
+    public virtual double Vanna(TOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -78,7 +78,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of gamma with respect to volatility (per 1%).</returns>
-    public virtual double Zomma(TOption option, PricingContext<BsmModelParameters> context)
+    public virtual double Zomma(TOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -122,7 +122,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of value with respect to the risk-free rate (per 1%).</returns>
-    public virtual double Rho(TOption option, PricingContext<BsmModelParameters> context)
+    public virtual double Rho(TOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -142,7 +142,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>A <see cref="PricingResult" /> containing the value and Greeks.</returns>
-    public virtual PricingResult ValueAndGreeks(TOption option, PricingContext<BsmModelParameters> context)
+    public virtual PricingResult ValueAndGreeks(TOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
 
@@ -242,7 +242,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     /// <returns>The implied volatility, or <see cref="double.NaN" /> if the root-finding fails to converge.</returns>
     public virtual double ImpliedVolatility(
         TOption option,
-        PricingContext<BsmModelParameters> context,
+        in PricingContext<BsmModelParameters> context,
         double optionPrice,
         double lowerBound = 0.0001,
         double upperBound = 4.0,
@@ -250,6 +250,7 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
     {
         ValidateArguments(option, context);
 
+        PricingContext<BsmModelParameters> ctx = context;
         if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
         {
             return root;
@@ -258,6 +259,6 @@ public abstract class BsmPricingEngine<TOption> : PricingEngine<TOption, BsmMode
         return double.NaN;
 
         double ObjectiveFunction(double vol) =>
-            CalculateValue(option, context with { ModelParameters = context.ModelParameters with { Volatility = vol } }) - optionPrice;
+            CalculateValue(option, ctx with { ModelParameters = ctx.ModelParameters with { Volatility = vol } }) - optionPrice;
     }
 }

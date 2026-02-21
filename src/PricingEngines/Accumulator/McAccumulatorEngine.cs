@@ -15,7 +15,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public override double[] Values(Accumulator option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(Accumulator option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         int count = assetPrices.Length;
         Guard.IsGreaterThanOrEqualTo(count, 3);
@@ -26,7 +26,8 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 
         if (simData.StepCount <= 0)
         {
-            return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
+            PricingContext<BsmModelParameters> ctx = context;
+            return assetPrices.Select(s => CalculateTerminalPayoff(option, ctx with { AssetPrice = s })).ToArray();
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
@@ -42,7 +43,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         return values;
     }
 
-    protected override double CalculateValue(Accumulator option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         using DisposeScope scope = torch.NewDisposeScope();
 
@@ -61,7 +62,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
 
     private static double CalculateAveragePayoff(
         Accumulator option,
-        PricingContext<BsmModelParameters> context,
+        in PricingContext<BsmModelParameters> context,
         Tensor priceMatrix,
         in SimulationData simData)
     {
@@ -98,14 +99,14 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         return discounted.mean().item<double>();
     }
 
-    private static double CalculateTerminalPayoff(Accumulator option, PricingContext<BsmModelParameters> context)
+    private static double CalculateTerminalPayoff(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);
 
         return option.AccumulatedQuantity * (context.AssetPrice - option.StrikePrice);
     }
 
-    private SimulationData PrepareSimulationData(Accumulator option, PricingContext<BsmModelParameters> context)
+    private SimulationData PrepareSimulationData(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);

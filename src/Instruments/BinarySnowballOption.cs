@@ -72,7 +72,7 @@ public sealed record BinarySnowballOption : AutocallableNote
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
-        DateOnly[] knockOutObservationDates = new SseCalendar().GetMonthlyObservationDates(effectiveDate, expirationDate, 0).ToArray();
+        DateOnly[] knockOutObservationDates = SseCalendar.Shared.GetMonthlyObservationDates(effectiveDate, expirationDate, 0).ToArray();
         int n = knockOutObservationDates.Length;
         return new BinarySnowballOption(
             Enumerable.Repeat(knockOutCouponRate, n).ToArray(),

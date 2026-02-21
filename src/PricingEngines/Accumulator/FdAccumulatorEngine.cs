@@ -55,7 +55,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         _timeStepCount = timeStepCount;
     }
 
-    public override double[] Values(Accumulator option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(Accumulator option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
 
@@ -93,7 +93,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         return values;
     }
 
-    protected override double CalculateValue(Accumulator option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {
@@ -141,7 +141,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
         {
-            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate));
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, NullCalendar.Shared));
         }
 
         public ReadOnlySpan<double> GetRow0Span()
@@ -233,7 +233,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
         {
-            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate));
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, NullCalendar.Shared));
         }
 
         public ReadOnlySpan<double> GetRow0Span()

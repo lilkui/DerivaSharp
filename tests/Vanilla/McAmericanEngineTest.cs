@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using TorchSharp;
 using static DerivaSharp.Tests.AmericanOptionTestData;
 
@@ -16,7 +17,7 @@ public class McAmericanEngineTest
     public void Value_IsAccurate(OptionType optionType, double assetPrice, double expected)
     {
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double tolerance = Math.Abs(expected) * 0.02;
         Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
     }
@@ -27,7 +28,7 @@ public class McAmericanEngineTest
     {
         const int precision = 6;
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

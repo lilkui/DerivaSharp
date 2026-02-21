@@ -22,7 +22,7 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
     /// <param name="context">The pricing context.</param>
     /// <param name="source">The random number source.</param>
     /// <returns>The option value.</returns>
-    public double Value(EuropeanOption option, PricingContext<BsmModelParameters> context, RandomNumberSource source)
+    public double Value(EuropeanOption option, in PricingContext<BsmModelParameters> context, RandomNumberSource source)
     {
         BsmModelParameters parameters = context.ModelParameters;
         double tau = DayCounter.YearFraction(context.ValuationDate, option.ExpirationDate);
@@ -40,7 +40,7 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
         return averagePayoff * Math.Exp(-parameters.RiskFreeRate * tau);
     }
 
-    protected override double CalculateValue(EuropeanOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {

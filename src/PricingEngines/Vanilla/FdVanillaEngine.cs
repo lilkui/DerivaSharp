@@ -12,7 +12,7 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : VanillaOption
 {
-    protected override double CalculateValue(TOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {

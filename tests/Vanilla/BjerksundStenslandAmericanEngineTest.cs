@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.AmericanOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -15,7 +16,7 @@ public class BjerksundStenslandAmericanEngineTest
     {
         const int precision = 4;
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
@@ -25,7 +26,7 @@ public class BjerksundStenslandAmericanEngineTest
     {
         const int precision = 6;
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

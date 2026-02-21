@@ -23,7 +23,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
     /// <param name="context">The pricing context.</param>
     /// <param name="source">The random number source.</param>
     /// <returns>The option value.</returns>
-    public double Value(AmericanOption option, PricingContext<BsmModelParameters> context, RandomNumberSource source)
+    public double Value(AmericanOption option, in PricingContext<BsmModelParameters> context, RandomNumberSource source)
     {
         Guard.IsGreaterThan(stepCount, 2);
 
@@ -70,7 +70,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
-    protected override double CalculateValue(AmericanOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(AmericanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {

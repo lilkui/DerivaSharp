@@ -23,7 +23,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double _couponAmount;
     private double _lossAtZero;
 
-    protected override double CalculateValue(PhoenixOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(PhoenixOption option, in PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

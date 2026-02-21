@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.Asian.AsianOptionTestData;
 
 namespace DerivaSharp.Tests.Asian;
@@ -21,7 +22,7 @@ public class ArithmeticAverageAsianEngineTest
             realizedAveragePrice,
             EffectiveDate,
             ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ValuationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ValuationDate, NullCalendar.Shared);
         double actual = _engine.Value(option, ctx);
         Assert.Equal(expected, actual, precision);
     }

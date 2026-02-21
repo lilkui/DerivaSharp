@@ -11,7 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<AmericanOption>
 {
-    protected override double CalculateValue(AmericanOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(AmericanOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;
         double assetPrice = context.AssetPrice;
@@ -90,7 +90,7 @@ public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<American
             // Never optimal to exercise early
             EuropeanOption europeanOption = new(OptionType.Call, x, option.EffectiveDate, option.ExpirationDate);
             AnalyticEuropeanEngine europeanEngine = new();
-            PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate);
+            PricingContext<BsmModelParameters> context = new(parameters, assetPrice, valuationDate, NullCalendar.Shared);
             value = europeanEngine.Value(europeanOption, context);
             return value;
         }

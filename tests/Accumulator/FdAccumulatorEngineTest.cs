@@ -1,6 +1,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using TorchSharp;
 
 namespace DerivaSharp.Tests;
@@ -26,7 +27,7 @@ public class FdAccumulatorEngineTest
             effectiveDate,
             expirationDate);
         var modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
-        PricingContext<BsmModelParameters> ctx = new(modelParameters, assetPrice, effectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(modelParameters, assetPrice, effectiveDate, NullCalendar.Shared);
         FdAccumulatorEngine fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
         McAccumulatorEngine mcEngine = new(200000, s_useCuda);
         double fdValue = fdEngine.Value(option, ctx);

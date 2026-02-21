@@ -13,7 +13,7 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
-    public override double[] Values(TernarySnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(TernarySnowballOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -29,7 +29,8 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
 
         if (simData.StepCount <= 0)
         {
-            return assetPrices.Select(s => CalculateTerminalPayoff(option, context with { AssetPrice = s })).ToArray();
+            PricingContext<BsmModelParameters> ctx = context;
+            return assetPrices.Select(s => CalculateTerminalPayoff(option, ctx with { AssetPrice = s })).ToArray();
         }
 
         using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
@@ -45,7 +46,7 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
         return values;
     }
 
-    protected override double CalculateValue(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(TernarySnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -69,7 +70,7 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
 
     private static double CalculateAveragePayoff(
         TernarySnowballOption option,
-        PricingContext<BsmModelParameters> context,
+        in PricingContext<BsmModelParameters> context,
         Tensor priceMatrix,
         in SimulationData simData)
     {
@@ -113,7 +114,7 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
         return pathPayoffs.mean().item<double>();
     }
 
-    private static double CalculateTerminalPayoff(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
+    private static double CalculateTerminalPayoff(TernarySnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);
 
@@ -132,7 +133,7 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false)
         return option.MaturityCouponRate * t;
     }
 
-    private SimulationData PrepareSimulationData(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
+    private SimulationData PrepareSimulationData(TernarySnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);

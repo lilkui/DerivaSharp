@@ -11,7 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class AnalyticDigitalEngine : BsmPricingEngine<DigitalOption>
 {
-    protected override double CalculateValue(DigitalOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(DigitalOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;
         double assetPrice = context.AssetPrice;

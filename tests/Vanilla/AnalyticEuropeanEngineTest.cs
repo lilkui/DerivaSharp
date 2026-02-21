@@ -1,6 +1,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.EuropeanOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -26,7 +27,7 @@ public class AnalyticEuropeanEngineTest
     {
         const int precision = 6;
         EuropeanOption option = optionType == OptionType.Call ? _call : _put;
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = _engine.Value(option, ctx);
         Assert.Equal(expected, actual, precision);
     }
@@ -37,7 +38,7 @@ public class AnalyticEuropeanEngineTest
     {
         const int precision = 6;
         EuropeanOption option = optionType == OptionType.Call ? _call : _put;
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = greek switch
         {
             "Delta" => _engine.Delta(option, ctx),
@@ -58,7 +59,7 @@ public class AnalyticEuropeanEngineTest
     public void ImpliedVolatility_IsAccurate(double price, double assetPrice, double expected)
     {
         const int precision = 4;
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = _engine.ImpliedVolatility(_call, ctx, price);
         Assert.Equal(expected, actual, precision);
     }
@@ -69,7 +70,7 @@ public class AnalyticEuropeanEngineTest
     {
         const int precision = 6;
         EuropeanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         double actual = _engine.Value(option, ctx);
         Assert.Equal(expected, actual, precision);
     }
@@ -81,7 +82,7 @@ public class AnalyticEuropeanEngineTest
     {
         const int precision = 6;
         EuropeanOption option = optionType == OptionType.Call ? _call : _put;
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
 
         // Numerical Greeks
         _engine.UseNumericalGreeks = true;

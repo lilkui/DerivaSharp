@@ -25,7 +25,7 @@ public static class AutocallableEngineExtensions
         /// <returns>The implied coupon rate, or <see cref="double.NaN" /> if the algorithm does not converge.</returns>
         public double ImpliedCouponRate(
             SnowballOption option,
-            PricingContext<BsmModelParameters> context,
+            in PricingContext<BsmModelParameters> context,
             double optionPrice,
             bool alignMaturityCouponRate,
             double lowerBound = 0.0,
@@ -46,6 +46,7 @@ public static class AutocallableEngineExtensions
                 offsets[i] = baseRates[i] - baseFirstRate;
             }
 
+            PricingContext<BsmModelParameters> ctx = context;
             if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
                 return root;
@@ -69,7 +70,7 @@ public static class AutocallableEngineExtensions
                     }
                     : option with { KnockOutCouponRates = adjustedRates };
 
-                return engine.Value(candidate, context) - optionPrice;
+                return engine.Value(candidate, ctx) - optionPrice;
             }
         }
     }
@@ -88,7 +89,7 @@ public static class AutocallableEngineExtensions
         /// <returns>The implied coupon rate, or <see cref="double.NaN" /> if the algorithm does not converge.</returns>
         public double ImpliedCouponRate(
             PhoenixOption option,
-            PricingContext<BsmModelParameters> context,
+            in PricingContext<BsmModelParameters> context,
             double optionPrice,
             double lowerBound = 0.0,
             double upperBound = 1.0,
@@ -98,6 +99,7 @@ public static class AutocallableEngineExtensions
             Guard.IsNotNull(option);
             Guard.IsLessThan(lowerBound, upperBound);
 
+            PricingContext<BsmModelParameters> ctx = context;
             if (BrentSolver.TryFindRoot(ObjectiveFunction, lowerBound, upperBound, accuracy, 100, out double root))
             {
                 return root;
@@ -109,7 +111,7 @@ public static class AutocallableEngineExtensions
             {
                 PhoenixOption candidate = option with { CouponRate = rate };
 
-                return engine.Value(candidate, context) - optionPrice;
+                return engine.Value(candidate, ctx) - optionPrice;
             }
         }
     }

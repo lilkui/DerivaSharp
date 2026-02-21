@@ -16,7 +16,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
 {
     protected override bool UseTradingDayGrid => true;
 
-    public override double[] Values(TOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(TOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

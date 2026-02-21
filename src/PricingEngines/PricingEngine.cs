@@ -24,7 +24,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The option value.</returns>
-    public double Value(TOption option, PricingContext<TModel> context)
+    public double Value(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -37,7 +37,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of value with respect to the asset price.</returns>
-    public virtual double Delta(TOption option, PricingContext<TModel> context)
+    public virtual double Delta(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -56,7 +56,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of delta with respect to the asset price.</returns>
-    public virtual double Gamma(TOption option, PricingContext<TModel> context)
+    public virtual double Gamma(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -76,7 +76,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of gamma with respect to the asset price.</returns>
-    public virtual double Speed(TOption option, PricingContext<TModel> context)
+    public virtual double Speed(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -97,7 +97,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of value with respect to time (per day).</returns>
-    public virtual double Theta(TOption option, PricingContext<TModel> context)
+    public virtual double Theta(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -117,7 +117,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of delta with respect to time (per day).</returns>
-    public virtual double Charm(TOption option, PricingContext<TModel> context)
+    public virtual double Charm(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -153,7 +153,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The rate of change of gamma with respect to time (per day).</returns>
-    public virtual double Color(TOption option, PricingContext<TModel> context)
+    public virtual double Color(TOption option, in PricingContext<TModel> context)
     {
         ValidateArguments(option, context);
 
@@ -192,7 +192,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="context">The pricing context.</param>
     /// <param name="assetPrices">The array of asset prices.</param>
     /// <returns>An array of option values corresponding to each asset price.</returns>
-    public virtual double[] Values(TOption option, PricingContext<TModel> context, double[] assetPrices)
+    public virtual double[] Values(TOption option, in PricingContext<TModel> context, double[] assetPrices)
     {
         Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
 
@@ -212,7 +212,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="context">The pricing context.</param>
     /// <param name="assetPrices">The array of asset prices.</param>
     /// <returns>An array of deltas corresponding to each asset price.</returns>
-    public virtual double[] Deltas(TOption option, PricingContext<TModel> context, double[] assetPrices)
+    public virtual double[] Deltas(TOption option, in PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         int count = assetPrices.Length;
@@ -237,7 +237,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="context">The pricing context.</param>
     /// <param name="assetPrices">The array of asset prices.</param>
     /// <returns>An array of gammas corresponding to each asset price.</returns>
-    public virtual double[] Gammas(TOption option, PricingContext<TModel> context, double[] assetPrices)
+    public virtual double[] Gammas(TOption option, in PricingContext<TModel> context, double[] assetPrices)
     {
         double[] values = Values(option, context, assetPrices);
         int count = assetPrices.Length;
@@ -262,14 +262,14 @@ public abstract class PricingEngine<TOption, TModel>
     /// <param name="option">The option to price.</param>
     /// <param name="context">The pricing context.</param>
     /// <returns>The option value.</returns>
-    protected abstract double CalculateValue(TOption option, PricingContext<TModel> context);
+    protected abstract double CalculateValue(TOption option, in PricingContext<TModel> context);
 
     /// <summary>
     ///     Validates the option and pricing context.
     /// </summary>
     /// <param name="option">The option to validate.</param>
     /// <param name="context">The pricing context to validate.</param>
-    protected virtual void ValidateArguments(TOption option, PricingContext<TModel> context)
+    protected virtual void ValidateArguments(TOption option, in PricingContext<TModel> context)
     {
         Guard.IsNotNull(option);
         Guard.IsBetweenOrEqualTo(context.ValuationDate, option.EffectiveDate, option.ExpirationDate);

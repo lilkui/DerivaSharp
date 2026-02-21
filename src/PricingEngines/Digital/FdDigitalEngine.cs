@@ -13,7 +13,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<DigitalOption>(scheme, priceStepCount, timeStepCount)
 {
-    protected override double CalculateValue(DigitalOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(DigitalOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {

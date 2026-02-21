@@ -1,6 +1,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.EuropeanOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -18,7 +19,7 @@ public class FdEuropeanEngineTest
     {
         const double assetPrice = 100;
         EuropeanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
 
         FdEuropeanEngine fdEngine = scheme switch
         {

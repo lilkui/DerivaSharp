@@ -53,7 +53,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    protected override double CalculateValue(SnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(SnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

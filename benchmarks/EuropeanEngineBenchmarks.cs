@@ -4,6 +4,7 @@ using BenchmarkDotNet.Jobs;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.Benchmarks;
 
@@ -21,7 +22,7 @@ public class EuropeanEngineBenchmarks
         _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
         DateOnly effectiveDate = new(2025, 1, 6);
         DateOnly expirationDate = effectiveDate.AddDays(365);
-        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, effectiveDate);
+        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, effectiveDate, NullCalendar.Shared);
         _european = new EuropeanOption(OptionType.Call, 100.0, effectiveDate, expirationDate);
     }
 

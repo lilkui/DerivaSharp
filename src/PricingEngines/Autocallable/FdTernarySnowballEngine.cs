@@ -22,7 +22,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
     private double _maturityPayoff;
     private double _minimalPayoff;
 
-    protected override double CalculateValue(TernarySnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(TernarySnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

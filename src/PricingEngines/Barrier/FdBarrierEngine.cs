@@ -19,7 +19,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
     protected override bool UseTradingDayGrid => true;
 
-    protected override double CalculateValue(BarrierOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(BarrierOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
         {

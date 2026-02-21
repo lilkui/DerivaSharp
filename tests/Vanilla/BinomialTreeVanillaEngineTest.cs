@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.EuropeanOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -14,7 +15,7 @@ public class BinomialTreeVanillaEngineTest
     public void Value_IsAccurate(OptionType optionType, double assetPrice, double expected)
     {
         EuropeanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double tolerance = Math.Abs(expected) * 0.001;
         Assert.Equal(expected, _engine.Value(option, ctx), tolerance);
     }
@@ -25,7 +26,7 @@ public class BinomialTreeVanillaEngineTest
     {
         const int precision = 6;
         EuropeanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 }

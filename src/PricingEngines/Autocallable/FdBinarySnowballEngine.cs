@@ -20,7 +20,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
 
     protected override bool UseTradingDayGrid => true;
 
-    public override double[] Values(BinarySnowballOption option, PricingContext<BsmModelParameters> context, double[] assetPrices)
+    public override double[] Values(BinarySnowballOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {
@@ -44,7 +44,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         return values;
     }
 
-    protected override double CalculateValue(BinarySnowballOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(BinarySnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
         {

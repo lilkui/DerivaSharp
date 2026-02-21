@@ -1,6 +1,7 @@
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.DigitalOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -21,7 +22,7 @@ public class FdDigitalEngineTest
             "AssetOrNothingPut" => new AssetOrNothingOption(OptionType.Put, Strike, EffectiveDate, ExpirationDate),
             _ => throw new ArgumentException("Invalid option kind"),
         };
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = _fdEngine.Value(option, ctx);
         double tolerance = Math.Abs(expected) * 0.001;
         Assert.Equal(expected, actual, tolerance);

@@ -24,10 +24,10 @@ public class AutocallableEngineBenchmarks
         _modelParameters = new BsmModelParameters(0.3, 0.04, 0.01);
         _effectiveDate = new DateOnly(2022, 1, 5);
 
-        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, _effectiveDate);
+        _context = new PricingContext<BsmModelParameters>(_modelParameters, 100.0, _effectiveDate, NullCalendar.Shared);
 
         DateOnly expirationDate = _effectiveDate.AddYears(1);
-        DateOnly[] koObsDates = new SseCalendar().GetMonthlyObservationDates(_effectiveDate, expirationDate, 3).ToArray();
+        DateOnly[] koObsDates = SseCalendar.Shared.GetMonthlyObservationDates(_effectiveDate, expirationDate, 3).ToArray();
 
         _snowball = SnowballOption.CreateStandardSnowball(
             0.085,

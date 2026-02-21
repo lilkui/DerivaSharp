@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.AmericanOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -16,7 +17,7 @@ public class FdAmericanEngineTest
     public void Value_IsAccurate(OptionType optionType, FiniteDifferenceScheme scheme, double toleranceFactor, double expected)
     {
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, AssetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, AssetPrice, EffectiveDate, NullCalendar.Shared);
 
         FdAmericanEngine fdEngine = scheme switch
         {

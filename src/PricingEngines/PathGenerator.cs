@@ -15,7 +15,7 @@ public static class PathGenerator
     /// <param name="dtVector">A tensor of time step sizes.</param>
     /// <param name="source">The random number source.</param>
     /// <returns>A tensor of shape [pathCount, stepCount + 1] containing simulated asset prices.</returns>
-    public static torch.Tensor Generate(PricingContext<BsmModelParameters> context, torch.Tensor dtVector, RandomNumberSource source)
+    public static torch.Tensor Generate(in PricingContext<BsmModelParameters> context, torch.Tensor dtVector, RandomNumberSource source)
     {
         BsmModelParameters parameters = context.ModelParameters;
         double s0 = context.AssetPrice;

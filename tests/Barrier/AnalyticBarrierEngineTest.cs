@@ -1,6 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 using static DerivaSharp.Tests.BarrierOptionTestData;
 
 namespace DerivaSharp.Tests;
@@ -32,7 +33,7 @@ public class AnalyticBarrierEngineTest
             obsFreq,
             EffectiveDate,
             ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
@@ -58,7 +59,7 @@ public class AnalyticBarrierEngineTest
             0,
             EffectiveDate,
             ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
 
@@ -79,7 +80,7 @@ public class AnalyticBarrierEngineTest
             ExpirationDate);
         BarrierOption koOption = kiOption with { BarrierType = BarrierType.UpAndOut };
         EuropeanOption eurOption = new(OptionType.Call, Strike, EffectiveDate, ExpirationDate);
-        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate);
+        PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double kiValue = _engine.Value(kiOption, ctx);
         double koValue = _engine.Value(koOption, ctx);
         double eurValue = new AnalyticEuropeanEngine().Value(eurOption, ctx);

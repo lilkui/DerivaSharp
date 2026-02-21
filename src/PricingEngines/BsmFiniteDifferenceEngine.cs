@@ -111,7 +111,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     /// </summary>
     protected virtual bool UseTradingDayGrid => false;
 
-    protected override double CalculateValue(TOption option, PricingContext<BsmModelParameters> context)
+    protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         SolvePde(option, context.ModelParameters, context.ValuationDate);
         return LinearInterpolation.InterpolateSorted(context.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));

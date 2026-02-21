@@ -20,9 +20,9 @@ public class McSnowballEngineTest
     {
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
-        _koObsDates = new SseCalendar().GetMonthlyObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
+        _koObsDates = SseCalendar.Shared.GetMonthlyObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate);
+        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate, NullCalendar.Shared);
         _engine = new McSnowballEngine(100000, s_useCuda);
     }
 
