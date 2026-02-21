@@ -5,6 +5,15 @@
 /// </summary>
 public sealed class NullCalendar : ICalendar
 {
+    private NullCalendar()
+    {
+    }
+
+    /// <summary>
+    ///     Gets the shared singleton instance of <see cref="NullCalendar" />.
+    /// </summary>
+    public static NullCalendar Shared { get; } = new();
+
     /// <inheritdoc />
     public int TradingDaysPerYear => 365;
 

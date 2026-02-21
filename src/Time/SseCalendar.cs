@@ -597,6 +597,15 @@ public sealed class SseCalendar : ICalendar
         new(2025, 10, 08),
     ];
 
+    private SseCalendar()
+    {
+    }
+
+    /// <summary>
+    ///     Gets the shared singleton instance of <see cref="SseCalendar" />.
+    /// </summary>
+    public static SseCalendar Shared { get; } = new();
+
     /// <inheritdoc />
     public int TradingDaysPerYear => 243;
 
