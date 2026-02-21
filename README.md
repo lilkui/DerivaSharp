@@ -22,6 +22,7 @@ The following example demonstrates how to price a European Call option using the
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
+using DerivaSharp.Time;
 
 DateOnly valuationDate = new(2025, 1, 6);
 DateOnly expirationDate = valuationDate.AddYears(1);
@@ -40,7 +41,8 @@ BsmModelParameters modelParameters = new(0.3, 0.04, 0.01);
 PricingContext<BsmModelParameters> context = new(
     modelParameters,
     assetPrice: 100.0,
-    valuationDate);
+    valuationDate,
+    NullCalendar.Shared);
 
 // 4. Price the option
 AnalyticEuropeanEngine engine = new();

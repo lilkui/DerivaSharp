@@ -11,14 +11,15 @@ src/Instruments/   – Immutable record hierarchy defining derivative contracts
 src/Models/        – Market model parameters (BsmModelParameters)
 src/PricingEngines/– Strategy-pattern engines: one engine per (instrument, method) pair
 src/Numerics/      – Math primitives (distributions, root-finding, quadrature, tridiagonal solver)
-src/Time/          – Trading calendar (SSE holidays), date utilities, trading-day grids
+src/Time/          – ICalendar abstraction, NullCalendar, SseCalendar (SSE holidays), CalendarExtensions,
+                   DayCounter (Actual/365 Fixed and trading-day year-fraction overloads)
 ```
 
 **Key generic constraint chain:** `PricingEngine<TOption, TModel> where TOption : Option where TModel : IModelParameters` → `BsmPricingEngine<TOption>` (fixes `TModel = BsmModelParameters`) → `BsmFiniteDifferenceEngine<TOption>` → `FdKiAutocallableEngine<TOption>`.
 
 **Instruments are `record` types** (immutable, positional or nominal). Intermediate types are `abstract record`; leaf instruments are `sealed record`. Models and pricing context are `readonly record struct`. Engines are `abstract class`/`sealed class`.
 
-**Template Method pattern** drives engines: override `CalculateValue()` for basic engines; override `SetTerminalCondition()`, `SetBoundaryConditions()`, `ApplyStepConditions()` for FD engines.
+**Template Method pattern** drives engines: override `CalculateValue(option, in PricingContext<TModel> context)` for basic engines; override `SetTerminalCondition()`, `SetBoundaryConditions()`, `ApplyStepConditions()` for FD engines.
 
 ## Code Conventions
 
@@ -32,7 +33,8 @@ src/Time/          – Trading calendar (SSE holidays), date utilities, trading-
 - **Target-typed `new()`** — preferred: `new(0.3, 0.04, 0.01)` instead of `new BsmModelParameters(0.3, 0.04, 0.01)`.
 - **Trailing commas** required in multi-line initializers.
 - **XML docs** on all public source types/members (4-space indented `///`). No docs on test code.
-- **Year fractions** — `days / 365.0` (calendar days), not trading days. Use `DayCounter.YearFraction(valuationDate, expirationDate)` from `DerivaSharp.Time`.
+- **Year fractions** — use `DayCounter.YearFraction(startDate, endDate)` for Actual/365 Fixed (calendar days ÷ 365), or `DayCounter.YearFraction(startDate, endDate, calendar)` for trading-day based (trading days ÷ `ICalendar.TradingDaysPerYear`). Both are in `DerivaSharp.Time`.
+- **Calendars** — pass `ICalendar` through `PricingContext<T>.Calendar`. Use singleton `NullCalendar.Shared` (all days are trading days, 365 days/year) for vanilla/barrier/digital instruments; use `SseCalendar.Shared` for SSE-listed autocallables and accumulators.
 - **`DateOnly`** exclusively — never `DateTime`.
 - **`sealed`** on all leaf classes and records.
 - **Using directives** outside namespace, System first, alphabetically sorted.
@@ -46,7 +48,7 @@ src/Time/          – Trading calendar (SSE holidays), date utilities, trading-
 ## Adding a New Pricing Engine
 
 1. Inherit from `BsmPricingEngine<TOption>` (analytic/MC) or `BsmFiniteDifferenceEngine<TOption>` (FD).
-2. Override `CalculateValue()`. For FD, override the three template hooks instead.
+2. Override `CalculateValue(option, in PricingContext<BsmModelParameters> context)`. For FD, override the three template hooks instead.
 3. For analytic engines, override individual Greek methods (e.g., `Delta()`, `Gamma()`) with closed-form implementations and add a `UseNumericalGreeks` toggle (see `AnalyticEuropeanEngine`).
 4. MC engines use `PathGenerator` and `RandomNumberSource` from `PricingEngines/` with TorchSharp tensors; accept `useCuda` constructor parameter.
 
