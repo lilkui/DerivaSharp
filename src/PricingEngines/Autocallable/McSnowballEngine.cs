@@ -143,7 +143,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : BsmP
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
 
-        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, _device);
+        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, context.Calendar, _device);
         if (grid.StepCount <= 0)
         {
             return new SimulationData(

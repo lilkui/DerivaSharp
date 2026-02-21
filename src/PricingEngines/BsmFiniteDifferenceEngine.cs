@@ -111,8 +111,14 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     /// </summary>
     protected virtual bool UseTradingDayGrid => false;
 
+    /// <summary>
+    ///     Gets the trading calendar used for date calculations.
+    /// </summary>
+    protected ICalendar Calendar { get; private set; } = NullCalendar.Shared;
+
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
+        Calendar = context.Calendar;
         SolvePde(option, context.ModelParameters, context.ValuationDate);
         return LinearInterpolation.InterpolateSorted(context.AssetPrice, PriceVector, ValueMatrixSpan.GetRowSpan(0));
     }
@@ -244,20 +250,6 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
         return result;
     }
 
-    private static double[] BuildTradingDayTimeGrid(DateOnly valuationDate, DateOnly expirationDate, double tMax, double maxDt)
-    {
-        DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
-        double[] tradingTimes = new double[tradingDays.Length];
-
-        int t0 = valuationDate.DayNumber;
-        for (int i = 0; i < tradingDays.Length; i++)
-        {
-            tradingTimes[i] = (tradingDays[i].DayNumber - t0) / 365.0;
-        }
-
-        return BuildTimeGridFromKeyTimes(tMax, tradingTimes, maxDt);
-    }
-
     private static double[] BuildTimeGridFromKeyTimes(double tMax, ReadOnlySpan<double> keyTimes, double maxDt)
     {
         List<double> keyTimesList = new(keyTimes.Length + 2)
@@ -314,6 +306,20 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     }
 
     private static double GetTimeTolerance(double tMax) => Math.Max(1e-12, tMax * 1e-12);
+
+    private double[] BuildTradingDayTimeGrid(DateOnly valuationDate, DateOnly expirationDate, double tMax, double maxDt)
+    {
+        DateOnly[] tradingDays = Calendar.GetTradingDays(valuationDate, expirationDate).ToArray();
+        double[] tradingTimes = new double[tradingDays.Length];
+
+        int t0 = valuationDate.DayNumber;
+        for (int i = 0; i < tradingDays.Length; i++)
+        {
+            tradingTimes[i] = (tradingDays[i].DayNumber - t0) / 365.0;
+        }
+
+        return BuildTimeGridFromKeyTimes(tMax, tradingTimes, maxDt);
+    }
 
     private void EnsureValueMatrixBuffer()
     {

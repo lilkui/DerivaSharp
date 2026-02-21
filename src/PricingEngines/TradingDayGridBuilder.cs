@@ -13,11 +13,12 @@ internal static class TradingDayGridBuilder
     /// </summary>
     /// <param name="valuationDate">The valuation date.</param>
     /// <param name="expirationDate">The expiration date.</param>
+    /// <param name="calendar">The trading calendar.</param>
     /// <param name="device">The torch device to use for tensor allocation.</param>
     /// <returns>A trading day grid containing time points and step sizes.</returns>
-    public static TradingDayGrid Build(DateOnly valuationDate, DateOnly expirationDate, torch.Device device)
+    public static TradingDayGrid Build(DateOnly valuationDate, DateOnly expirationDate, ICalendar calendar, torch.Device device)
     {
-        DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
+        DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, expirationDate).ToArray();
         if (tradingDays.Length <= 1)
         {
             return new TradingDayGrid(

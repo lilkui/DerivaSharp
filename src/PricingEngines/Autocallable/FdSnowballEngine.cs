@@ -60,7 +60,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             return 0.0;
         }
 
-        InitializeParameters(option, context.ValuationDate);
+        InitializeParameters(option, context.ValuationDate, context.Calendar);
 
         if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
@@ -163,7 +163,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     {
         if (_observationTimes is null)
         {
-            InitializeParameters(option, valuationDate);
+            InitializeParameters(option, valuationDate, Calendar);
         }
 
         base.InitializeGrid(option, parameters, valuationDate);
@@ -196,7 +196,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
-    private void InitializeParameters(SnowballOption option, DateOnly valuationDate)
+    private void InitializeParameters(SnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
         DateOnly effDate = option.EffectiveDate;
         DateOnly[] obsDates = option.KnockOutObservationDates;
@@ -223,7 +223,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
         if (option.KnockInObservationFrequency == ObservationFrequency.Daily)
         {
-            DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
+            DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
             _knockInTimes = new double[tradingDays.Length];
             for (int i = 0; i < tradingDays.Length; i++)
             {

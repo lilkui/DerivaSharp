@@ -111,7 +111,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
         DateOnly valuationDate = context.ValuationDate;
         Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
 
-        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, _device);
+        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, context.Calendar, _device);
         return new SimulationData(grid.TimeGrid, grid.DtVector, grid.StepCount);
     }
 

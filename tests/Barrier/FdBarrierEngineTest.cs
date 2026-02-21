@@ -24,7 +24,8 @@ public class FdBarrierEngineTest
             PaymentType.PayAtExpiry,
             0,
             EffectiveDate,
-            ExpirationDate);
+            ExpirationDate,
+            NullCalendar.Shared);
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         double actual = _fdEngine.Value(option, ctx);
         double expected = _analyticEngine.Value(option, ctx);
@@ -46,7 +47,8 @@ public class FdBarrierEngineTest
             PaymentType.PayAtExpiry,
             0,
             EffectiveDate,
-            ExpirationDate);
+            ExpirationDate,
+            NullCalendar.Shared);
         BarrierOption koOption = kiOption with { BarrierType = BarrierType.UpAndOut };
         EuropeanOption eurOption = new(OptionType.Call, Strike, EffectiveDate, ExpirationDate);
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);

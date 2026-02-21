@@ -20,6 +20,7 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     /// <param name="observationIntervalDays">The interval in days between barrier observations (0 for continuous).</param>
     /// <param name="effectiveDate">The date when the option becomes effective.</param>
     /// <param name="expirationDate">The date when the option expires.</param>
+    /// <param name="calendar">The trading calendar used for adjusting observation dates.</param>
     public BarrierOption(
         OptionType optionType,
         BarrierType barrierType,
@@ -29,7 +30,8 @@ public sealed record BarrierOption : StrikedTypePayoffOption
         PaymentType rebatePaymentType,
         int observationIntervalDays,
         DateOnly effectiveDate,
-        DateOnly expirationDate)
+        DateOnly expirationDate,
+        ICalendar calendar)
         : base(optionType, strikePrice, effectiveDate, expirationDate)
     {
         Guard.IsGreaterThan(barrierPrice, 0);
@@ -47,7 +49,7 @@ public sealed record BarrierOption : StrikedTypePayoffOption
         ObservationInterval = observationIntervalDays / 365.0;
         ObservationDates = observationIntervalDays == 0
             ? []
-            : BuildObservationDates(effectiveDate, expirationDate, observationIntervalDays);
+            : BuildObservationDates(effectiveDate, expirationDate, observationIntervalDays, calendar);
     }
 
     /// <summary>
@@ -83,7 +85,8 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     private static DateOnly[] BuildObservationDates(
         DateOnly effectiveDate,
         DateOnly expirationDate,
-        int observationIntervalDays)
+        int observationIntervalDays,
+        ICalendar calendar)
     {
         List<DateOnly> dates = [];
         DateOnly current = effectiveDate.AddDays(observationIntervalDays);
@@ -91,7 +94,7 @@ public sealed record BarrierOption : StrikedTypePayoffOption
 
         while (current <= expirationDate)
         {
-            DateOnly adjusted = AdjustToNextTradingDay(current, expirationDate);
+            DateOnly adjusted = AdjustToNextTradingDay(current, expirationDate, calendar);
             if (adjusted > expirationDate)
             {
                 break;
@@ -117,10 +120,10 @@ public sealed record BarrierOption : StrikedTypePayoffOption
         return dates.ToArray();
     }
 
-    private static DateOnly AdjustToNextTradingDay(DateOnly date, DateOnly expirationDate)
+    private static DateOnly AdjustToNextTradingDay(DateOnly date, DateOnly expirationDate, ICalendar calendar)
     {
         DateOnly current = date;
-        while (current <= expirationDate && !DateUtils.IsTradingDay(current))
+        while (current <= expirationDate && !calendar.IsTradingDay(current))
         {
             current = current.AddDays(1);
         }

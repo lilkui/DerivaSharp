@@ -20,7 +20,7 @@ public class McTernarySnowballEngineTest
         _effectiveDate = new DateOnly(2022, 1, 5);
         _expirationDate = new DateOnly(2023, 1, 5);
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate, NullCalendar.Shared);
+        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate, SseCalendar.Shared);
         _engine = new McTernarySnowballEngine(100000, s_useCuda);
     }
 

@@ -32,7 +32,8 @@ public class AnalyticBarrierEngineTest
             paymentType,
             obsFreq,
             EffectiveDate,
-            ExpirationDate);
+            ExpirationDate,
+            NullCalendar.Shared);
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
@@ -58,7 +59,8 @@ public class AnalyticBarrierEngineTest
             paymentType,
             0,
             EffectiveDate,
-            ExpirationDate);
+            ExpirationDate,
+            NullCalendar.Shared);
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, ExpirationDate, NullCalendar.Shared);
         Assert.Equal(expected, _engine.Value(option, ctx), precision);
     }
@@ -77,7 +79,8 @@ public class AnalyticBarrierEngineTest
             PaymentType.PayAtExpiry,
             0,
             EffectiveDate,
-            ExpirationDate);
+            ExpirationDate,
+            NullCalendar.Shared);
         BarrierOption koOption = kiOption with { BarrierType = BarrierType.UpAndOut };
         EuropeanOption eurOption = new(OptionType.Call, Strike, EffectiveDate, ExpirationDate);
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);

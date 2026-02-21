@@ -71,14 +71,14 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         }
 
         AccumulatorUnitValueEngine unitValueEngine = new(_scheme, _priceStepCount, _timeStepCount);
-        unitValueEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        unitValueEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate, context.Calendar);
 
         double[] unitValueMatrix = unitValueEngine.GetValueMatrixCopy();
         ReadOnlySpan<double> unitValueRow = unitValueEngine.GetRow0Span();
         ReadOnlySpan<double> priceGrid = unitValueEngine.PriceGrid;
 
         AccumulatorFutureAccrualEngine futureAccrualEngine = new(_scheme, _priceStepCount, _timeStepCount, unitValueMatrix);
-        futureAccrualEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate);
+        futureAccrualEngine.Solve(option, context.ModelParameters, context.AssetPrice, context.ValuationDate, context.Calendar);
 
         ReadOnlySpan<double> futureAccrualRow = futureAccrualEngine.GetRow0Span();
 
@@ -105,18 +105,18 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         DateOnly valuationDate = context.ValuationDate;
 
         AccumulatorUnitValueEngine unitValueEngine = new(_scheme, _priceStepCount, _timeStepCount);
-        double unitValue = unitValueEngine.Solve(option, parameters, assetPrice, valuationDate);
+        double unitValue = unitValueEngine.Solve(option, parameters, assetPrice, valuationDate, context.Calendar);
         double[] unitValueMatrix = unitValueEngine.GetValueMatrixCopy();
 
         AccumulatorFutureAccrualEngine futureAccrualEngine = new(_scheme, _priceStepCount, _timeStepCount, unitValueMatrix);
-        double futureAccrualValue = futureAccrualEngine.Solve(option, parameters, assetPrice, valuationDate);
+        double futureAccrualValue = futureAccrualEngine.Solve(option, parameters, assetPrice, valuationDate, context.Calendar);
 
         return option.AccumulatedQuantity * unitValue + futureAccrualValue;
     }
 
-    private static double[] BuildObservationTimes(DateOnly valuationDate, DateOnly expirationDate)
+    private static double[] BuildObservationTimes(DateOnly valuationDate, DateOnly expirationDate, ICalendar calendar)
     {
-        DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, expirationDate).ToArray();
+        DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, expirationDate).ToArray();
         double[] observationTimes = new double[tradingDays.Length];
 
         int t0 = valuationDate.DayNumber;
@@ -139,9 +139,9 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         protected override bool UseTradingDayGrid => true;
 
-        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate, ICalendar calendar)
         {
-            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, NullCalendar.Shared));
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, calendar));
         }
 
         public ReadOnlySpan<double> GetRow0Span()
@@ -165,7 +165,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             double maxRef = Math.Max(option.StrikePrice, option.KnockOutPrice);
             MaxPrice = 4.0 * maxRef;
 
-            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
+            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate, Calendar);
             base.InitializeGrid(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)
@@ -231,9 +231,9 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
 
         protected override bool UseTradingDayGrid => true;
 
-        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate)
+        public double Solve(Accumulator option, BsmModelParameters parameters, double assetPrice, DateOnly valuationDate, ICalendar calendar)
         {
-            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, NullCalendar.Shared));
+            return CalculateValue(option, new PricingContext<BsmModelParameters>(parameters, assetPrice, valuationDate, calendar));
         }
 
         public ReadOnlySpan<double> GetRow0Span()
@@ -252,7 +252,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
             double maxRef = Math.Max(option.StrikePrice, option.KnockOutPrice);
             MaxPrice = 4.0 * maxRef;
 
-            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate);
+            double[] observationTimes = BuildObservationTimes(valuationDate, option.ExpirationDate, Calendar);
             base.InitializeGrid(option, parameters, valuationDate);
 
             if (_stepToObservationIndex.Length != TimeStepCount + 1)

@@ -30,7 +30,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             return 0.0;
         }
 
-        InitializeParameters(option, context.ValuationDate);
+        InitializeParameters(option, context.ValuationDate, context.Calendar);
 
         if (!_hasDailyKnockIn)
         {
@@ -147,7 +147,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     {
         if (_observationTimes is null)
         {
-            InitializeParameters(option, valuationDate);
+            InitializeParameters(option, valuationDate, Calendar);
         }
 
         base.InitializeGrid(option, parameters, valuationDate);
@@ -180,7 +180,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private void InitializeParameters(PhoenixOption option, DateOnly valuationDate)
+    private void InitializeParameters(PhoenixOption option, DateOnly valuationDate, ICalendar calendar)
     {
         DateOnly[] obsDates = option.KnockOutObservationDates;
         int n = obsDates.Length;
@@ -202,7 +202,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
         if (_hasDailyKnockIn)
         {
-            DateOnly[] tradingDays = DateUtils.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
+            DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
             _knockInTimes = new double[tradingDays.Length];
             for (int i = 0; i < tradingDays.Length; i++)
             {

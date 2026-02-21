@@ -22,7 +22,7 @@ public class McPhoenixEngineTest
         _expirationDate = new DateOnly(2023, 1, 5);
         _obsDates = SseCalendar.Shared.GetMonthlyObservationDates(_effectiveDate, _expirationDate, 3).ToArray();
         BsmModelParameters parameters = new(0.16, 0.02, 0.04);
-        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate, NullCalendar.Shared);
+        _ctx = new PricingContext<BsmModelParameters>(parameters, 1.0, _effectiveDate, SseCalendar.Shared);
         _engine = new McPhoenixEngine(100000, s_useCuda);
     }
 
