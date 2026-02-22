@@ -1,5 +1,7 @@
 # DerivaSharp
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Stage: Experimental](https://img.shields.io/badge/stage-experimental-orange)
 
