@@ -1,7 +1,6 @@
-using CommunityToolkit.Diagnostics;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
-using DerivaSharp.Numerics;
+using DerivaSharp.Time;
 
 namespace DerivaSharp.PricingEngines;
 
@@ -9,51 +8,39 @@ namespace DerivaSharp.PricingEngines;
 ///     Finite difference pricing engine for binary snowball options.
 /// </summary>
 public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
-    : BsmFiniteDifferenceEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
+    : FdAutocallableEngine<BinarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {
-    private int[] _stepToObservationIndex = [];
-    private double[]? _observationTimes;
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
     private double _maturityPayoff;
 
-    protected override bool UseTradingDayGrid => true;
+    protected override bool IsUpTouched(BinarySnowballOption option) =>
+        option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 
-    public override double[] Values(BinarySnowballOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
+    protected override void InitializeParameters(BinarySnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
+        DateOnly effDate = option.EffectiveDate;
+        DateOnly[] obsDates = option.KnockOutObservationDates;
+        int n = obsDates.Length;
+
+        ObservationTimes = new double[n];
+        _observationAccruedTimes = new double[n];
+        _observationPrices = option.KnockOutPrices;
+        _observationCoupons = option.KnockOutCouponRates;
+
+        for (int i = 0; i < n; i++)
         {
-            return new double[assetPrices.Length];
+            ObservationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
+            _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
         }
 
-        int count = assetPrices.Length;
-        Guard.IsGreaterThanOrEqualTo(count, 3);
+        double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
+        _maturityPayoff = option.MaturityCouponRate * maturityTime;
 
-        CalculateValue(option, context);
-
-        double[] values = new double[count];
-        ReadOnlySpan<double> priceSpan = PriceVector;
-        ReadOnlySpan<double> valueSpan = ValueMatrixSpan.GetRowSpan(0);
-
-        for (int i = 0; i < count; i++)
-        {
-            values[i] = LinearInterpolation.InterpolateSorted(assetPrices[i], priceSpan, valueSpan);
-        }
-
-        return values;
-    }
-
-    protected override double CalculateValue(BinarySnowballOption option, in PricingContext<BsmModelParameters> context)
-    {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
-        {
-            return 0.0;
-        }
-
-        InitializeParameters(option, context.ValuationDate);
-
-        return base.CalculateValue(option, context);
+        MinPrice = 0.0;
+        double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
+        MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
     }
 
     protected override void SetTerminalCondition(BinarySnowballOption option)
@@ -70,7 +57,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
-        int nObs = _observationTimes!.Length;
+        int nObs = ObservationTimes!.Length;
 
         for (int i = 0; i <= TimeStepCount; i++)
         {
@@ -79,14 +66,14 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
 
             ValueMatrixSpan[i, 0] = _maturityPayoff * df;
 
-            while (nextObsIdx < nObs && _observationTimes[nextObsIdx] < t - 1e-6)
+            while (nextObsIdx < nObs && ObservationTimes[nextObsIdx] < t - 1e-6)
             {
                 nextObsIdx++;
             }
 
             if (nextObsIdx < nObs)
             {
-                double obsTime = _observationTimes[nextObsIdx];
+                double obsTime = ObservationTimes[nextObsIdx];
                 double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
                 ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
             }
@@ -99,7 +86,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
 
     protected override void ApplyStepConditions(int i, BinarySnowballOption option, BsmModelParameters parameters)
     {
-        int obsIdx = _stepToObservationIndex[i];
+        int obsIdx = StepToObservationIndex[i];
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
@@ -113,47 +100,5 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
                 }
             }
         }
-    }
-
-    protected override void InitializeGrid(BinarySnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
-    {
-        if (_observationTimes is null)
-        {
-            InitializeParameters(option, valuationDate);
-        }
-
-        base.InitializeGrid(option, parameters, valuationDate);
-
-        if (_stepToObservationIndex.Length != TimeStepCount + 1)
-        {
-            _stepToObservationIndex = new int[TimeStepCount + 1];
-        }
-
-        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
-    }
-
-    private void InitializeParameters(BinarySnowballOption option, DateOnly valuationDate)
-    {
-        DateOnly effDate = option.EffectiveDate;
-        DateOnly[] obsDates = option.KnockOutObservationDates;
-        int n = obsDates.Length;
-
-        _observationTimes = new double[n];
-        _observationAccruedTimes = new double[n];
-        _observationPrices = option.KnockOutPrices;
-        _observationCoupons = option.KnockOutCouponRates;
-
-        for (int i = 0; i < n; i++)
-        {
-            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
-            _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
-        }
-
-        double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
-        _maturityPayoff = option.MaturityCouponRate * maturityTime;
-
-        MinPrice = 0.0;
-        double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
-        MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
     }
 }

@@ -11,45 +11,40 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {
-    private double[] _knockedInValues = [];
-    private int[] _stepToObservationIndex = [];
-    private bool[] _stepToKnockInObservation = [];
-    private bool _isSolvingKnockedIn;
-    private bool _hasDailyKnockIn;
-    private double[]? _observationTimes;
-    private double[]? _knockInTimes;
     private double[]? _observationPrices;
     private double[]? _couponBarriers;
     private double _couponAmount;
     private double _lossAtZero;
 
-    protected override double CalculateValue(PhoenixOption option, in PricingContext<BsmModelParameters> context)
+    protected override bool RequiresTwoPass(PhoenixOption option) =>
+        option.KnockInObservationFrequency == ObservationFrequency.Daily;
+
+    protected override void InitializeParameters(PhoenixOption option, DateOnly valuationDate, ICalendar calendar)
     {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
+        DateOnly[] obsDates = option.KnockOutObservationDates;
+        int n = obsDates.Length;
+
+        Guard.IsGreaterThan(n, 0);
+        Guard.IsEqualTo(option.CouponBarrierPrices.Length, n);
+        Guard.IsEqualTo(option.KnockOutPrices.Length, n);
+
+        ObservationTimes = new double[n];
+        _observationPrices = option.KnockOutPrices;
+        _couponBarriers = option.CouponBarrierPrices;
+        _couponAmount = option.InitialPrice * option.CouponRate;
+
+        for (int i = 0; i < n; i++)
         {
-            return 0.0;
+            ObservationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
         }
 
-        InitializeParameters(option, context.ValuationDate, context.Calendar);
+        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
 
-        if (!_hasDailyKnockIn)
-        {
-            _isSolvingKnockedIn = option.BarrierTouchStatus == BarrierTouchStatus.DownTouch;
-            return base.CalculateValue(option, context);
-        }
+        MinPrice = 0.0;
+        double maxBarrier = Math.Max(option.InitialPrice, Math.Max(_observationPrices.Max(), _couponBarriers.Max()));
+        MaxPrice = maxBarrier * 4.0;
 
-        if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
-        {
-            _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, context);
-        }
-
-        _isSolvingKnockedIn = true;
-        base.CalculateValue(option, context);
-        ValueMatrixSpan.CopyTo(_knockedInValues);
-
-        _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, context);
+        ComputeKnockInTimes(option, valuationDate, calendar);
     }
 
     protected override void SetTerminalCondition(PhoenixOption option)
@@ -65,7 +60,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             double s = PriceVector[j];
             double loss = Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
 
-            if (_isSolvingKnockedIn)
+            if (IsSolvingKnockedIn)
             {
                 ValueMatrixSpan[TimeStepCount, j] = loss;
             }
@@ -88,7 +83,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
-        int nObs = _observationTimes!.Length;
+        int nObs = ObservationTimes!.Length;
 
         for (int i = 0; i <= TimeStepCount; i++)
         {
@@ -97,14 +92,14 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
             ValueMatrixSpan[i, 0] = _lossAtZero * df;
 
-            while (nextObsIdx < nObs && _observationTimes[nextObsIdx] < t - 1e-6)
+            while (nextObsIdx < nObs && ObservationTimes[nextObsIdx] < t - 1e-6)
             {
                 nextObsIdx++;
             }
 
             if (nextObsIdx < nObs)
             {
-                double obsTime = _observationTimes[nextObsIdx];
+                double obsTime = ObservationTimes[nextObsIdx];
                 ValueMatrixSpan[i, PriceStepCount] = _couponAmount * Math.Exp(-r * (obsTime - t));
             }
             else
@@ -116,7 +111,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
     protected override void ApplyStepConditions(int i, PhoenixOption option, BsmModelParameters parameters)
     {
-        int obsIdx = _stepToObservationIndex[i];
+        int obsIdx = StepToObservationIndex[i];
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
@@ -139,85 +134,6 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             }
         }
 
-        bool applyKnockIn = !_isSolvingKnockedIn && _hasDailyKnockIn && _stepToKnockInObservation[i];
-        ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
-    }
-
-    protected override void InitializeGrid(PhoenixOption option, BsmModelParameters parameters, DateOnly valuationDate)
-    {
-        if (_observationTimes is null)
-        {
-            InitializeParameters(option, valuationDate, Calendar);
-        }
-
-        base.InitializeGrid(option, parameters, valuationDate);
-
-        if (_stepToObservationIndex.Length != TimeStepCount + 1)
-        {
-            _stepToObservationIndex = new int[TimeStepCount + 1];
-        }
-
-        if (_stepToKnockInObservation.Length != TimeStepCount + 1)
-        {
-            _stepToKnockInObservation = new bool[TimeStepCount + 1];
-        }
-
-        int requiredKnockedInValues = (TimeStepCount + 1) * (PriceStepCount + 1);
-        if (_knockedInValues.Length != requiredKnockedInValues)
-        {
-            _knockedInValues = new double[requiredKnockedInValues];
-        }
-
-        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
-
-        if (_hasDailyKnockIn && _knockInTimes is not null)
-        {
-            MapObservationFlags(_knockInTimes, _stepToKnockInObservation);
-        }
-        else
-        {
-            Array.Clear(_stepToKnockInObservation);
-        }
-    }
-
-    private void InitializeParameters(PhoenixOption option, DateOnly valuationDate, ICalendar calendar)
-    {
-        DateOnly[] obsDates = option.KnockOutObservationDates;
-        int n = obsDates.Length;
-
-        Guard.IsGreaterThan(n, 0);
-        Guard.IsEqualTo(option.CouponBarrierPrices.Length, n);
-        Guard.IsEqualTo(option.KnockOutPrices.Length, n);
-
-        _observationTimes = new double[n];
-        _observationPrices = option.KnockOutPrices;
-        _couponBarriers = option.CouponBarrierPrices;
-        _couponAmount = option.InitialPrice * option.CouponRate;
-        _hasDailyKnockIn = option.KnockInObservationFrequency == ObservationFrequency.Daily;
-
-        for (int i = 0; i < n; i++)
-        {
-            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
-        }
-
-        if (_hasDailyKnockIn)
-        {
-            DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
-            _knockInTimes = new double[tradingDays.Length];
-            for (int i = 0; i < tradingDays.Length; i++)
-            {
-                _knockInTimes[i] = (tradingDays[i].DayNumber - valuationDate.DayNumber) / 365.0;
-            }
-        }
-        else
-        {
-            _knockInTimes = null;
-        }
-
-        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
-
-        MinPrice = 0.0;
-        double maxBarrier = Math.Max(option.InitialPrice, Math.Max(_observationPrices.Max(), _couponBarriers.Max()));
-        MaxPrice = maxBarrier * 4.0;
+        ApplyKnockInSubstitutionIfNeeded(i, option);
     }
 }

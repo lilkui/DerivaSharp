@@ -10,73 +10,41 @@ namespace DerivaSharp.PricingEngines;
 /// <param name="scheme">The finite difference scheme to use.</param>
 /// <param name="priceStepCount">The number of price steps in the grid.</param>
 /// <param name="timeStepCount">The number of time steps in the grid.</param>
-/// <remarks>
-///     <para>
-///         A Snowball has two economic "states": (1) not-knocked-in yet, and (2) already knocked-in.
-///         Once knock-in has occurred, future cashflows no longer depend on the pre-knock-in path;
-///         the contract from that time onward is fully described by (t, S) under the "knocked-in" rules.
-///         That makes the valuation Markov in (t, S, KI-flag), and the PDE/FD backward induction can be
-///         done separately per state and then linked by a state-switch condition at the knock-in barrier.
-///     </para>
-///     <para>
-///         Pass 1 (knocked-in surface):
-///         Solve the FD grid assuming KI-flag = true from the start. This produces V_KI(t, S) on the
-///         entire (time, price) grid, with terminal/boundary/step conditions consistent with being
-///         knocked in (but still applying knock-out at observation dates). Store this surface.
-///     </para>
-///     <para>
-///         Pass 2 (not-knocked-in surface):
-///         Solve again with KI-flag = false. At each time step, apply knock-out step conditions as usual.
-///         Then, wherever the price process triggers knock-in (e.g., daily monitoring and S &lt; KI barrier),
-///         "switch regimes" by substituting the continuation value with the precomputed knocked-in value:
-///         V_NKI(t, S) := V_KI(t, S) on the knock-in region.
-///         This enforces the correct dynamic programming condition: immediately after knock-in, the option's
-///         value must equal the value of the same contract in the knocked-in state at the same (t, S).
-///     </para>
-///     <para>
-///         In other words, the two passes implement a coupled two-state PDE by solving the KI state first
-///         and using it as a boundary/interface condition for the NKI state.
-///     </para>
-/// </remarks>
 public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<SnowballOption>(scheme, priceStepCount, timeStepCount)
 {
-    private double[] _knockedInValues = [];
-    private int[] _stepToObservationIndex = [];
-    private bool[] _stepToKnockInObservation = [];
-    private bool _isSolvingKnockedIn;
-    private double[]? _observationTimes;
-    private double[]? _knockInTimes;
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
     private double _maturityPayoff;
     private double _lossAtZero;
 
-    protected override double CalculateValue(SnowballOption option, in PricingContext<BsmModelParameters> context)
+    protected override void InitializeParameters(SnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
+        DateOnly effDate = option.EffectiveDate;
+        DateOnly[] obsDates = option.KnockOutObservationDates;
+        int n = obsDates.Length;
+
+        ObservationTimes = new double[n];
+        _observationAccruedTimes = new double[n];
+        _observationPrices = option.KnockOutPrices;
+        _observationCoupons = option.KnockOutCouponRates;
+
+        for (int i = 0; i < n; i++)
         {
-            return 0.0;
+            ObservationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
+            _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
         }
 
-        InitializeParameters(option, context.ValuationDate, context.Calendar);
+        double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
+        _maturityPayoff = option.MaturityCouponRate * maturityTime;
+        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
 
-        if (option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
-        {
-            _isSolvingKnockedIn = true;
-            return base.CalculateValue(option, context);
-        }
+        MinPrice = 0.0;
+        double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
+        MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
 
-        // First pass: solve the knocked-in scenario and store the resulting value surface.
-        _isSolvingKnockedIn = true;
-        base.CalculateValue(option, context);
-
-        ValueMatrixSpan.CopyTo(_knockedInValues);
-
-        // Second pass: solve the not-knocked-in scenario, applying the knock-in substitution.
-        _isSolvingKnockedIn = false;
-        return base.CalculateValue(option, context);
+        ComputeKnockInTimes(option, valuationDate, calendar);
     }
 
     protected override void SetTerminalCondition(SnowballOption option)
@@ -91,7 +59,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             double s = PriceVector[j];
             double loss = Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
 
-            if (_isSolvingKnockedIn || s < knockInPrice)
+            if (IsSolvingKnockedIn || s < knockInPrice)
             {
                 ValueMatrixSpan[TimeStepCount, j] = loss;
             }
@@ -108,7 +76,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         double maturity = TimeVector[TimeStepCount];
 
         int nextObsIdx = 0;
-        int nObs = _observationTimes!.Length;
+        int nObs = ObservationTimes!.Length;
 
         for (int i = 0; i <= TimeStepCount; i++)
         {
@@ -117,20 +85,20 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
             ValueMatrixSpan[i, 0] = _lossAtZero * df;
 
-            while (nextObsIdx < nObs && _observationTimes[nextObsIdx] < t - 1e-6)
+            while (nextObsIdx < nObs && ObservationTimes[nextObsIdx] < t - 1e-6)
             {
                 nextObsIdx++;
             }
 
             if (nextObsIdx < nObs)
             {
-                double obsTime = _observationTimes[nextObsIdx];
+                double obsTime = ObservationTimes[nextObsIdx];
                 double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
                 ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
             }
             else
             {
-                double terminalPayoff = _isSolvingKnockedIn ? 0.0 : _maturityPayoff;
+                double terminalPayoff = IsSolvingKnockedIn ? 0.0 : _maturityPayoff;
                 ValueMatrixSpan[i, PriceStepCount] = terminalPayoff * df;
             }
         }
@@ -138,7 +106,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
 
     protected override void ApplyStepConditions(int i, SnowballOption option, BsmModelParameters parameters)
     {
-        int obsIdx = _stepToObservationIndex[i];
+        int obsIdx = StepToObservationIndex[i];
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
@@ -153,86 +121,6 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             }
         }
 
-        bool applyKnockIn = !_isSolvingKnockedIn
-                            && option.KnockInObservationFrequency == ObservationFrequency.Daily
-                            && _stepToKnockInObservation[i];
-        ApplyKnockInSubstitution(i, option.KnockInPrice, applyKnockIn, _knockedInValues);
-    }
-
-    protected override void InitializeGrid(SnowballOption option, BsmModelParameters parameters, DateOnly valuationDate)
-    {
-        if (_observationTimes is null)
-        {
-            InitializeParameters(option, valuationDate, Calendar);
-        }
-
-        base.InitializeGrid(option, parameters, valuationDate);
-
-        if (_stepToObservationIndex.Length != TimeStepCount + 1)
-        {
-            _stepToObservationIndex = new int[TimeStepCount + 1];
-        }
-
-        if (_stepToKnockInObservation.Length != TimeStepCount + 1)
-        {
-            _stepToKnockInObservation = new bool[TimeStepCount + 1];
-        }
-
-        int requiredKnockedInValues = (TimeStepCount + 1) * (PriceStepCount + 1);
-        if (_knockedInValues.Length != requiredKnockedInValues)
-        {
-            _knockedInValues = new double[requiredKnockedInValues];
-        }
-
-        MapObservationSteps(_observationTimes!, _stepToObservationIndex);
-
-        if (option.KnockInObservationFrequency == ObservationFrequency.Daily && _knockInTimes is not null)
-        {
-            MapObservationFlags(_knockInTimes, _stepToKnockInObservation);
-        }
-        else
-        {
-            Array.Clear(_stepToKnockInObservation);
-        }
-    }
-
-    private void InitializeParameters(SnowballOption option, DateOnly valuationDate, ICalendar calendar)
-    {
-        DateOnly effDate = option.EffectiveDate;
-        DateOnly[] obsDates = option.KnockOutObservationDates;
-        int n = obsDates.Length;
-
-        _observationTimes = new double[n];
-        _observationAccruedTimes = new double[n];
-        _observationPrices = option.KnockOutPrices;
-        _observationCoupons = option.KnockOutCouponRates;
-
-        for (int i = 0; i < n; i++)
-        {
-            _observationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
-            _observationAccruedTimes[i] = (obsDates[i].DayNumber - effDate.DayNumber) / 365.0;
-        }
-
-        double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
-        _maturityPayoff = option.MaturityCouponRate * maturityTime;
-        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
-
-        MinPrice = 0.0;
-        double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
-        MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
-
-        if (option.KnockInObservationFrequency == ObservationFrequency.Daily)
-        {
-            DateOnly[] tradingDays = calendar.GetTradingDays(valuationDate, option.ExpirationDate).ToArray();
-            _knockInTimes = new double[tradingDays.Length];
-            for (int i = 0; i < tradingDays.Length; i++)
-            {
-                _knockInTimes[i] = (tradingDays[i].DayNumber - valuationDate.DayNumber) / 365.0;
-            }
-        }
-        else
-        {
-            _knockInTimes = null;
-        }
+        ApplyKnockInSubstitutionIfNeeded(i, option);
     }
 }
