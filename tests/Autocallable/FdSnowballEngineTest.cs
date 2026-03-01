@@ -55,7 +55,11 @@ public class FdSnowballEngineTest
             _effectiveDate,
             _expirationDate);
 
-        PricingContext<BsmModelParameters> ctx = _ctx with { ValuationDate = new DateOnly(2022, 4, 6), AssetPrice = 1.05 };
+        PricingContext<BsmModelParameters> ctx = _ctx with
+        {
+            ValuationDate = new DateOnly(2022, 4, 6),
+            AssetPrice = 1.05,
+        };
 
         const double expected = 0.021067;
         double actual = _engine.Value(option, ctx);

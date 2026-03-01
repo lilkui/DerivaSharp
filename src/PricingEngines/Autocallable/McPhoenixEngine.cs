@@ -9,66 +9,22 @@ namespace DerivaSharp.PricingEngines;
 /// <summary>
 ///     Monte Carlo pricing engine for Phoenix autocallable options.
 /// </summary>
-public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<PhoenixOption>
+public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : McKiAutocallableEngine<PhoenixOption>(pathCount, useCuda)
 {
-    private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
+    protected override bool IsUpTouched(PhoenixOption option) => option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 
-    public override double[] Values(PhoenixOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
+    protected override Tensor BuildObservationAuxTensor(PhoenixOption option, ReadOnlySpan<int> futureScheduleIndices)
     {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
+        double[] couponBarriersArray = new double[futureScheduleIndices.Length];
+        for (int i = 0; i < futureScheduleIndices.Length; i++)
         {
-            return new double[assetPrices.Length];
+            couponBarriersArray[i] = option.CouponBarrierPrices[futureScheduleIndices[i]];
         }
 
-        int count = assetPrices.Length;
-        Guard.IsGreaterThanOrEqualTo(count, 3);
-
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        SimulationData simData = PrepareSimulationData(option, context);
-
-        if (simData.StepCount <= 0)
-        {
-            PricingContext<BsmModelParameters> ctx = context;
-            return assetPrices.Select(s => CalculateTerminalPayoff(option, ctx with { AssetPrice = s })).ToArray();
-        }
-
-        using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
-
-        double[] values = new double[count];
-        for (int i = 0; i < count; i++)
-        {
-            PricingContext<BsmModelParameters> assetContext = context with { AssetPrice = assetPrices[i] };
-            using Tensor priceMatrix = PathGenerator.Generate(assetContext, simData.DtVector, source);
-            values[i] = CalculateAveragePayoff(option, assetContext, priceMatrix, simData);
-        }
-
-        return values;
+        return torch.tensor(couponBarriersArray, torch.float64, Device);
     }
 
-    protected override double CalculateValue(PhoenixOption option, in PricingContext<BsmModelParameters> context)
-    {
-        if (option.BarrierTouchStatus == BarrierTouchStatus.UpTouch)
-        {
-            return 0.0;
-        }
-
-        using DisposeScope scope = torch.NewDisposeScope();
-
-        SimulationData simData = PrepareSimulationData(option, context);
-
-        if (simData.StepCount <= 0)
-        {
-            return CalculateTerminalPayoff(option, context);
-        }
-
-        using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
-        Tensor priceMatrix = PathGenerator.Generate(context, simData.DtVector, source);
-
-        return CalculateAveragePayoff(option, context, priceMatrix, simData);
-    }
-
-    private static double CalculateAveragePayoff(
+    protected override double CalculateAveragePayoff(
         PhoenixOption option,
         in PricingContext<BsmModelParameters> context,
         Tensor priceMatrix,
@@ -81,17 +37,13 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPr
 
         Guard.IsGreaterThan(simData.ObsIdx.numel(), 0);
 
-        Tensor obsPrices = priceMatrix.index_select(1, simData.ObsIdx);
-        Tensor koPriceRow = simData.KoPrices.unsqueeze(0);
-        Tensor koMatrix = obsPrices >= koPriceRow;
-        Tensor hasKnockedOut = koMatrix.any(1);
-        Tensor firstKoIdx = koMatrix.@long().argmax(1);
+        KnockOutState knockOutState = BuildKnockOutState(priceMatrix, simData);
 
-        Tensor obsIndices = torch.arange(simData.ObsIdx.size(0), torch.int64, obsPrices.device).unsqueeze(0);
-        Tensor includeMask = torch.where(hasKnockedOut.unsqueeze(1), obsIndices <= firstKoIdx.unsqueeze(1), torch.ones_like(koMatrix));
+        Tensor obsIndices = torch.arange(simData.ObsIdx.size(0), torch.int64, knockOutState.ObsPrices.device).unsqueeze(0);
+        Tensor includeMask = torch.where(knockOutState.HasKnockedOut.unsqueeze(1), obsIndices <= knockOutState.FirstKoIdx.unsqueeze(1), torch.ones_like(knockOutState.KoMatrix));
 
-        Tensor couponBarrierRow = simData.CouponBarriers.unsqueeze(0);
-        Tensor couponHit = obsPrices >= couponBarrierRow;
+        Tensor couponBarrierRow = simData.ObsAux.unsqueeze(0);
+        Tensor couponHit = knockOutState.ObsPrices >= couponBarrierRow;
         Tensor couponMask = couponHit.logical_and(includeMask);
 
         Tensor obsTimes = simData.TimeGrid.index_select(0, simData.ObsIdx);
@@ -99,25 +51,22 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPr
         double couponAmount = option.InitialPrice * option.CouponRate;
         Tensor totalCoupons = couponMask.to(torch.float64).mul_(couponAmount).mul_(discountFactors).sum(1);
 
-        Tensor finalSpot = priceMatrix.select(1, -1);
-        Tensor hasKnockedInOnFuturePath = option.KnockInObservationFrequency == ObservationFrequency.AtExpiry
-            ? finalSpot < option.KnockInPrice
-            : (priceMatrix < option.KnockInPrice).any(1);
-        Tensor hasKnockedIn = option.BarrierTouchStatus == BarrierTouchStatus.DownTouch
-            ? torch.ones_like(hasKnockedInOnFuturePath)
-            : hasKnockedInOnFuturePath;
+        KnockInState knockInState = BuildKnockInState(option, priceMatrix);
 
         double timeToMaturity = simData.TimeGrid[-1].item<double>();
         double dfFinal = Math.Exp(-r * timeToMaturity);
-        Tensor loss = torch.clamp_(finalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
+        Tensor loss = torch.clamp_(knockInState.FinalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
         Tensor discountedMaturityPayoff = loss * dfFinal;
 
-        Tensor pathPayoffs = torch.where(hasKnockedOut, totalCoupons, torch.where(hasKnockedIn.logical_not(), totalCoupons, totalCoupons + discountedMaturityPayoff));
+        Tensor pathPayoffs = torch.where(
+            knockOutState.HasKnockedOut,
+            totalCoupons,
+            torch.where(knockInState.HasKnockedIn.logical_not(), totalCoupons, totalCoupons + discountedMaturityPayoff));
 
         return pathPayoffs.mean().item<double>();
     }
 
-    private static double CalculateTerminalPayoff(PhoenixOption option, in PricingContext<BsmModelParameters> context)
+    protected override double CalculateTerminalPayoff(PhoenixOption option, in PricingContext<BsmModelParameters> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);
 
@@ -138,59 +87,4 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : BsmPr
 
         return coupon;
     }
-
-    private SimulationData PrepareSimulationData(PhoenixOption option, in PricingContext<BsmModelParameters> context)
-    {
-        DateOnly valuationDate = context.ValuationDate;
-        Guard.IsBetweenOrEqualTo(valuationDate, option.EffectiveDate, option.ExpirationDate);
-
-        TradingDayGrid grid = TradingDayGridBuilder.Build(valuationDate, option.ExpirationDate, context.Calendar, _device);
-        if (grid.StepCount <= 0)
-        {
-            return new SimulationData(
-                grid.TimeGrid,
-                grid.DtVector,
-                torch.empty(0, torch.int64, _device),
-                torch.empty(0, torch.float64, _device),
-                torch.empty(0, torch.float64, _device),
-                0);
-        }
-
-        DateOnly[] futureTradingDays = grid.TradingDays;
-
-        DateOnly[] futureObsDates = option.KnockOutObservationDates.Where(d => d >= valuationDate).ToArray();
-
-        Dictionary<DateOnly, (double KoPrice, double CouponBarrier)> obsMap = new(option.KnockOutObservationDates.Length);
-        for (int i = 0; i < option.KnockOutObservationDates.Length; i++)
-        {
-            obsMap[option.KnockOutObservationDates[i]] = (option.KnockOutPrices[i], option.CouponBarrierPrices[i]);
-        }
-
-        int n = futureObsDates.Length;
-        int[] obsIdxArray = new int[n];
-        double[] koPricesArray = new double[n];
-        double[] couponBarriersArray = new double[n];
-
-        for (int i = 0; i < futureObsDates.Length; i++)
-        {
-            int index = futureTradingDays.AsSpan().BinarySearch(futureObsDates[i]);
-            if (index < 0)
-            {
-                ThrowHelper.ThrowInvalidOperationException($"Observation date {futureObsDates[i]} is not a trading day.");
-            }
-
-            obsIdxArray[i] = index;
-            (double koPrice, double couponBarrier) = obsMap[futureObsDates[i]];
-            koPricesArray[i] = koPrice;
-            couponBarriersArray[i] = couponBarrier;
-        }
-
-        Tensor obsIdx = torch.tensor(obsIdxArray, torch.int64, _device);
-        Tensor koPrices = torch.tensor(koPricesArray, torch.float64, _device);
-        Tensor couponBarriers = torch.tensor(couponBarriersArray, torch.float64, _device);
-
-        return new SimulationData(grid.TimeGrid, grid.DtVector, obsIdx, koPrices, couponBarriers, grid.StepCount);
-    }
-
-    private readonly record struct SimulationData(Tensor TimeGrid, Tensor DtVector, Tensor ObsIdx, Tensor KoPrices, Tensor CouponBarriers, int StepCount);
 }

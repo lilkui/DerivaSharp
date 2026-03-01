@@ -44,4 +44,75 @@ public class McTernarySnowballEngineTest
         double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
     }
+
+    [Fact]
+    public void Value_UpTouch_ReturnsZero()
+    {
+        TernarySnowballOption option = TernarySnowballOption.Create(
+                0.067,
+                0.04,
+                0.01,
+                1.0,
+                0.8,
+                1.03,
+                BarrierTouchStatus.NoTouch,
+                _effectiveDate,
+                _expirationDate) with
+            {
+                BarrierTouchStatus = BarrierTouchStatus.UpTouch,
+            };
+
+        double actual = _engine.Value(option, _ctx);
+
+        Assert.Equal(0.0, actual);
+    }
+
+    [Fact]
+    public void Values_UpTouch_ReturnsZeroArray()
+    {
+        TernarySnowballOption option = TernarySnowballOption.Create(
+                0.067,
+                0.04,
+                0.01,
+                1.0,
+                0.8,
+                1.03,
+                BarrierTouchStatus.NoTouch,
+                _effectiveDate,
+                _expirationDate) with
+            {
+                BarrierTouchStatus = BarrierTouchStatus.UpTouch,
+            };
+
+        double[] assetPrices = [0.8, 1.0, 1.2];
+        double[] actual = _engine.Values(option, _ctx, assetPrices);
+
+        Assert.All(actual, value => Assert.Equal(0.0, value));
+    }
+
+    [Fact]
+    public void Values_AtExpiry_MatchesTerminalPayoff()
+    {
+        TernarySnowballOption option = TernarySnowballOption.Create(
+            0.067,
+            0.04,
+            0.01,
+            1.0,
+            0.8,
+            1.03,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        PricingContext<BsmModelParameters> expiryContext = _ctx with { ValuationDate = _expirationDate };
+
+        double[] assetPrices = [0.7, 0.9, 1.05];
+        double[] expected = [0.01, 0.04, 0.067];
+        double[] actual = _engine.Values(option, expiryContext, assetPrices);
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.Equal(expected[i], actual[i], 12);
+        }
+    }
 }

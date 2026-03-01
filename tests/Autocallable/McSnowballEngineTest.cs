@@ -202,6 +202,74 @@ public class McSnowballEngineTest
     }
 
     [Fact]
+    public void Value_UpTouch_ReturnsZero()
+    {
+        SnowballOption option = SnowballOption.CreateStandardSnowball(
+                0.0865,
+                1.0,
+                0.8,
+                1.03,
+                _koObsDates,
+                BarrierTouchStatus.NoTouch,
+                _effectiveDate,
+                _expirationDate) with
+            {
+                BarrierTouchStatus = BarrierTouchStatus.UpTouch,
+            };
+
+        double actual = _engine.Value(option, _ctx);
+
+        Assert.Equal(0.0, actual);
+    }
+
+    [Fact]
+    public void Values_UpTouch_ReturnsZeroArray()
+    {
+        SnowballOption option = SnowballOption.CreateStandardSnowball(
+                0.0865,
+                1.0,
+                0.8,
+                1.03,
+                _koObsDates,
+                BarrierTouchStatus.NoTouch,
+                _effectiveDate,
+                _expirationDate) with
+            {
+                BarrierTouchStatus = BarrierTouchStatus.UpTouch,
+            };
+
+        double[] assetPrices = [0.8, 1.0, 1.2];
+        double[] actual = _engine.Values(option, _ctx, assetPrices);
+
+        Assert.All(actual, value => Assert.Equal(0.0, value));
+    }
+
+    [Fact]
+    public void Values_AtExpiry_MatchesTerminalPayoff()
+    {
+        SnowballOption option = SnowballOption.CreateStandardSnowball(
+            0.0865,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            _effectiveDate,
+            _expirationDate);
+
+        PricingContext<BsmModelParameters> expiryContext = _ctx with { ValuationDate = _expirationDate };
+
+        double[] assetPrices = [0.7, 0.9, 1.03];
+        double[] expected = [-0.3, 0.0865, 0.0865];
+        double[] actual = _engine.Values(option, expiryContext, assetPrices);
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.Equal(expected[i], actual[i], 12);
+        }
+    }
+
+    [Fact]
     public void ImpliedCouponRate_StandardSnowball_IsAccurate()
     {
         SnowballOption template = SnowballOption.CreateStandardSnowball(
