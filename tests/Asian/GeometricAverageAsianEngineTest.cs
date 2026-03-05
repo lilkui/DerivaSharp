@@ -3,7 +3,7 @@ using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 using DerivaSharp.Time;
 
-namespace DerivaSharp.Tests.Asian;
+namespace DerivaSharp.Tests;
 
 public class GeometricAverageAsianEngineTest
 {

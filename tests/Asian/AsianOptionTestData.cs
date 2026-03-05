@@ -1,7 +1,7 @@
 ﻿using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 
-namespace DerivaSharp.Tests.Asian;
+namespace DerivaSharp.Tests;
 
 public static class AsianOptionTestData
 {

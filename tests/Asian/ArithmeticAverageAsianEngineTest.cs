@@ -2,9 +2,9 @@
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 using DerivaSharp.Time;
-using static DerivaSharp.Tests.Asian.AsianOptionTestData;
+using static DerivaSharp.Tests.AsianOptionTestData;
 
-namespace DerivaSharp.Tests.Asian;
+namespace DerivaSharp.Tests;
 
 public class ArithmeticAverageAsianEngineTest
 {
