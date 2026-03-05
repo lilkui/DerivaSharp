@@ -69,7 +69,8 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         else // discrete observation
         {
             MinPrice = 0;
-            MaxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
+            double maxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
+            MaxPrice = AlignMaxPriceToBarrierGrid(option.BarrierPrice, maxPrice);
         }
 
         _observationTimes = option.ObservationInterval > 0 ? BuildObservationTimes(option.ObservationDates, valuationDate) : null;
@@ -273,6 +274,18 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
 
         return times;
+    }
+
+    private double AlignMaxPriceToBarrierGrid(double barrierPrice, double maxPrice)
+    {
+        if (barrierPrice <= 0.0)
+        {
+            return maxPrice;
+        }
+
+        double rawIndex = PriceStepCount * barrierPrice / maxPrice;
+        int barrierIndex = Math.Max(1, Math.Min(PriceStepCount - 1, (int)Math.Round(rawIndex)));
+        return barrierPrice * PriceStepCount / barrierIndex;
     }
 
     private void BuildObservationSchedule()
