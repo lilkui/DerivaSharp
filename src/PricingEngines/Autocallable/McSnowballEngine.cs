@@ -11,7 +11,8 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 /// <param name="pathCount">The number of simulation paths.</param>
 /// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
-public sealed class McSnowballEngine(int pathCount, bool useCuda = false) : McKiAutocallableEngine<SnowballOption>(pathCount, useCuda)
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? seed = null) : McKiAutocallableEngine<SnowballOption>(pathCount, useCuda, seed)
 {
     protected override bool IsUpTouched(SnowballOption option)
     {

@@ -8,8 +8,11 @@ namespace DerivaSharp.PricingEngines;
 ///     Base class for Monte Carlo pricing engines of knock-in autocallable notes.
 /// </summary>
 /// <typeparam name="TOption">The type of knock-in autocallable option.</typeparam>
-public abstract class McKiAutocallableEngine<TOption>(int pathCount, bool useCuda = false)
-    : McAutocallableEngine<TOption>(pathCount, useCuda)
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public abstract class McKiAutocallableEngine<TOption>(int pathCount, bool useCuda = false, int? seed = null)
+    : McAutocallableEngine<TOption>(pathCount, useCuda, seed)
     where TOption : KiAutocallableNote
 {
     /// <summary>

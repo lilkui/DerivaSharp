@@ -11,7 +11,8 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 /// <param name="pathCount">The number of simulation paths.</param>
 /// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
-public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : BsmPricingEngine<Accumulator>
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false, int? seed = null) : BsmPricingEngine<Accumulator>
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
@@ -30,7 +31,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
             return assetPrices.Select(s => CalculateTerminalPayoff(option, ctx with { AssetPrice = s })).ToArray();
         }
 
-        using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
+        using RandomNumberSource source = new(pathCount, simData.StepCount, _device, seed);
 
         double[] values = new double[count];
         for (int i = 0; i < count; i++)
@@ -54,7 +55,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false) : B
             return CalculateTerminalPayoff(option, context);
         }
 
-        using RandomNumberSource source = new(pathCount, simData.StepCount, _device);
+        using RandomNumberSource source = new(pathCount, simData.StepCount, _device, seed);
         Tensor priceMatrix = PathGenerator.Generate(context, simData.DtVector, source);
 
         return CalculateAveragePayoff(option, context, priceMatrix, simData);

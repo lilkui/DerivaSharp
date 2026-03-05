@@ -10,7 +10,10 @@ namespace DerivaSharp.PricingEngines;
 ///     Base class for Monte Carlo pricing engines of autocallable notes.
 /// </summary>
 /// <typeparam name="TOption">The type of autocallable option.</typeparam>
-public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda = false) : BsmPricingEngine<TOption>
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda = false, int? seed = null) : BsmPricingEngine<TOption>
     where TOption : AutocallableNote
 {
     /// <summary>
@@ -37,7 +40,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
             return assetPrices.Select(s => CalculateTerminalPayoff(option, ctx with { AssetPrice = s })).ToArray();
         }
 
-        using RandomNumberSource source = new(pathCount, simData.StepCount, Device);
+        using RandomNumberSource source = new(pathCount, simData.StepCount, Device, seed);
 
         double[] values = new double[count];
         for (int i = 0; i < count; i++)
@@ -87,7 +90,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
             return CalculateTerminalPayoff(option, context);
         }
 
-        using RandomNumberSource source = new(pathCount, simData.StepCount, Device);
+        using RandomNumberSource source = new(pathCount, simData.StepCount, Device, seed);
         Tensor priceMatrix = PathGenerator.Generate(context, simData.DtVector, source);
 
         return CalculateAveragePayoff(option, context, priceMatrix, simData);

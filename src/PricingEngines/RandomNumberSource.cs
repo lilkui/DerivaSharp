@@ -10,6 +10,7 @@ public sealed class RandomNumberSource : IDisposable
 {
     private readonly torch.Device _device;
     private readonly int _pathCount;
+    private readonly int? _seed;
     private readonly int _stepCount;
     private torch.Tensor? _cache;
 
@@ -19,7 +20,8 @@ public sealed class RandomNumberSource : IDisposable
     /// <param name="pathCount">The number of simulation paths.</param>
     /// <param name="stepCount">The number of time steps per path.</param>
     /// <param name="device">The device on which to allocate tensors.</param>
-    public RandomNumberSource(int pathCount, int stepCount, torch.Device device)
+    /// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+    public RandomNumberSource(int pathCount, int stepCount, torch.Device device, int? seed = null)
     {
         Guard.IsGreaterThan(pathCount, 0);
         Guard.IsGreaterThan(stepCount, 0);
@@ -27,6 +29,7 @@ public sealed class RandomNumberSource : IDisposable
         _pathCount = pathCount;
         _stepCount = stepCount;
         _device = device;
+        _seed = seed;
     }
 
     public void Dispose() => _cache?.Dispose();
@@ -44,6 +47,11 @@ public sealed class RandomNumberSource : IDisposable
 
         using (torch.NewDisposeScope())
         {
+            if (_seed is not null)
+            {
+                torch.random.manual_seed(_seed.Value);
+            }
+
             int totalPathCount = _pathCount % 2 != 0 ? _pathCount + 1 : _pathCount;
             int halfPathCount = totalPathCount / 2;
             torch.Tensor halfTensor = torch.randn([halfPathCount, _stepCount], torch.float64, _device);

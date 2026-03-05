@@ -9,7 +9,10 @@ namespace DerivaSharp.PricingEngines;
 /// <summary>
 ///     Monte Carlo pricing engine for ternary snowball options.
 /// </summary>
-public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false) : McKiAutocallableEngine<TernarySnowballOption>(pathCount, useCuda)
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false, int? seed = null) : McKiAutocallableEngine<TernarySnowballOption>(pathCount, useCuda, seed)
 {
     protected override bool IsUpTouched(TernarySnowballOption option)
     {

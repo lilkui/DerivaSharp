@@ -9,7 +9,10 @@ namespace DerivaSharp.PricingEngines;
 /// <summary>
 ///     Monte Carlo pricing engine for Phoenix autocallable options.
 /// </summary>
-public sealed class McPhoenixEngine(int pathCount, bool useCuda = false) : McKiAutocallableEngine<PhoenixOption>(pathCount, useCuda)
+/// <param name="pathCount">The number of simulation paths.</param>
+/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
+public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? seed = null) : McKiAutocallableEngine<PhoenixOption>(pathCount, useCuda, seed)
 {
     protected override bool IsUpTouched(PhoenixOption option) => option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 

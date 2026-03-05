@@ -10,7 +10,7 @@ namespace DerivaSharp.Tests;
 public class McEuropeanEngineTest
 {
     private static readonly bool s_useCuda = torch.cuda.is_available();
-    private readonly McEuropeanEngine _engine = new(500000, 2, s_useCuda);
+    private readonly McEuropeanEngine _engine = new(500000, 2, s_useCuda, 42);
 
     [Theory]
     [MemberData(nameof(ValueData), MemberType = typeof(EuropeanOptionTestData))]
