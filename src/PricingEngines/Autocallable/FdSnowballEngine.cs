@@ -16,6 +16,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
+    private double _principalPayoff;
     private double _maturityPayoff;
     private double _lossAtZero;
 
@@ -37,8 +38,9 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
 
         double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
-        _maturityPayoff = option.MaturityCouponRate * maturityTime;
-        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
+        _principalPayoff = option.PrincipalRatio;
+        _maturityPayoff = _principalPayoff + option.MaturityCouponRate * maturityTime;
+        _lossAtZero = _principalPayoff + (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
 
         MinPrice = 0.0;
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
@@ -57,7 +59,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         for (int j = 0; j <= PriceStepCount; j++)
         {
             double s = PriceVector[j];
-            double loss = Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
+            double loss = _principalPayoff + Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
 
             if (IsSolvingKnockedIn || s < knockInPrice)
             {
@@ -93,12 +95,12 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
             if (nextObsIdx < nObs)
             {
                 double obsTime = ObservationTimes[nextObsIdx];
-                double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
+                double coupon = _principalPayoff + _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
                 ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
             }
             else
             {
-                double terminalPayoff = IsSolvingKnockedIn ? 0.0 : _maturityPayoff;
+                double terminalPayoff = IsSolvingKnockedIn ? _principalPayoff : _maturityPayoff;
                 ValueMatrixSpan[i, PriceStepCount] = terminalPayoff * df;
             }
         }
@@ -110,7 +112,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
-            double payoff = _observationCoupons![obsIdx] * _observationAccruedTimes![obsIdx];
+            double payoff = _principalPayoff + _observationCoupons![obsIdx] * _observationAccruedTimes![obsIdx];
 
             for (int j = 0; j <= PriceStepCount; j++)
             {

@@ -18,6 +18,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
     /// <param name="knockInObservationFrequency">How frequently the knock-in barrier is observed.</param>
     /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     public SnowballOption(
@@ -31,6 +32,7 @@ public sealed record SnowballOption : KiAutocallableNote
         DateOnly[] knockOutObservationDates,
         ObservationFrequency knockInObservationFrequency,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
         : base(
@@ -42,6 +44,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             knockInObservationFrequency,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate)
     {
@@ -69,6 +72,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -84,6 +88,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -99,6 +104,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double knockOutLevelStep,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -116,6 +122,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -132,6 +139,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double knockOutLevelStep,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -155,6 +163,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -170,6 +179,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -185,6 +195,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -200,6 +211,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double finalKnockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -217,6 +229,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -232,6 +245,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double strikeLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -247,6 +261,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -262,6 +277,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double floorLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -277,6 +293,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -291,6 +308,7 @@ public sealed record SnowballOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -306,6 +324,7 @@ public sealed record SnowballOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.AtExpiry,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }

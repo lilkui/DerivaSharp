@@ -34,6 +34,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -52,6 +53,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -77,6 +79,7 @@ public class FdSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -97,6 +100,7 @@ public class FdSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -116,6 +120,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -135,6 +140,7 @@ public class FdSnowballEngineTest
             0.95,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -154,6 +160,7 @@ public class FdSnowballEngineTest
             1.05,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -173,6 +180,7 @@ public class FdSnowballEngineTest
             0.8,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -191,12 +199,39 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
         const double expected = 0;
         double actual = _engine.Value(option, _ctx);
         Assert.Equal(expected, actual, DefaultTolerance);
+    }
+
+    [Fact]
+    public void Values_AtExpiry_MatchesTerminalPayoff()
+    {
+        SnowballOption option = SnowballOption.CreateStandardSnowball(
+            0.0865,
+            1.0,
+            0.8,
+            1.03,
+            _koObsDates,
+            BarrierTouchStatus.NoTouch,
+            0.0,
+            _effectiveDate,
+            _expirationDate);
+
+        PricingContext<BsmModelParameters> expiryContext = _ctx with { ValuationDate = _expirationDate };
+
+        double[] assetPrices = [0.7, 0.9, 1.03];
+        double[] expected = [-0.3, 0.0865, 0.0865];
+        double[] actual = _engine.Values(option, expiryContext, assetPrices);
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.Equal(expected[i], actual[i], 12);
+        }
     }
 
     [Fact]
@@ -209,6 +244,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -228,6 +264,7 @@ public class FdSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -248,6 +285,7 @@ public class FdSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -267,6 +305,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -286,6 +325,7 @@ public class FdSnowballEngineTest
             0.95,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -305,6 +345,7 @@ public class FdSnowballEngineTest
             1.05,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -324,6 +365,7 @@ public class FdSnowballEngineTest
             0.8,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -342,6 +384,7 @@ public class FdSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 

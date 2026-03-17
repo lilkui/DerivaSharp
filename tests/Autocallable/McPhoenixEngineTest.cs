@@ -36,6 +36,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -54,6 +55,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -72,6 +74,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -90,6 +93,7 @@ public class McPhoenixEngineTest
                 1.03,
                 _obsDates,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -111,6 +115,7 @@ public class McPhoenixEngineTest
                 1.03,
                 _obsDates,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -133,6 +138,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -158,6 +164,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -176,6 +183,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -194,6 +202,7 @@ public class McPhoenixEngineTest
             1.03,
             _obsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 

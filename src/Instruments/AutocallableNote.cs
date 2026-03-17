@@ -1,3 +1,5 @@
+using CommunityToolkit.Diagnostics;
+
 namespace DerivaSharp.Instruments;
 
 /// <summary>
@@ -13,6 +15,7 @@ public abstract record AutocallableNote : Option
     /// <param name="upperStrikePrice">The upper strike price for payoff calculation.</param>
     /// <param name="lowerStrikePrice">The lower strike price for payoff calculation.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     protected AutocallableNote(
@@ -21,15 +24,19 @@ public abstract record AutocallableNote : Option
         double upperStrikePrice,
         double lowerStrikePrice,
         DateOnly[] knockOutObservationDates,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
         : base(effectiveDate, expirationDate)
     {
+        Guard.IsGreaterThanOrEqualTo(principalRatio, 0.0);
+
         InitialPrice = initialPrice;
         KnockOutPrices = knockOutPrices;
         UpperStrikePrice = upperStrikePrice;
         LowerStrikePrice = lowerStrikePrice;
         KnockOutObservationDates = knockOutObservationDates;
+        PrincipalRatio = principalRatio;
     }
 
     /// <summary>
@@ -56,4 +63,9 @@ public abstract record AutocallableNote : Option
     ///     Gets the dates when knock-out conditions are checked.
     /// </summary>
     public DateOnly[] KnockOutObservationDates { get; init; }
+
+    /// <summary>
+    ///     Gets the ratio of nominal principal prepaid and returned by the note.
+    /// </summary>
+    public double PrincipalRatio { get; init; }
 }

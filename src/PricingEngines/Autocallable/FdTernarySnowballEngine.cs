@@ -13,6 +13,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
     private double[]? _observationPrices;
     private double[]? _observationCoupons;
     private double[]? _observationAccruedTimes;
+    private double _principalPayoff;
     private double _maturityPayoff;
     private double _minimalPayoff;
 
@@ -34,8 +35,9 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
         }
 
         double maturityTime = (option.ExpirationDate.DayNumber - effDate.DayNumber) / 365.0;
-        _maturityPayoff = option.MaturityCouponRate * maturityTime;
-        _minimalPayoff = option.MinimalCouponRate * maturityTime;
+        _principalPayoff = option.PrincipalRatio;
+        _maturityPayoff = _principalPayoff + option.MaturityCouponRate * maturityTime;
+        _minimalPayoff = _principalPayoff + option.MinimalCouponRate * maturityTime;
 
         MinPrice = 0.0;
         double maxBarrier = n > 0 ? option.KnockOutPrices.Max() : option.InitialPrice;
@@ -86,7 +88,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
             if (nextObsIdx < nObs)
             {
                 double obsTime = ObservationTimes[nextObsIdx];
-                double coupon = _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
+                double coupon = _principalPayoff + _observationCoupons![nextObsIdx] * _observationAccruedTimes![nextObsIdx];
                 ValueMatrixSpan[i, PriceStepCount] = coupon * Math.Exp(-r * (obsTime - t));
             }
             else
@@ -103,7 +105,7 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
         if (obsIdx != -1)
         {
             double koPrice = _observationPrices![obsIdx];
-            double payoff = _observationCoupons![obsIdx] * _observationAccruedTimes![obsIdx];
+            double payoff = _principalPayoff + _observationCoupons![obsIdx] * _observationAccruedTimes![obsIdx];
 
             for (int j = 0; j <= PriceStepCount; j++)
             {

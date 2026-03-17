@@ -18,6 +18,7 @@ public sealed record PhoenixOption : KiAutocallableNote
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
     /// <param name="knockInObservationFrequency">How frequently the knock-in barrier is observed.</param>
     /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     public PhoenixOption(
@@ -31,6 +32,7 @@ public sealed record PhoenixOption : KiAutocallableNote
         DateOnly[] knockOutObservationDates,
         ObservationFrequency knockInObservationFrequency,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
         : base(
@@ -42,6 +44,7 @@ public sealed record PhoenixOption : KiAutocallableNote
             knockOutObservationDates,
             knockInObservationFrequency,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate)
     {
@@ -69,6 +72,7 @@ public sealed record PhoenixOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -88,6 +92,7 @@ public sealed record PhoenixOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.Daily,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -102,6 +107,7 @@ public sealed record PhoenixOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -121,6 +127,7 @@ public sealed record PhoenixOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.AtExpiry,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
@@ -135,6 +142,7 @@ public sealed record PhoenixOption : KiAutocallableNote
         double knockOutLevel,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -154,6 +162,7 @@ public sealed record PhoenixOption : KiAutocallableNote
             knockOutObservationDates,
             ObservationFrequency.AtExpiry,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }

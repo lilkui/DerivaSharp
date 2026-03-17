@@ -53,18 +53,19 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? se
         Tensor discountFactors = torch.exp(-r * obsTimes);
         double couponAmount = option.InitialPrice * option.CouponRate;
         Tensor totalCoupons = couponMask.to(torch.float64).mul_(couponAmount).mul_(discountFactors).sum(1);
+        Tensor discountedKoPrincipal = torch.exp(-r * knockOutState.TimeToKo) * option.PrincipalRatio;
 
         KnockInState knockInState = BuildKnockInState(option, priceMatrix);
 
         double timeToMaturity = simData.TimeGrid[-1].item<double>();
         double dfFinal = Math.Exp(-r * timeToMaturity);
         Tensor loss = torch.clamp_(knockInState.FinalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
-        Tensor discountedMaturityPayoff = loss * dfFinal;
-
-        Tensor pathPayoffs = torch.where(
-            knockOutState.HasKnockedOut,
-            totalCoupons,
-            torch.where(knockInState.HasKnockedIn.logical_not(), totalCoupons, totalCoupons + discountedMaturityPayoff));
+        Tensor discountedPrincipal = torch.full_like(totalCoupons, option.PrincipalRatio * dfFinal);
+        Tensor discountedLoss = loss * dfFinal;
+        Tensor maturityTailPayoff = discountedPrincipal + torch.where(knockInState.HasKnockedIn, discountedLoss, torch.zeros_like(discountedLoss));
+        Tensor knockOutPayoff = totalCoupons + discountedKoPrincipal;
+        Tensor maturityPayoff = totalCoupons + maturityTailPayoff;
+        Tensor pathPayoffs = torch.where(knockOutState.HasKnockedOut, knockOutPayoff, maturityPayoff);
 
         return pathPayoffs.mean().item<double>();
     }
@@ -80,14 +81,14 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? se
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
-            return coupon;
+            return option.PrincipalRatio + coupon;
         }
 
         if (context.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
-            return coupon + loss;
+            return option.PrincipalRatio + coupon + loss;
         }
 
-        return coupon;
+        return option.PrincipalRatio + coupon;
     }
 }

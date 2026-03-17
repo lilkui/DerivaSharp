@@ -46,15 +46,15 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false,
         Tensor couponAccrualTime = knockOutState.TimeToKo + timeFromEffectiveToValuation;
 
         Tensor pathKoCouponRate = simData.ObsAux.index_select(0, knockOutState.FirstKoIdx);
-        Tensor discountedKoPayoff = pathKoCouponRate * couponAccrualTime * torch.exp(-r * knockOutState.TimeToKo);
+        Tensor discountedKoPayoff = (pathKoCouponRate * couponAccrualTime + option.PrincipalRatio) * torch.exp(-r * knockOutState.TimeToKo);
 
         KnockInState knockInState = BuildKnockInState(option, priceMatrix);
 
         double timeToMaturity = simData.TimeGrid[-1].item<double>();
         double dfFinal = Math.Exp(-r * timeToMaturity);
         double tenor = (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
-        double maturityCouponPayoff = option.MaturityCouponRate * tenor;
-        double minimalCouponPayoff = option.MinimalCouponRate * tenor;
+        double maturityCouponPayoff = option.PrincipalRatio + option.MaturityCouponRate * tenor;
+        double minimalCouponPayoff = option.PrincipalRatio + option.MinimalCouponRate * tenor;
 
         Tensor discountedMaturityPayoff = torch.where(knockInState.HasKnockedIn, minimalCouponPayoff, maturityCouponPayoff) * dfFinal;
 
@@ -71,14 +71,14 @@ public sealed class McTernarySnowballEngine(int pathCount, bool useCuda = false,
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
-            return option.KnockOutCouponRates[^1] * t;
+            return option.PrincipalRatio + option.KnockOutCouponRates[^1] * t;
         }
 
         if (context.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
-            return option.MinimalCouponRate * t;
+            return option.PrincipalRatio + option.MinimalCouponRate * t;
         }
 
-        return option.MaturityCouponRate * t;
+        return option.PrincipalRatio + option.MaturityCouponRate * t;
     }
 }

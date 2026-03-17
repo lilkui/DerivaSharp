@@ -14,6 +14,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double[]? _observationPrices;
     private double[]? _couponBarriers;
     private double _couponAmount;
+    private double _principalPayoff;
     private double _lossAtZero;
 
     protected override bool RequiresTwoPass(PhoenixOption option) =>
@@ -32,13 +33,14 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         _observationPrices = option.KnockOutPrices;
         _couponBarriers = option.CouponBarrierPrices;
         _couponAmount = option.InitialPrice * option.CouponRate;
+        _principalPayoff = option.PrincipalRatio;
 
         for (int i = 0; i < n; i++)
         {
             ObservationTimes[i] = (obsDates[i].DayNumber - valuationDate.DayNumber) / 365.0;
         }
 
-        _lossAtZero = (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
+        _lossAtZero = _principalPayoff + (option.LowerStrikePrice - option.UpperStrikePrice) / option.InitialPrice;
 
         MinPrice = 0.0;
         double maxBarrier = Math.Max(option.InitialPrice, Math.Max(_observationPrices.Max(), _couponBarriers.Max()));
@@ -58,7 +60,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         for (int j = 0; j <= PriceStepCount; j++)
         {
             double s = PriceVector[j];
-            double loss = Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
+            double loss = _principalPayoff + Math.Clamp(s - upperStrike, lowerStrike - upperStrike, 0) / initialPrice;
 
             if (IsSolvingKnockedIn)
             {
@@ -68,11 +70,11 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             {
                 ValueMatrixSpan[TimeStepCount, j] = s < knockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch
                     ? loss
-                    : 0.0;
+                    : _principalPayoff;
             }
             else
             {
-                ValueMatrixSpan[TimeStepCount, j] = 0.0;
+                ValueMatrixSpan[TimeStepCount, j] = _principalPayoff;
             }
         }
     }
@@ -100,11 +102,11 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
             if (nextObsIdx < nObs)
             {
                 double obsTime = ObservationTimes[nextObsIdx];
-                ValueMatrixSpan[i, PriceStepCount] = _couponAmount * Math.Exp(-r * (obsTime - t));
+                ValueMatrixSpan[i, PriceStepCount] = (_principalPayoff + _couponAmount) * Math.Exp(-r * (obsTime - t));
             }
             else
             {
-                ValueMatrixSpan[i, PriceStepCount] = 0.0;
+                ValueMatrixSpan[i, PriceStepCount] = _principalPayoff * df;
             }
         }
     }
@@ -125,7 +127,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
                 if (hitsKo)
                 {
-                    ValueMatrixSpan[i, j] = hitsCoupon ? _couponAmount : 0.0;
+                    ValueMatrixSpan[i, j] = _principalPayoff + (hitsCoupon ? _couponAmount : 0.0);
                 }
                 else if (hitsCoupon)
                 {

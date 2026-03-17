@@ -46,11 +46,11 @@ public sealed class McBinarySnowballEngine(int pathCount, bool useCuda = false, 
         Tensor couponAccrualTime = knockOutState.TimeToKo + timeFromEffectiveToValuation;
 
         Tensor pathKoCouponRate = simData.ObsAux.index_select(0, knockOutState.FirstKoIdx);
-        Tensor discountedKoPayoff = pathKoCouponRate * couponAccrualTime * torch.exp(-r * knockOutState.TimeToKo);
+        Tensor discountedKoPayoff = (pathKoCouponRate * couponAccrualTime + option.PrincipalRatio) * torch.exp(-r * knockOutState.TimeToKo);
 
         double timeToMaturity = simData.TimeGrid[-1].item<double>();
         double dfFinal = Math.Exp(-r * timeToMaturity);
-        double maturityCouponPayoff = option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
+        double maturityCouponPayoff = option.PrincipalRatio + option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
         Tensor discountedMaturityPayoff = torch.full_like(discountedKoPayoff, maturityCouponPayoff * dfFinal);
 
         Tensor pathPayoffs = torch.where(knockOutState.HasKnockedOut, discountedKoPayoff, discountedMaturityPayoff);
@@ -66,9 +66,9 @@ public sealed class McBinarySnowballEngine(int pathCount, bool useCuda = false, 
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
-            return option.KnockOutCouponRates[^1] * t;
+            return option.PrincipalRatio + option.KnockOutCouponRates[^1] * t;
         }
 
-        return option.MaturityCouponRate * t;
+        return option.PrincipalRatio + option.MaturityCouponRate * t;
     }
 }

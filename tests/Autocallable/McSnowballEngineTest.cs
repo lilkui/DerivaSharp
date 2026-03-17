@@ -1,4 +1,4 @@
-﻿using DerivaSharp.Instruments;
+using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
 using DerivaSharp.Time;
@@ -36,6 +36,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -54,6 +55,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -79,6 +81,7 @@ public class McSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -99,6 +102,7 @@ public class McSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -118,6 +122,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -137,6 +142,7 @@ public class McSnowballEngineTest
             0.95,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -156,6 +162,7 @@ public class McSnowballEngineTest
             1.05,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -175,6 +182,7 @@ public class McSnowballEngineTest
             0.8,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -193,6 +201,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -211,6 +220,7 @@ public class McSnowballEngineTest
                 1.03,
                 _koObsDates,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -232,6 +242,7 @@ public class McSnowballEngineTest
                 1.03,
                 _koObsDates,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -254,6 +265,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -279,6 +291,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -298,6 +311,7 @@ public class McSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -318,6 +332,7 @@ public class McSnowballEngineTest
             0.02,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -337,6 +352,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -356,6 +372,7 @@ public class McSnowballEngineTest
             0.95,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -375,6 +392,7 @@ public class McSnowballEngineTest
             1.05,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -394,6 +412,7 @@ public class McSnowballEngineTest
             0.8,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 
@@ -412,6 +431,7 @@ public class McSnowballEngineTest
             1.03,
             _koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 

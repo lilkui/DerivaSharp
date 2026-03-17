@@ -35,6 +35,7 @@ public class McBinarySnowballEngineTest
             1.0,
             1.03,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
         const double expected = 0.02;
@@ -51,6 +52,7 @@ public class McBinarySnowballEngineTest
                 1.0,
                 1.03,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -71,6 +73,7 @@ public class McBinarySnowballEngineTest
                 1.0,
                 1.03,
                 BarrierTouchStatus.NoTouch,
+                0.0,
                 _effectiveDate,
                 _expirationDate) with
             {
@@ -92,6 +95,7 @@ public class McBinarySnowballEngineTest
             1.0,
             1.03,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             _expirationDate);
 

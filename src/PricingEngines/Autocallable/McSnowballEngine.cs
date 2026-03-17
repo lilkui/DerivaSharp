@@ -46,7 +46,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? s
         Tensor couponAccrualTime = knockOutState.TimeToKo + timeFromEffectiveToValuation;
 
         Tensor pathKoCouponRate = simData.ObsAux.index_select(0, knockOutState.FirstKoIdx);
-        Tensor discountedKoPayoff = pathKoCouponRate * couponAccrualTime * torch.exp(-r * knockOutState.TimeToKo);
+        Tensor discountedKoPayoff = (pathKoCouponRate * couponAccrualTime + option.PrincipalRatio) * torch.exp(-r * knockOutState.TimeToKo);
 
         KnockInState knockInState = BuildKnockInState(option, priceMatrix);
 
@@ -55,7 +55,11 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? s
         double maturityCouponPayoff = option.MaturityCouponRate * (option.ExpirationDate.DayNumber - option.EffectiveDate.DayNumber) / 365.0;
 
         Tensor loss = torch.clamp_(knockInState.FinalSpot - option.UpperStrikePrice, option.LowerStrikePrice - option.UpperStrikePrice, 0).div_(option.InitialPrice);
-        Tensor discountedMaturityPayoff = torch.where(knockInState.HasKnockedIn.logical_not(), maturityCouponPayoff, loss) * dfFinal;
+        Tensor maturityPayoff = torch.where(
+            knockInState.HasKnockedIn.logical_not(),
+            torch.full_like(loss, option.PrincipalRatio + maturityCouponPayoff),
+            loss + option.PrincipalRatio);
+        Tensor discountedMaturityPayoff = maturityPayoff * dfFinal;
 
         Tensor pathPayoffs = torch.where(knockOutState.HasKnockedOut, discountedKoPayoff, discountedMaturityPayoff);
 
@@ -71,14 +75,14 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? s
 
         if (context.AssetPrice >= option.KnockOutPrices[^1])
         {
-            return option.KnockOutCouponRates[^1] * t;
+            return option.PrincipalRatio + option.KnockOutCouponRates[^1] * t;
         }
 
         if (context.AssetPrice < option.KnockInPrice || option.BarrierTouchStatus == BarrierTouchStatus.DownTouch)
         {
-            return loss;
+            return option.PrincipalRatio + loss;
         }
 
-        return option.MaturityCouponRate * t;
+        return option.PrincipalRatio + option.MaturityCouponRate * t;
     }
 }

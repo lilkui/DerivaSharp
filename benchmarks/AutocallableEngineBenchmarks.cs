@@ -36,6 +36,7 @@ public class AutocallableEngineBenchmarks
             1.03,
             koObsDates,
             BarrierTouchStatus.NoTouch,
+            0.0,
             _effectiveDate,
             expirationDate);
     }

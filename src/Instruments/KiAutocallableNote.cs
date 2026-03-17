@@ -16,6 +16,7 @@ public abstract record KiAutocallableNote : AutocallableNote
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
     /// <param name="knockInObservationFrequency">How frequently the knock-in barrier is observed.</param>
     /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     protected KiAutocallableNote(
@@ -27,6 +28,7 @@ public abstract record KiAutocallableNote : AutocallableNote
         DateOnly[] knockOutObservationDates,
         ObservationFrequency knockInObservationFrequency,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
         : base(
@@ -35,6 +37,7 @@ public abstract record KiAutocallableNote : AutocallableNote
             upperStrikePrice,
             lowerStrikePrice,
             knockOutObservationDates,
+            principalRatio,
             effectiveDate,
             expirationDate)
     {

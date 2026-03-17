@@ -18,6 +18,7 @@ public sealed record BinarySnowballOption : AutocallableNote
     /// <param name="lowerStrikePrice">The lower strike price for payoff calculation.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
     /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     public BinarySnowballOption(
@@ -29,6 +30,7 @@ public sealed record BinarySnowballOption : AutocallableNote
         double lowerStrikePrice,
         DateOnly[] knockOutObservationDates,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
         : base(
@@ -37,6 +39,7 @@ public sealed record BinarySnowballOption : AutocallableNote
             upperStrikePrice,
             lowerStrikePrice,
             knockOutObservationDates,
+            principalRatio,
             effectiveDate,
             expirationDate)
     {
@@ -69,6 +72,7 @@ public sealed record BinarySnowballOption : AutocallableNote
         double initialPrice,
         double knockOutLevel,
         BarrierTouchStatus barrierTouchStatus,
+        double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
     {
@@ -83,6 +87,7 @@ public sealed record BinarySnowballOption : AutocallableNote
             0,
             knockOutObservationDates,
             barrierTouchStatus,
+            principalRatio,
             effectiveDate,
             expirationDate);
     }
