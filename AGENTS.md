@@ -1,39 +1,140 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
+## Project Overview
 
-- `src/` contains the library code, organized by domain (`Instruments`, `PricingEngines`, `Models`, `Numerics`, `Time`).
-- `tests/` contains xUnit v3 coverage, grouped by product area (`Vanilla`, `Digital`, `Barrier`, `Autocallable`, `Asian`, `Accumulator`, `Numerics`).
-- `benchmarks/` hosts BenchmarkDotNet performance suites.
-- `notebooks/` includes Jupyter examples that consume published binaries.
-- Root configuration files (`.editorconfig`, `stylecop.json`, `Directory.Build.props`, `StyleCopAnalyzers.ruleset`) define shared coding and analyzer rules.
+DerivaSharp is a C# derivatives pricing library targeting .NET 10. It implements pricing engines for a wide range of financial instruments — vanilla European/American options, barrier options, digital/binary options, Asian options, accumulators, and autocallable structured notes (snowballs, phoenix notes, knock-in autocallables).
 
-## Build, Test, and Development Commands
+Pricing approaches include:
 
-- `dotnet restore` - restore NuGet dependencies for all projects.
-- `dotnet build DerivaSharp.slnx -c Release` - build library, tests, and benchmarks with analyzers.
-- `dotnet test --project tests/DerivaSharp.Tests.csproj -v minimal` - run the full test suite.
-- `dotnet run --project benchmarks/DerivaSharp.Benchmarks.csproj -c Release` - execute performance benchmarks.
-- `dotnet publish src/DerivaSharp.csproj -c Release -r win-x64` - produce binaries used by notebooks.
+- **Analytic** — closed-form Black-Scholes-Merton solutions
+- **Integral** — numerical integration via Gauss-Legendre quadrature
+- **Finite-difference** — PDE solvers on a trading-day grid
+- **Monte Carlo** — path simulation using TorchSharp (GPU-accelerated via CUDA when available)
+- **Binomial tree** — lattice methods for American options
 
-## Coding Style & Naming Conventions
+Key dependencies: TorchSharp (tensor computation / CUDA), CommunityToolkit.Diagnostics & HighPerformance, StyleCop.Analyzers.
 
-- Use 4-space indentation, UTF-8, and Unix-final newline rules from `.editorconfig`.
-- Follow C# Allman brace style and keep `using` directives outside namespaces.
-- Naming: PascalCase for public APIs and constants, `_camelCase` for private/internal fields, and `s_camelCase` for private/internal static fields.
-- Prefer explicit types over `var` unless the type is obvious from the right-hand side.
-- Keep nullable warnings clean (`<Nullable>enable</Nullable>`) and address StyleCop analyzer findings before merging.
+## Project Structure
 
-## Testing Guidelines
+```
+src/                        Main library (DerivaSharp.csproj)
+  Instruments/              Option & structured-note definitions
+  Models/                   Model parameter types (BsmModelParameters)
+  Numerics/                 Math utilities (root finding, interpolation, distributions)
+  PricingEngines/           All pricing engine implementations
+    Vanilla/                European, American, binomial tree engines
+    Barrier/                Barrier option engines
+    Digital/                Digital/binary option engines
+    Asian/                  Asian option engines
+    Autocallable/           Snowball, phoenix, KI-autocallable engines
+    Accumulator/            Accumulator engines
+  Time/                     Day counting, calendars (NullCalendar, SseCalendar)
+tests/                      Unit tests (DerivaSharp.Tests.csproj)
+benchmarks/                 BenchmarkDotNet performance benchmarks
+notebooks/                  Python notebooks for validation / comparison
+```
 
-- Write tests with xUnit v3 (`[Fact]`, `[Theory]`, `[MemberData]`).
-- Name test files `*Test.cs` and test methods with behavior-focused names (e.g., `Value_IsAccurate`).
-- For pricing logic, include explicit numeric tolerance checks (`precision` constants) and boundary-date scenarios.
-- Add tests in the matching domain folder whenever adding or changing an instrument or engine.
+## Setup Commands
 
-## Commit & Pull Request Guidelines
+```bash
+# Restore all dependencies (includes libtorch CUDA binaries — large download)
+dotnet restore
 
-- Use concise, imperative commit subjects (e.g., `Add NullCalendar`, `Refactor day counting utility`).
-- Keep commits scoped to one logical change and include tests with code changes.
-- PRs should include: purpose, affected modules, validation steps (`dotnet build`, `dotnet test`), and linked issues if applicable.
-- For performance-sensitive changes, include benchmark notes from `benchmarks/` in the PR description.
+# Build the entire solution
+dotnet build
+
+# Build a single project
+dotnet build src/DerivaSharp.csproj
+```
+
+## Testing
+
+Tests use **xunit v3** with `Microsoft.Testing.Platform` as the runner (configured in `global.json`). Test data is shared via static `*TestData` classes with `[MemberData]` attributes.
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests for a specific test class
+dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest"
+
+# Run a single test method
+dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest.Value_IsAccurate"
+```
+
+### Test organisation
+
+Tests mirror the `PricingEngines/` subdirectory layout:
+
+| Folder          | Covers                                              |
+|-----------------|-----------------------------------------------------|
+| `Vanilla/`      | European & American analytic, FD, MC, binomial tree  |
+| `Barrier/`      | Barrier option analytic & FD engines                 |
+| `Digital/`      | Digital/binary option analytic, integral & FD engines |
+| `Asian/`        | Arithmetic & geometric average Asian engines         |
+| `Autocallable/` | Snowball, phoenix, ternary snowball, binary snowball  |
+| `Accumulator/`  | FD accumulator engine                                |
+| `Numerics/`     | Brent solver, quadrature, interpolation, distributions |
+
+### Test conventions
+
+- Test classes are named `{EngineName}Test` (e.g. `AnalyticEuropeanEngineTest`).
+- Test methods follow the pattern `{Behaviour}_Is{Expected}` (e.g. `Value_IsAccurate`, `ImpliedVolatility_IsAccurate`).
+- Assertions compare to a fixed number of decimal places (`Assert.Equal(expected, actual, precision)`).
+- Test data classes (e.g. `EuropeanOptionTestData`) supply `[MemberData]` for theories.
+- When adding a new pricing engine, add a corresponding test class and test-data class.
+
+## Benchmarks
+
+```bash
+# Run all benchmarks
+dotnet run --project benchmarks -c Release
+
+# Run a specific benchmark class
+dotnet run --project benchmarks -c Release -- --filter "*EuropeanEngine*"
+```
+
+## Code Style
+
+The project enforces style via **StyleCop.Analyzers** and a shared `.editorconfig`. Key rules:
+
+- **Indentation**: 4 spaces, no tabs.
+- **Braces**: Allman style — opening brace on its own line.
+- **Using directives**: Outside the namespace, sorted with `System` first.
+- **`this.` qualifier**: Do not use (SA1101 disabled, SX1101 enabled).
+- **`var` usage**: Prefer explicit types; avoid `var` even when the type is apparent.
+- **Naming**:
+  - Constants: `PascalCase`
+  - Private static fields: `s_camelCase`
+  - Private/internal instance fields: `_camelCase`
+  - All other members: standard C# PascalCase
+- **Nullability**: Nullable reference types are enabled (`<Nullable>enable</Nullable>`).
+- **XML docs**: Not enforced by StyleCop (SA0001 disabled), but present on all public APIs.
+- **Expression-bodied members**: Preferred where concise.
+- **Records**: Instrument types are typically `sealed record` types.
+- **File-scoped namespaces**: Used throughout.
+
+## Build and CI
+
+CI runs on GitHub Actions (`.github/workflows/ci.yml`) on pushes and PRs to `main`:
+
+1. `dotnet restore`
+2. `dotnet build --no-restore`
+3. `dotnet test --no-build`
+
+Target framework is `net10.0`. The library is AOT-compatible (`<IsAotCompatible>true</IsAotCompatible>`).
+
+## Architecture Notes
+
+- **`PricingEngine<TOption, TModel>`** is the abstract base for all engines. It provides numerical Greeks (delta, gamma, theta, etc.) via finite differencing. Engines override `CalculateValue`.
+- **`BsmPricingEngine<TOption>`** extends this for BSM-model engines, adding volatility-based Greeks (vega, vanna, zomma, etc.).
+- **`PricingContext<TModel>`** is a record carrying model parameters, asset price, valuation date, and calendar. It supports `with` expressions for bumped scenarios.
+- **TorchSharp** is used for Monte Carlo path generation and some FD engines. CUDA availability is checked at runtime.
+- **`ICalendar` / `DayCounter`** handle business-day conventions and year-fraction calculations.
+
+## Common Patterns
+
+- New instruments go in `src/Instruments/` and inherit from `Option` or a more specific base like `VanillaOption`, `BarrierOption`, etc.
+- New pricing engines go in the appropriate `src/PricingEngines/{Category}/` subfolder and extend `PricingEngine<TOption, TModel>` or `BsmPricingEngine<TOption>`.
+- Validation uses `CommunityToolkit.Diagnostics.Guard` (e.g. `Guard.IsGreaterThan`).
+- Error messages are centralised in `ExceptionMessages.cs`.
