@@ -295,7 +295,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         int nTimes = TimeVector.Length;
         Debug.Assert(nTimes >= 2);
 
-        _isObservationTime = _isObservationTime is { Length: var length } && length == nTimes
+        _isObservationTime = _isObservationTime is { Length: int length } && length == nTimes
             ? _isObservationTime
             : new bool[nTimes];
 
