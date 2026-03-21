@@ -25,8 +25,8 @@ public sealed record PhoenixOption : KiAutocallableNote
         double couponRate,
         double initialPrice,
         double knockInPrice,
-        double[] knockOutPrices,
-        double[] couponBarrierPrices,
+        IReadOnlyList<double> knockOutPrices,
+        IReadOnlyList<double> couponBarrierPrices,
         double upperStrikePrice,
         double lowerStrikePrice,
         DateOnly[] knockOutObservationDates,
@@ -60,7 +60,7 @@ public sealed record PhoenixOption : KiAutocallableNote
     /// <summary>
     ///     Gets the barrier prices for coupon payment at each observation date.
     /// </summary>
-    public double[] CouponBarrierPrices { get; init; }
+    public IReadOnlyList<double> CouponBarrierPrices { get; init; }
 
     /// <summary>
     ///     Creates a standard Phoenix option with memory coupon feature.

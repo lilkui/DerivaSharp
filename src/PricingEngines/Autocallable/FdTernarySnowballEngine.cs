@@ -10,8 +10,8 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<TernarySnowballOption>(scheme, priceStepCount, timeStepCount)
 {
-    private double[]? _observationPrices;
-    private double[]? _observationCoupons;
+    private IReadOnlyList<double>? _observationPrices;
+    private IReadOnlyList<double>? _observationCoupons;
     private double[]? _observationAccruedTimes;
     private double _principalPayoff;
     private double _maturityPayoff;
@@ -20,8 +20,8 @@ public sealed class FdTernarySnowballEngine(FiniteDifferenceScheme scheme, int p
     protected override void InitializeParameters(TernarySnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
         DateOnly effDate = option.EffectiveDate;
-        DateOnly[] obsDates = option.KnockOutObservationDates;
-        int n = obsDates.Length;
+        IReadOnlyList<DateOnly> obsDates = option.KnockOutObservationDates;
+        int n = obsDates.Count;
 
         ObservationTimes = new double[n];
         _observationAccruedTimes = new double[n];

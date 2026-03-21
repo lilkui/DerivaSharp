@@ -80,9 +80,9 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     /// <summary>
     ///     Gets the dates when the barrier is observed.
     /// </summary>
-    public DateOnly[] ObservationDates { get; init; }
+    public IReadOnlyList<DateOnly> ObservationDates { get; init; }
 
-    private static DateOnly[] BuildObservationDates(
+    private static IReadOnlyList<DateOnly> BuildObservationDates(
         DateOnly effectiveDate,
         DateOnly expirationDate,
         int observationIntervalDays,

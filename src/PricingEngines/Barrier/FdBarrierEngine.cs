@@ -258,17 +258,17 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
-    private static double[] BuildObservationTimes(DateOnly[] observationDates, DateOnly valuationDate)
+    private static double[] BuildObservationTimes(IReadOnlyList<DateOnly> observationDates, DateOnly valuationDate)
     {
-        if (observationDates.Length == 0)
+        if (observationDates.Count == 0)
         {
             return [];
         }
 
-        double[] times = new double[observationDates.Length];
+        double[] times = new double[observationDates.Count];
         int t0 = valuationDate.DayNumber;
 
-        for (int i = 0; i < observationDates.Length; i++)
+        for (int i = 0; i < observationDates.Count; i++)
         {
             times[i] = (observationDates[i].DayNumber - t0) / 365.0;
         }

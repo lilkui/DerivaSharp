@@ -22,10 +22,10 @@ public abstract record KiAutocallableNote : AutocallableNote
     protected KiAutocallableNote(
         double initialPrice,
         double knockInPrice,
-        double[] knockOutPrices,
+        IReadOnlyList<double> knockOutPrices,
         double upperStrikePrice,
         double lowerStrikePrice,
-        DateOnly[] knockOutObservationDates,
+        IReadOnlyList<DateOnly> knockOutObservationDates,
         ObservationFrequency knockInObservationFrequency,
         BarrierTouchStatus barrierTouchStatus,
         double principalRatio,

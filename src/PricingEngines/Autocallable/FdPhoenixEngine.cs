@@ -11,8 +11,8 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdKiAutocallableEngine<PhoenixOption>(scheme, priceStepCount, timeStepCount)
 {
-    private double[]? _observationPrices;
-    private double[]? _couponBarriers;
+    private IReadOnlyList<double>? _observationPrices;
+    private IReadOnlyList<double>? _couponBarriers;
     private double _couponAmount;
     private double _principalPayoff;
     private double _lossAtZero;
@@ -22,12 +22,12 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
 
     protected override void InitializeParameters(PhoenixOption option, DateOnly valuationDate, ICalendar calendar)
     {
-        DateOnly[] obsDates = option.KnockOutObservationDates;
-        int n = obsDates.Length;
+        IReadOnlyList<DateOnly> obsDates = option.KnockOutObservationDates;
+        int n = obsDates.Count;
 
         Guard.IsGreaterThan(n, 0);
-        Guard.IsEqualTo(option.CouponBarrierPrices.Length, n);
-        Guard.IsEqualTo(option.KnockOutPrices.Length, n);
+        Guard.IsEqualTo(option.CouponBarrierPrices.Count, n);
+        Guard.IsEqualTo(option.KnockOutPrices.Count, n);
 
         ObservationTimes = new double[n];
         _observationPrices = option.KnockOutPrices;

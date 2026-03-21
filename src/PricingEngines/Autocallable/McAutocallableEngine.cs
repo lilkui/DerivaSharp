@@ -155,9 +155,9 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
                 0);
         }
 
-        DateOnly[] observationDates = option.KnockOutObservationDates;
+        IReadOnlyList<DateOnly> observationDates = option.KnockOutObservationDates;
         int futureCount = 0;
-        for (int i = 0; i < observationDates.Length; i++)
+        for (int i = 0; i < observationDates.Count; i++)
         {
             if (observationDates[i] >= valuationDate)
             {
@@ -168,7 +168,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
         DateOnly[] futureObsDates = new DateOnly[futureCount];
         int[] futureScheduleIndices = new int[futureCount];
         int cursor = 0;
-        for (int i = 0; i < observationDates.Length; i++)
+        for (int i = 0; i < observationDates.Count; i++)
         {
             if (observationDates[i] < valuationDate)
             {

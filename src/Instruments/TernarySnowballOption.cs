@@ -25,7 +25,7 @@ public sealed record TernarySnowballOption : KiAutocallableNote
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
     public TernarySnowballOption(
-        double[] knockOutCouponRates,
+        IReadOnlyList<double> knockOutCouponRates,
         double maturityCouponRate,
         double minimalCouponRate,
         double initialPrice,
@@ -60,7 +60,7 @@ public sealed record TernarySnowballOption : KiAutocallableNote
     /// <summary>
     ///     Gets the coupon rates paid at each knock-out observation date.
     /// </summary>
-    public double[] KnockOutCouponRates { get; init; }
+    public IReadOnlyList<double> KnockOutCouponRates { get; init; }
 
     /// <summary>
     ///     Gets the coupon rate paid at maturity if not knocked out.

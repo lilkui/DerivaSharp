@@ -20,10 +20,10 @@ public abstract record AutocallableNote : Option
     /// <param name="expirationDate">The date when the note expires.</param>
     protected AutocallableNote(
         double initialPrice,
-        double[] knockOutPrices,
+        IReadOnlyList<double> knockOutPrices,
         double upperStrikePrice,
         double lowerStrikePrice,
-        DateOnly[] knockOutObservationDates,
+        IReadOnlyList<DateOnly> knockOutObservationDates,
         double principalRatio,
         DateOnly effectiveDate,
         DateOnly expirationDate)
@@ -47,7 +47,7 @@ public abstract record AutocallableNote : Option
     /// <summary>
     ///     Gets the barrier prices for early termination at each observation date.
     /// </summary>
-    public double[] KnockOutPrices { get; init; }
+    public IReadOnlyList<double> KnockOutPrices { get; init; }
 
     /// <summary>
     ///     Gets the upper strike price for payoff calculation.
@@ -62,7 +62,7 @@ public abstract record AutocallableNote : Option
     /// <summary>
     ///     Gets the dates when knock-out conditions are checked.
     /// </summary>
-    public DateOnly[] KnockOutObservationDates { get; init; }
+    public IReadOnlyList<DateOnly> KnockOutObservationDates { get; init; }
 
     /// <summary>
     ///     Gets the ratio of nominal principal prepaid and returned by the note.

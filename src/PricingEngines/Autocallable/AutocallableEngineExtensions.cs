@@ -36,12 +36,12 @@ public static class AutocallableEngineExtensions
             Guard.IsNotNull(option);
             Guard.IsLessThan(lowerBound, upperBound);
 
-            double[] baseRates = option.KnockOutCouponRates;
-            Guard.IsGreaterThan(baseRates.Length, 0);
+            IReadOnlyList<double> baseRates = option.KnockOutCouponRates;
+            Guard.IsGreaterThan(baseRates.Count, 0);
 
-            double[] offsets = new double[baseRates.Length];
+            double[] offsets = new double[baseRates.Count];
             double baseFirstRate = baseRates[0];
-            for (int i = 0; i < baseRates.Length; i++)
+            for (int i = 0; i < baseRates.Count; i++)
             {
                 offsets[i] = baseRates[i] - baseFirstRate;
             }
