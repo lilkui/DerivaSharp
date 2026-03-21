@@ -26,10 +26,12 @@ public abstract record StrikedTypePayoffOption : Option
     /// <summary>
     ///     Gets the option type (call or put).
     /// </summary>
+    /// <value>One of the <see cref="OptionType" /> values that specifies whether the option is a call or a put.</value>
     public OptionType OptionType { get; init; }
 
     /// <summary>
     ///     Gets the strike price.
     /// </summary>
+    /// <value>The strike price of the option.</value>
     public double StrikePrice { get; init; }
 }

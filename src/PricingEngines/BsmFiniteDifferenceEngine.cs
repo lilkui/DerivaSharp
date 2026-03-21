@@ -69,51 +69,61 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     /// <summary>
     ///     Gets the number of price steps in the grid.
     /// </summary>
+    /// <value>The number of price steps in the finite difference grid.</value>
     protected int PriceStepCount { get; }
 
     /// <summary>
     ///     Gets the actual number of time steps in the grid.
     /// </summary>
+    /// <value>The actual number of time steps in the finite difference grid; may differ from the target when using a trading-day grid.</value>
     protected int TimeStepCount { get; private set; }
 
     /// <summary>
     ///     Gets or sets the minimum price in the grid.
     /// </summary>
+    /// <value>The minimum asset price in the finite difference grid.</value>
     protected double MinPrice { get; set; }
 
     /// <summary>
     ///     Gets or sets the maximum price in the grid.
     /// </summary>
+    /// <value>The maximum asset price in the finite difference grid.</value>
     protected double MaxPrice { get; set; }
 
     /// <summary>
     ///     Gets or sets the price grid points.
     /// </summary>
+    /// <value>An array of asset price grid points.</value>
     protected double[] PriceVector { get; set; } = [];
 
     /// <summary>
     ///     Gets or sets the time grid points.
     /// </summary>
+    /// <value>An array of time grid points, representing year fractions from the valuation date.</value>
     protected double[] TimeVector { get; set; } = [];
 
     /// <summary>
     ///     Gets the finite difference scheme.
     /// </summary>
+    /// <value>One of the <see cref="FiniteDifferenceScheme" /> values used to advance the solution in time.</value>
     protected FiniteDifferenceScheme Scheme { get; }
 
     /// <summary>
     ///     Gets a 2D span view of the value matrix with dimensions [timeStepCount + 1, priceStepCount + 1].
     /// </summary>
+    /// <value>A 2D span of option values with dimensions [timeStepCount + 1, priceStepCount + 1].</value>
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
     /// <summary>
     ///     Gets a value indicating whether to use a trading day grid instead of a uniform time grid.
     /// </summary>
+    /// <value><see langword="true" /> if a trading-day grid is used for time discretization; otherwise, <see langword="false" />. The default is <see langword="false" />.</value>
     protected virtual bool UseTradingDayGrid => false;
 
     /// <summary>
     ///     Gets the trading calendar used for date calculations.
     /// </summary>
+    /// <value>The trading calendar used for date calculations; defaults to <see cref="NullCalendar.Shared" />.</value>
     protected ICalendar Calendar { get; private set; } = NullCalendar.Shared;
 
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)

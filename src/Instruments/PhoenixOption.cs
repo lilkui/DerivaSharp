@@ -55,16 +55,28 @@ public sealed record PhoenixOption : KiAutocallableNote
     /// <summary>
     ///     Gets the coupon rate.
     /// </summary>
+    /// <value>The annualized coupon rate paid at qualifying observation dates.</value>
     public double CouponRate { get; init; }
 
     /// <summary>
     ///     Gets the barrier prices for coupon payment at each observation date.
     /// </summary>
+    /// <value>A read-only list of barrier prices at or above which a coupon payment is made.</value>
     public IReadOnlyList<double> CouponBarrierPrices { get; init; }
 
     /// <summary>
     ///     Creates a standard Phoenix option with memory coupon feature.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at qualifying observation dates.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out and coupon conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="PhoenixOption" /> configured as a standard Phoenix with memory coupon.</returns>
     public static PhoenixOption CreateStandardPhoenix(
         double couponRate,
         double initialPrice,
@@ -100,6 +112,16 @@ public sealed record PhoenixOption : KiAutocallableNote
     /// <summary>
     ///     Creates a fixed coupon note with guaranteed coupon payments.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at all observation dates.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="PhoenixOption" /> configured as a fixed coupon note.</returns>
     public static PhoenixOption CreateFixedCouponNote(
         double couponRate,
         double initialPrice,
@@ -135,6 +157,16 @@ public sealed record PhoenixOption : KiAutocallableNote
     /// <summary>
     ///     Creates a digital coupon note with binary coupon payments.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at qualifying observation dates.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="PhoenixOption" /> configured as a digital coupon note.</returns>
     public static PhoenixOption CreateDigitalCouponNote(
         double couponRate,
         double initialPrice,

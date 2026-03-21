@@ -20,5 +20,6 @@ public sealed record CashOrNothingOption : DigitalOption
     /// <summary>
     ///     Gets the fixed cash amount paid if the option expires in the money.
     /// </summary>
+    /// <value>The fixed cash amount paid if the option expires in the money.</value>
     public double Rebate { get; init; }
 }

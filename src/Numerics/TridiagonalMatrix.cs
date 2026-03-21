@@ -15,16 +15,19 @@ public sealed class TridiagonalMatrix(double[] lower, double[] main, double[] up
     /// <summary>
     ///     Gets the lower diagonal elements of the matrix.
     /// </summary>
+    /// <value>An array of lower diagonal elements.</value>
     public double[] Lower { get; } = lower;
 
     /// <summary>
     ///     Gets the main diagonal elements of the matrix.
     /// </summary>
+    /// <value>An array of main diagonal elements.</value>
     public double[] Main { get; } = main;
 
     /// <summary>
     ///     Gets the upper diagonal elements of the matrix.
     /// </summary>
+    /// <value>An array of upper diagonal elements.</value>
     public double[] Upper { get; } = upper;
 
     /// <summary>

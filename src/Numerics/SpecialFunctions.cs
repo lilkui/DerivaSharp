@@ -85,7 +85,7 @@ public static class SpecialFunctions
     ///     Computes the complementary error function erfc(x) = 1 - erf(x).
     /// </summary>
     /// <param name="x">The input value.</param>
-    /// <returns>The value of erfc(x), computed using rational approximations from Cephes.</returns>
+    /// <returns>The value of <c>erfc(x)</c>, computed using rational approximations from Cephes.</returns>
     public static double Erfc(double x)
     {
         if (double.IsNaN(x))

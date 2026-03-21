@@ -11,7 +11,7 @@ internal static class BsmCalculator
     /// <summary>
     ///     Calculates the Black-Scholes-Merton option value.
     /// </summary>
-    /// <param name="z">Option type: 1 for call, -1 for put.</param>
+    /// <param name="z">The option type sign: 1 for a call option, −1 for a put option.</param>
     /// <param name="spot">Current spot price of the underlying asset.</param>
     /// <param name="strike">Strike price of the option.</param>
     /// <param name="tau">Time to expiration in years.</param>

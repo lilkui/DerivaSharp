@@ -12,6 +12,7 @@ public sealed class NullCalendar : ICalendar
     /// <summary>
     ///     Gets the shared singleton instance of <see cref="NullCalendar" />.
     /// </summary>
+    /// <value>The shared singleton instance.</value>
     public static NullCalendar Shared { get; } = new();
 
     /// <inheritdoc />

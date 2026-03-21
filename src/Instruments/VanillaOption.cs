@@ -20,5 +20,6 @@ public abstract record VanillaOption : StrikedTypePayoffOption
     /// <summary>
     ///     Gets the exercise style.
     /// </summary>
+    /// <value>One of the <see cref="Exercise" /> values that specifies the exercise style.</value>
     public Exercise Exercise { get; init; }
 }

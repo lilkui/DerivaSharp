@@ -16,6 +16,7 @@ public abstract class PricingEngine<TOption, TModel>
     /// <summary>
     ///     Gets or initializes the shift parameters used for numerical differentiation.
     /// </summary>
+    /// <value>The shift parameters used to compute numerical Greeks; defaults to <see cref="NumericalShiftParameters.Default" />.</value>
     protected NumericalShiftParameters ShiftParameters { get; init; } = NumericalShiftParameters.Default;
 
     /// <summary>

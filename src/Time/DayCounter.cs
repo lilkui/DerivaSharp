@@ -12,7 +12,7 @@ public static class DayCounter
     /// </summary>
     /// <param name="startDate">The start date (must be on or before <paramref name="endDate" />).</param>
     /// <param name="endDate">The end date.</param>
-    /// <returns>Actual calendar days divided by 365.</returns>
+    /// <returns>The year fraction as the number of actual calendar days divided by 365.</returns>
     public static double YearFraction(DateOnly startDate, DateOnly endDate)
     {
         Guard.IsLessThanOrEqualTo(startDate, endDate);
@@ -25,7 +25,7 @@ public static class DayCounter
     /// <param name="startDate">The start date (must be on or before <paramref name="endDate" />).</param>
     /// <param name="endDate">The end date.</param>
     /// <param name="calendar">The trading calendar used to count business days and determine days per year.</param>
-    /// <returns>Trading days between the two dates divided by <see cref="ICalendar.TradingDaysPerYear" />.</returns>
+    /// <returns>The year fraction as the number of trading days between the two dates divided by <see cref="ICalendar.TradingDaysPerYear" />.</returns>
     public static double YearFraction(DateOnly startDate, DateOnly endDate, ICalendar calendar)
     {
         Guard.IsLessThanOrEqualTo(startDate, endDate);

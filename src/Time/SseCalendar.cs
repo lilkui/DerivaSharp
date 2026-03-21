@@ -698,6 +698,7 @@ public sealed class SseCalendar : ICalendar
     /// <summary>
     ///     Gets the shared singleton instance of <see cref="SseCalendar" />.
     /// </summary>
+    /// <value>The shared singleton instance.</value>
     public static SseCalendar Shared { get; } = new();
 
     /// <inheritdoc />

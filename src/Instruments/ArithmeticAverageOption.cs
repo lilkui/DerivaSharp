@@ -35,10 +35,12 @@ public sealed record ArithmeticAverageOption : AsianOption
     /// <summary>
     ///     Gets the date when averaging begins.
     /// </summary>
+    /// <value>The date on which the averaging period begins.</value>
     public DateOnly AverageStartDate { get; init; }
 
     /// <summary>
     ///     Gets the realized average price up to the valuation date.
     /// </summary>
+    /// <value>The realized average price up to the valuation date; 0 if none has been realized yet.</value>
     public double RealizedAveragePrice { get; init; }
 }

@@ -35,25 +35,30 @@ public sealed record Accumulator : Option
     /// <summary>
     ///     Gets the price at which shares are accumulated.
     /// </summary>
+    /// <value>The strike price at which shares are accumulated.</value>
     public double StrikePrice { get; init; }
 
     /// <summary>
     ///     Gets the barrier price that terminates the contract.
     /// </summary>
+    /// <value>The knock-out barrier price that terminates the contract.</value>
     public double KnockOutPrice { get; init; }
 
     /// <summary>
     ///     Gets the number of shares accumulated daily.
     /// </summary>
+    /// <value>The number of shares accumulated on each trading day.</value>
     public double DailyQuantity { get; init; }
 
     /// <summary>
     ///     Gets the multiplier applied when the price is below the strike.
     /// </summary>
+    /// <value>The acceleration factor applied to the daily quantity when the spot price is below the strike price.</value>
     public double AccelerationFactor { get; init; }
 
     /// <summary>
     ///     Gets the quantity already accumulated.
     /// </summary>
+    /// <value>The quantity of shares already accumulated prior to the valuation date.</value>
     public double AccumulatedQuantity { get; init; }
 }

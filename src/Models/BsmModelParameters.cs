@@ -13,7 +13,7 @@ public readonly record struct BsmModelParameters : IModelParameters
     /// <param name="volatility">The annualized volatility of the underlying asset. Must be greater than or equal to 0.</param>
     /// <param name="riskFreeRate">The annualized risk-free interest rate.</param>
     /// <param name="dividendYield">The annualized dividend yield of the underlying asset.</param>
-    /// <exception cref="ArgumentException">Thrown when volatility is less than 0.</exception>
+    /// <exception cref="ArgumentException">Volatility is less than 0.</exception>
     public BsmModelParameters(double volatility, double riskFreeRate, double dividendYield)
     {
         Guard.IsGreaterThanOrEqualTo(volatility, 0);

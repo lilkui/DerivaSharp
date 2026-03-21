@@ -47,35 +47,42 @@ public abstract record BinaryBarrierOption : Option
     /// <summary>
     ///     Gets the barrier type.
     /// </summary>
+    /// <value>One of the <see cref="BarrierType" /> values that specifies the barrier type.</value>
     public BarrierType BarrierType { get; init; }
 
     /// <summary>
     ///     Gets the option type (null for one-touch/no-touch options).
     /// </summary>
+    /// <value>One of the <see cref="OptionType" /> values, or <see langword="null" /> for one-touch and no-touch options.</value>
     public OptionType? OptionType { get; init; }
 
     /// <summary>
     ///     Gets when the rebate is paid.
     /// </summary>
+    /// <value>One of the <see cref="PaymentType" /> values that specifies when the rebate is paid.</value>
     public PaymentType RebatePaymentType { get; init; }
 
     /// <summary>
     ///     Gets the strike price.
     /// </summary>
+    /// <value>The strike price of the option.</value>
     public double StrikePrice { get; init; }
 
     /// <summary>
     ///     Gets the barrier price level.
     /// </summary>
+    /// <value>The barrier price level that triggers a knock-in or knock-out event.</value>
     public double BarrierPrice { get; init; }
 
     /// <summary>
     ///     Gets the fixed amount paid.
     /// </summary>
+    /// <value>The fixed cash amount paid when the barrier condition is met.</value>
     public double Rebate { get; init; }
 
     /// <summary>
     ///     Gets the observation interval in years.
     /// </summary>
+    /// <value>The observation interval in years.</value>
     public double ObservationInterval { get; init; }
 }

@@ -55,31 +55,37 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     /// <summary>
     ///     Gets the barrier type (up-and-in, down-and-in, up-and-out, or down-and-out).
     /// </summary>
+    /// <value>One of the <see cref="BarrierType" /> values that specifies the barrier type.</value>
     public BarrierType BarrierType { get; init; }
 
     /// <summary>
     ///     Gets the barrier price level.
     /// </summary>
+    /// <value>The barrier price level that triggers a knock-in or knock-out event.</value>
     public double BarrierPrice { get; init; }
 
     /// <summary>
     ///     Gets the rebate paid if the option is not activated or is knocked out.
     /// </summary>
+    /// <value>The fixed rebate amount paid if the option is not activated or is knocked out.</value>
     public double Rebate { get; init; }
 
     /// <summary>
     ///     Gets when the rebate is paid.
     /// </summary>
+    /// <value>One of the <see cref="PaymentType" /> values that specifies when the rebate is paid.</value>
     public PaymentType RebatePaymentType { get; init; }
 
     /// <summary>
     ///     Gets the observation interval in years.
     /// </summary>
+    /// <value>The observation interval in years; 0 if the barrier is observed continuously.</value>
     public double ObservationInterval { get; init; }
 
     /// <summary>
     ///     Gets the dates when the barrier is observed.
     /// </summary>
+    /// <value>A read-only list of dates on which the barrier is checked; empty if the barrier is observed continuously.</value>
     public IReadOnlyList<DateOnly> ObservationDates { get; init; }
 
     private static IReadOnlyList<DateOnly> BuildObservationDates(

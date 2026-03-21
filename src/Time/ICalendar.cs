@@ -8,6 +8,7 @@ public interface ICalendar
     /// <summary>
     ///     Gets the conventional number of trading days in a year for this exchange.
     /// </summary>
+    /// <value>The conventional number of trading days per year.</value>
     int TradingDaysPerYear { get; }
 
     /// <summary>

@@ -55,16 +55,28 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Gets the coupon rates paid at each knock-out observation date.
     /// </summary>
+    /// <value>A read-only list of annualized coupon rates, one for each knock-out observation date.</value>
     public IReadOnlyList<double> KnockOutCouponRates { get; init; }
 
     /// <summary>
     ///     Gets the coupon rate paid at maturity if not knocked out.
     /// </summary>
+    /// <value>The annualized coupon rate paid at maturity if the note is not knocked out.</value>
     public double MaturityCouponRate { get; init; }
 
     /// <summary>
     ///     Creates a standard snowball with uniform knock-out levels and coupon rates.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at knock-out and at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a standard snowball.</returns>
     public static SnowballOption CreateStandardSnowball(
         double couponRate,
         double initialPrice,
@@ -96,6 +108,17 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a step-down snowball with decreasing knock-out levels over time.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at all observation dates.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevelStart">The initial knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevelStep">The amount by which the knock-out level decreases at each observation date.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a step-down snowball.</returns>
     public static SnowballOption CreateStepDownSnowball(
         double couponRate,
         double initialPrice,
@@ -130,6 +153,18 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a both-down snowball with decreasing knock-out levels and coupon rates.
     /// </summary>
+    /// <param name="knockOutCouponRateStart">The initial annualized knock-out coupon rate.</param>
+    /// <param name="knockOutCouponRateStep">The amount by which the knock-out coupon rate decreases at each observation date.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevelStart">The initial knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevelStep">The amount by which the knock-out level decreases at each observation date.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a both-down snowball.</returns>
     public static SnowballOption CreateBothDownSnowball(
         double knockOutCouponRateStart,
         double knockOutCouponRateStep,
@@ -171,6 +206,17 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a dual-coupon snowball with different knock-out and maturity coupon rates.
     /// </summary>
+    /// <param name="knockOutCouponRate">The annualized coupon rate paid at knock-out observation dates.</param>
+    /// <param name="maturityCouponRate">The annualized coupon rate paid at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a dual-coupon snowball.</returns>
     public static SnowballOption CreateDualCouponSnowball(
         double knockOutCouponRate,
         double maturityCouponRate,

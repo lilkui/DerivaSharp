@@ -13,8 +13,8 @@ public static class LinearInterpolation
     /// <param name="x">The x-coordinate at which to evaluate the interpolated value.</param>
     /// <param name="xs">The x-coordinates of the data points. Must be sorted in ascending order.</param>
     /// <param name="ys">The y-coordinates of the data points.</param>
-    /// <param name="left">Value to return for <c>x &lt; xs[0]</c>. Default is <c>ys[0]</c>.</param>
-    /// <param name="right">Value to return for <c>x &gt; xs[^1]</c>. Default is <c>ys[^1]</c>.</param>
+    /// <param name="left">The value to return for <c>x &lt; xs[0]</c>. Default is <c>ys[0]</c>.</param>
+    /// <param name="right">The value to return for <c>x &gt; xs[^1]</c>. Default is <c>ys[^1]</c>.</param>
     /// <returns>The interpolated y-value.</returns>
     public static double InterpolateSorted(double x, ReadOnlySpan<double> xs, ReadOnlySpan<double> ys, double? left = null, double? right = null)
     {

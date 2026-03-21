@@ -23,10 +23,12 @@ public abstract record Option
     /// <summary>
     ///     Gets the date when the option becomes effective.
     /// </summary>
+    /// <value>The date on which the option becomes effective.</value>
     public DateOnly EffectiveDate { get; init; }
 
     /// <summary>
     ///     Gets the date when the option expires.
     /// </summary>
+    /// <value>The date on which the option expires.</value>
     public DateOnly ExpirationDate { get; init; }
 }

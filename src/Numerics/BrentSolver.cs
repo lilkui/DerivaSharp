@@ -21,7 +21,7 @@ public static class BrentSolver
     /// <param name="upperBound">Upper bound of the search interval.</param>
     /// <param name="accuracy">Absolute tolerance for convergence.</param>
     /// <param name="maxIterations">Maximum number of iterations allowed.</param>
-    /// <param name="root">When this method returns, contains the root if found; otherwise, the last computed value.</param>
+    /// <param name="root">When this method returns, contains the root if found; otherwise, the last computed value. This parameter is treated as uninitialized.</param>
     /// <returns><see langword="true" /> if a root is found within the specified accuracy; otherwise, <see langword="false" />.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="f" /> is <see langword="null" />.</exception>
     /// <exception cref="ArgumentOutOfRangeException">

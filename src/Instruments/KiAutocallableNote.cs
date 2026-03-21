@@ -49,15 +49,18 @@ public abstract record KiAutocallableNote : AutocallableNote
     /// <summary>
     ///     Gets the knock-in barrier price.
     /// </summary>
+    /// <value>The barrier price at which the knock-in event is triggered.</value>
     public double KnockInPrice { get; init; }
 
     /// <summary>
     ///     Gets how frequently the knock-in barrier is observed.
     /// </summary>
+    /// <value>One of the <see cref="ObservationFrequency" /> values that specifies how often the knock-in barrier is observed.</value>
     public ObservationFrequency KnockInObservationFrequency { get; init; }
 
     /// <summary>
     ///     Gets the current barrier touch status.
     /// </summary>
+    /// <value>One of the <see cref="BarrierTouchStatus" /> values that indicates whether the barrier has been touched.</value>
     public BarrierTouchStatus BarrierTouchStatus { get; init; }
 }
