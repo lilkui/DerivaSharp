@@ -22,7 +22,7 @@ public class BjerksundStenslandAmericanEngineTest
 
     [Theory]
     [MemberData(nameof(ValueAtExpiryData), MemberType = typeof(AmericanOptionTestData))]
-    public void Value_AtExpiry_ReturnIntrinsicValue(OptionType optionType, double assetPrice, double expected)
+    public void Value_AtExpiry_ReturnsIntrinsicValue(OptionType optionType, double assetPrice, double expected)
     {
         const int precision = 6;
         AmericanOption option = new(optionType, Strike, EffectiveDate, ExpirationDate);
