@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <RuleSet Name="StyleCop.Analyzers rules with default action" Description="StyleCop.Analyzers with default action. Rules with IsEnabledByDefault = false are disabled." ToolsVersion="14.0">
     <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers.SpecialRules">
-        <Rule Id="SA0001"  Action="None" />             <!-- XML comment analysis disabled -->
+        <Rule Id="SA0001"  Action="Warning" />          <!-- XML comment analysis disabled -->
         <Rule Id="SA0002"  Action="Warning" />          <!-- Invalid settings file -->
     </Rules>
     <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers.SpacingRules">
@@ -45,7 +45,7 @@
         <Rule Id="SA1105"  Action="Warning" />          <!-- Query clauses spanning multiple lines should begin on own line -->
         <Rule Id="SA1106"  Action="Warning" />          <!-- Code should not contain empty statements -->
         <Rule Id="SA1107"  Action="Warning" />          <!-- Code should not contain multiple statements on one line -->
-        <Rule Id="SA1108"  Action="None" />             <!-- Block statements should not contain embedded comments -->
+        <Rule Id="SA1108"  Action="Warning" />          <!-- Block statements should not contain embedded comments -->
         <Rule Id="SA1109"  Action="None" />             <!-- Block statements should not contain embedded regions -->
         <Rule Id="SA1110"  Action="Warning" />          <!-- Opening parenthesis or bracket should be on declaration line -->
         <Rule Id="SA1111"  Action="Warning" />          <!-- Closing parenthesis should be on line of last parameter -->
@@ -125,7 +125,7 @@
         <Rule Id="SA1402"  Action="Warning" />          <!-- File may only contain a single type -->
         <Rule Id="SA1403"  Action="Warning" />          <!-- File may only contain a single namespace -->
         <Rule Id="SA1404"  Action="Warning" />          <!-- Code analysis suppression should have justification -->
-        <Rule Id="SA1405"  Action="None" />             <!-- Debug.Assert should provide message text -->
+        <Rule Id="SA1405"  Action="Warning" />          <!-- Debug.Assert should provide message text -->
         <Rule Id="SA1406"  Action="Warning" />          <!-- Debug.Fail should provide message text -->
         <Rule Id="SA1407"  Action="None" />             <!-- Arithmetic expressions should declare precedence -->
         <Rule Id="SA1408"  Action="Warning" />          <!-- Conditional expressions should declare precedence -->
@@ -161,9 +161,9 @@
     </Rules>
 
     <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers.DocumentationRules">
-        <Rule Id="SA1600"  Action="None" />             <!-- Elements should be documented -->
+        <Rule Id="SA1600"  Action="Warning" />          <!-- Elements should be documented -->
         <Rule Id="SA1601"  Action="Warning" />          <!-- Partial elements should be documented -->
-        <Rule Id="SA1602"  Action="None" />             <!-- Enumeration items should be documented -->
+        <Rule Id="SA1602"  Action="Warning" />          <!-- Enumeration items should be documented -->
         <Rule Id="SA1603"  Action="None" />             <!-- Documentation should contain valid XML -->
         <Rule Id="SA1604"  Action="Warning" />          <!-- Element documentation should have summary -->
         <Rule Id="SA1605"  Action="Warning" />          <!-- Partial element documentation should have summary -->
@@ -172,11 +172,11 @@
         <Rule Id="SA1608"  Action="Warning" />          <!-- Element documentation should not have default summary -->
         <Rule Id="SA1609"  Action="None" />             <!-- Property documentation should have value -->
         <Rule Id="SA1610"  Action="Warning" />          <!-- Property documentation should have value text -->
-        <Rule Id="SA1611"  Action="None" />             <!-- Element parameters should be documented -->
+        <Rule Id="SA1611"  Action="Warning" />          <!-- Element parameters should be documented -->
         <Rule Id="SA1612"  Action="Warning" />          <!-- Element parameter documentation should match element parameters -->
         <Rule Id="SA1613"  Action="Warning" />          <!-- Element parameter documentation should declare parameter name -->
         <Rule Id="SA1614"  Action="Warning" />          <!-- Element parameter documentation should have text -->
-        <Rule Id="SA1615"  Action="None" />             <!-- Element return value should be documented -->
+        <Rule Id="SA1615"  Action="Warning" />          <!-- Element return value should be documented -->
         <Rule Id="SA1616"  Action="Warning" />          <!-- Element return value documentation should have text -->
         <Rule Id="SA1617"  Action="Warning" />          <!-- Void return value should not be documented -->
         <Rule Id="SA1618"  Action="Warning" />          <!-- Generic type parameters should be documented -->

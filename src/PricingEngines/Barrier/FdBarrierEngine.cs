@@ -45,8 +45,9 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
     protected override void InitializeGrid(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
-        if (option.ObservationInterval == 0) // continuous observation
+        if (option.ObservationInterval == 0)
         {
+            // continuous observation
             switch (option.BarrierType)
             {
                 case BarrierType.UpAndOut:
@@ -66,8 +67,9 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                     break;
             }
         }
-        else // discrete observation
+        else
         {
+            // discrete observation
             MinPrice = 0;
             double maxPrice = 4 * Math.Max(option.StrikePrice, option.BarrierPrice);
             MaxPrice = AlignMaxPriceToBarrierGrid(option.BarrierPrice, maxPrice);
@@ -100,8 +102,9 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 ValueMatrixSpan[^1, j] = Math.Max(z * (PriceVector[j] - x), 0);
             }
         }
-        else // knock-in
+        else
         {
+            // knock-in
             for (int j = 0; j < PriceVector.Length; j++)
             {
                 ValueMatrixSpan[^1, j] = k;
@@ -122,8 +125,9 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         double minPrice = PriceVector[0];
         double maxPrice = PriceVector[^1];
 
-        if (option.ObservationInterval == 0) // continuous observation
+        if (option.ObservationInterval == 0)
         {
+            // continuous observation
             for (int i = 0; i < TimeVector.Length; i++)
             {
                 double tau = maxTime - TimeVector[i];
@@ -155,8 +159,9 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
                 }
             }
         }
-        else // discrete observation
+        else
         {
+            // discrete observation
             for (int i = 0; i < TimeVector.Length - 1; i++)
             {
                 double tau = maxTime - TimeVector[i];
@@ -189,7 +194,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
             return;
         }
 
-        Debug.Assert(_isObservationTime is not null);
+        Debug.Assert(_isObservationTime is not null, "Observation flags required.");
         if (!_isObservationTime[i])
         {
             return;
@@ -290,10 +295,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
 
     private void BuildObservationSchedule()
     {
-        Debug.Assert(_observationTimes is not null);
+        Debug.Assert(_observationTimes is not null, "Observation times required.");
 
         int nTimes = TimeVector.Length;
-        Debug.Assert(nTimes >= 2);
+        Debug.Assert(nTimes >= 2, "Time grid too short.");
 
         _isObservationTime = _isObservationTime is { Length: int length } && length == nTimes
             ? _isObservationTime
