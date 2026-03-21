@@ -49,6 +49,8 @@ public class AnalyticEuropeanEngineTest
             "Vanna" => _engine.Vanna(option, ctx),
             "Zomma" => _engine.Zomma(option, ctx),
             "Rho" => _engine.Rho(option, ctx),
+            "Charm" => _engine.Charm(option, ctx),
+            "Color" => _engine.Color(option, ctx),
             _ => throw new ArgumentException("Invalid Greek"),
         };
         Assert.Equal(expected, actual, precision);

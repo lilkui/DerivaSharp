@@ -44,6 +44,10 @@ public static class EuropeanOptionTestData
         { "Zomma", OptionType.Put, 100, -0.000431 },
         { "Rho", OptionType.Call, 100, 0.461238 },
         { "Rho", OptionType.Put, 100, -0.499552 },
+        { "Charm", OptionType.Call, 100, -0.000115 },
+        { "Charm", OptionType.Put, 100, -0.000142 },
+        { "Color", OptionType.Call, 100, 0.000019 },
+        { "Color", OptionType.Put, 100, 0.000019 },
     };
 
     public static TheoryData<double, double, double> ImpliedVolatilityData => new()
