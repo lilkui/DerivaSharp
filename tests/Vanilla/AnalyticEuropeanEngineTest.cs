@@ -85,20 +85,19 @@ public class AnalyticEuropeanEngineTest
         PricingContext<BsmModelParameters> ctx = new(ModelParameters, assetPrice, EffectiveDate, NullCalendar.Shared);
 
         // Numerical Greeks
-        _engine.UseNumericalGreeks = true;
-        double deltaN = _engine.Delta(option, ctx);
-        double gammaN = _engine.Gamma(option, ctx);
-        double speedN = _engine.Speed(option, ctx);
-        double thetaN = _engine.Theta(option, ctx);
-        double charmN = _engine.Charm(option, ctx);
-        double colorN = _engine.Color(option, ctx);
-        double vegaN = _engine.Vega(option, ctx);
-        double vannaN = _engine.Vanna(option, ctx);
-        double zommaN = _engine.Zomma(option, ctx);
-        double rhoN = _engine.Rho(option, ctx);
+        AnalyticEuropeanEngine numericalEngine = new() { UseNumericalGreeks = true };
+        double deltaN = numericalEngine.Delta(option, ctx);
+        double gammaN = numericalEngine.Gamma(option, ctx);
+        double speedN = numericalEngine.Speed(option, ctx);
+        double thetaN = numericalEngine.Theta(option, ctx);
+        double charmN = numericalEngine.Charm(option, ctx);
+        double colorN = numericalEngine.Color(option, ctx);
+        double vegaN = numericalEngine.Vega(option, ctx);
+        double vannaN = numericalEngine.Vanna(option, ctx);
+        double zommaN = numericalEngine.Zomma(option, ctx);
+        double rhoN = numericalEngine.Rho(option, ctx);
 
         // Analytical Greeks
-        _engine.UseNumericalGreeks = false;
         double deltaA = _engine.Delta(option, ctx);
         double gammaA = _engine.Gamma(option, ctx);
         double speedA = _engine.Speed(option, ctx);

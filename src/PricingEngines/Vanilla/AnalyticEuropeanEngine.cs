@@ -12,9 +12,9 @@ namespace DerivaSharp.PricingEngines;
 public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
     /// <summary>
-    ///     Gets or sets a value indicating whether to use numerical differentiation for Greeks instead of analytical formulas.
+    ///     Gets a value indicating whether to use numerical differentiation for Greeks instead of analytical formulas.
     /// </summary>
-    public bool UseNumericalGreeks { get; set; } = false;
+    public bool UseNumericalGreeks { get; init; } = false;
 
     public override double Delta(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
