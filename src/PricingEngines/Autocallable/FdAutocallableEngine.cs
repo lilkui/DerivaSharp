@@ -68,6 +68,9 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     ///     Solves the PDE grid. The default implementation delegates to the base FD solver.
     ///     Override in derived classes to implement multi-pass algorithms (e.g., knock-in two-pass).
     /// </summary>
+    /// <param name="option">The autocallable note to price.</param>
+    /// <param name="context">The pricing context containing model parameters and market data.</param>
+    /// <returns>The fair value of the option.</returns>
     protected virtual double SolveGrid(TOption option, in PricingContext<BsmModelParameters> context)
     {
         return base.CalculateValue(option, context);
@@ -76,11 +79,16 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     /// <summary>
     ///     Determines whether the option has already knocked out before valuation.
     /// </summary>
+    /// <param name="option">The autocallable note to check.</param>
+    /// <returns><see langword="true" /> if the option has knocked out; otherwise, <see langword="false" />.</returns>
     protected abstract bool IsUpTouched(TOption option);
 
     /// <summary>
     ///     Initializes product-specific parameters from the option and valuation context.
     /// </summary>
+    /// <param name="option">The autocallable note being priced.</param>
+    /// <param name="valuationDate">The date as of which the option is valued.</param>
+    /// <param name="calendar">The trading calendar used to determine business days.</param>
     protected abstract void InitializeParameters(TOption option, DateOnly valuationDate, ICalendar calendar);
 
     /// <inheritdoc/>

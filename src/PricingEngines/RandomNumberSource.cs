@@ -32,6 +32,7 @@ public sealed class RandomNumberSource : IDisposable
         _seed = seed;
     }
 
+    /// <inheritdoc/>
     public void Dispose() => _cache?.Dispose();
 
     /// <summary>

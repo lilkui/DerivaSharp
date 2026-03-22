@@ -57,6 +57,8 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     ///     Determines whether this option requires the two-pass solve. The default is <see langword="true" />.
     ///     Override to return <see langword="false" /> when a single pass suffices (e.g., at-expiry knock-in).
     /// </summary>
+    /// <param name="option">The knock-in autocallable note to check.</param>
+    /// <returns><see langword="true" /> if the two-pass algorithm is required; otherwise, <see langword="false" />.</returns>
     protected virtual bool RequiresTwoPass(TOption option) => true;
 
     /// <inheritdoc/>
@@ -88,6 +90,9 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     /// <summary>
     ///     Computes knock-in observation times from trading days.
     /// </summary>
+    /// <param name="option">The knock-in autocallable note being priced.</param>
+    /// <param name="valuationDate">The date as of which the option is valued.</param>
+    /// <param name="calendar">The trading calendar used to determine business days.</param>
     protected void ComputeKnockInTimes(TOption option, DateOnly valuationDate, ICalendar calendar)
     {
         if (option.KnockInObservationFrequency == ObservationFrequency.Daily)
@@ -108,6 +113,8 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     /// <summary>
     ///     Applies knock-in substitution at the given time step if the conditions are met.
     /// </summary>
+    /// <param name="i">The time step index.</param>
+    /// <param name="option">The knock-in autocallable note being priced.</param>
     protected void ApplyKnockInSubstitutionIfNeeded(int i, TOption option)
     {
         bool apply = !IsSolvingKnockedIn

@@ -249,6 +249,17 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a parachute snowball with a lower final knock-out level.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at knock-out and at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="finalKnockOutLevel">The knock-out level applied at the final observation date as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a parachute snowball.</returns>
     public static SnowballOption CreateParachuteSnowball(
         double couponRate,
         double initialPrice,
@@ -283,6 +294,17 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates an out-of-the-money snowball with an upper strike above the initial price.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at knock-out and at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="strikeLevel">The upper strike level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as an OTM snowball.</returns>
     public static SnowballOption CreateOtmSnowball(
         double couponRate,
         double initialPrice,
@@ -315,6 +337,17 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a loss-capped snowball with a floor level limiting downside.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at knock-out and at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="floorLevel">The lower strike floor level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a loss-capped snowball.</returns>
     public static SnowballOption CreateLossCappedSnowball(
         double couponRate,
         double initialPrice,
@@ -347,6 +380,16 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <summary>
     ///     Creates a European-style snowball with knock-in observed only at expiry.
     /// </summary>
+    /// <param name="couponRate">The annualized coupon rate paid at knock-out and at maturity.</param>
+    /// <param name="initialPrice">The initial price of the underlying asset.</param>
+    /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
+    /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
+    /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
+    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
+    /// <param name="effectiveDate">The date when the note becomes effective.</param>
+    /// <param name="expirationDate">The date when the note expires.</param>
+    /// <returns>A new <see cref="SnowballOption" /> configured as a European-style snowball.</returns>
     public static SnowballOption CreateEuropeanSnowball(
         double couponRate,
         double initialPrice,
