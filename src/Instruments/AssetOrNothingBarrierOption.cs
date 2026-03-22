@@ -8,9 +8,9 @@ public sealed record AssetOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Initializes a new instance of the <see cref="AssetOrNothingBarrierOption" /> class.
     /// </summary>
-    /// <param name="barrierType">The barrier type.</param>
-    /// <param name="rebatePaymentType">When the rebate is paid.</param>
-    /// <param name="optionType">The option type (null for one-touch/no-touch options).</param>
+    /// <param name="barrierType">One of the <see cref="BarrierType" /> enumeration values that specifies the barrier type.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="optionType">One of the <see cref="OptionType" /> enumeration values that specifies the option type, or <see langword="null" /> for one-touch and no-touch options.</param>
     /// <param name="strikePrice">The strike price.</param>
     /// <param name="barrierPrice">The barrier price level.</param>
     /// <param name="rebate">The fixed amount paid.</param>

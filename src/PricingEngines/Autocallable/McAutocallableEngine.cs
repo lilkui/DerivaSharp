@@ -11,7 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 /// <typeparam name="TOption">The type of autocallable option.</typeparam>
 /// <param name="pathCount">The number of simulation paths.</param>
-/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="useCuda"><see langword="true" /> to use CUDA for GPU acceleration; otherwise, <see langword="false" />.</param>
 /// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
 public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda = false, int? seed = null) : BsmPricingEngine<TOption>
     where TOption : AutocallableNote
@@ -57,8 +57,8 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
     /// <summary>
     ///     Builds knock-out state tensors shared by derived payoff implementations.
     /// </summary>
-    /// <param name="priceMatrix">Simulated paths with shape [pathCount, stepCount].</param>
-    /// <param name="simData">Precomputed simulation data and observation indices.</param>
+    /// <param name="priceMatrix">The simulated paths with shape [pathCount, stepCount].</param>
+    /// <param name="simData">The precomputed simulation data and observation indices.</param>
     /// <returns>
     ///     A <see cref="KnockOutState" /> containing observation prices, knock-out mask, first knock-out indices,
     ///     and corresponding knock-out times.
@@ -102,7 +102,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
     ///     Determines whether the option has already knocked out before valuation.
     /// </summary>
     /// <param name="option">The option being priced.</param>
-    /// <returns><see langword="true" /> when pricing should short-circuit to zero; otherwise <see langword="false" />.</returns>
+    /// <returns><see langword="true" /> if pricing should short-circuit to zero; otherwise, <see langword="false" />.</returns>
     protected abstract bool IsUpTouched(TOption option);
 
     /// <summary>
@@ -122,9 +122,9 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
     ///     Calculates the Monte Carlo payoff estimate when path simulation is required.
     /// </summary>
     /// <param name="option">The option being priced.</param>
-    /// <param name="context">Pricing context for the current valuation.</param>
-    /// <param name="priceMatrix">Simulated paths with shape [pathCount, stepCount].</param>
-    /// <param name="simData">Precomputed simulation data and observation tensors.</param>
+    /// <param name="context">The pricing context for the current valuation.</param>
+    /// <param name="priceMatrix">The simulated paths with shape [pathCount, stepCount].</param>
+    /// <param name="simData">The precomputed simulation data and observation tensors.</param>
     /// <returns>The discounted expected payoff across simulated paths.</returns>
     protected abstract double CalculateAveragePayoff(
         TOption option,
@@ -136,7 +136,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
     ///     Calculates the terminal payoff when valuation is at expiration or no future steps are simulated.
     /// </summary>
     /// <param name="option">The option being priced.</param>
-    /// <param name="context">Pricing context for the current valuation.</param>
+    /// <param name="context">The pricing context for the current valuation.</param>
     /// <returns>The terminal payoff at the current asset level.</returns>
     protected abstract double CalculateTerminalPayoff(TOption option, in PricingContext<BsmModelParameters> context);
 

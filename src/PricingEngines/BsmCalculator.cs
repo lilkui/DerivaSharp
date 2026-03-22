@@ -12,12 +12,12 @@ internal static class BsmCalculator
     ///     Calculates the Black-Scholes-Merton option value.
     /// </summary>
     /// <param name="z">The option type sign: 1 for a call option, −1 for a put option.</param>
-    /// <param name="spot">Current spot price of the underlying asset.</param>
-    /// <param name="strike">Strike price of the option.</param>
-    /// <param name="tau">Time to expiration in years.</param>
-    /// <param name="vol">Volatility of the underlying asset.</param>
-    /// <param name="r">Risk-free interest rate.</param>
-    /// <param name="q">Dividend yield.</param>
+    /// <param name="spot">The current spot price of the underlying asset.</param>
+    /// <param name="strike">The strike price of the option.</param>
+    /// <param name="tau">The time to expiration in years.</param>
+    /// <param name="vol">The annualized volatility of the underlying asset.</param>
+    /// <param name="r">The risk-free interest rate.</param>
+    /// <param name="q">The dividend yield.</param>
     /// <returns>The option value.</returns>
     public static double CalculateValue(int z, double spot, double strike, double tau, double vol, double r, double q)
     {
@@ -34,12 +34,12 @@ internal static class BsmCalculator
     /// <summary>
     ///     Calculates the d1 and d2 parameters used in the Black-Scholes-Merton formula.
     /// </summary>
-    /// <param name="spot">Current spot price of the underlying asset.</param>
-    /// <param name="strike">Strike price of the option.</param>
-    /// <param name="tau">Time to expiration in years.</param>
-    /// <param name="vol">Volatility of the underlying asset.</param>
-    /// <param name="r">Risk-free interest rate.</param>
-    /// <param name="q">Dividend yield.</param>
+    /// <param name="spot">The current spot price of the underlying asset.</param>
+    /// <param name="strike">The strike price of the option.</param>
+    /// <param name="tau">The time to expiration in years.</param>
+    /// <param name="vol">The annualized volatility of the underlying asset.</param>
+    /// <param name="r">The risk-free interest rate.</param>
+    /// <param name="q">The dividend yield.</param>
     /// <returns>A tuple containing d1 and d2 values.</returns>
     public static (double D1, double D2) D1D2(double spot, double strike, double tau, double vol, double r, double q)
     {

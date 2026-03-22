@@ -17,7 +17,7 @@ public interface ICalendar
     /// <param name="date">The date to test.</param>
     /// <returns>
     ///     <see langword="true" /> if <paramref name="date" /> is a trading day;
-    ///     <see langword="false" /> if it falls on a weekend or a published exchange holiday.
+    ///     otherwise, <see langword="false" />.
     /// </returns>
     bool IsTradingDay(DateOnly date);
 }

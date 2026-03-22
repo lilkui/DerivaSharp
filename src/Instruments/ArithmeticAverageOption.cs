@@ -10,7 +10,7 @@ public sealed record ArithmeticAverageOption : AsianOption
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArithmeticAverageOption" /> class.
     /// </summary>
-    /// <param name="optionType">The option type (call or put).</param>
+    /// <param name="optionType">One of the <see cref="OptionType" /> enumeration values that specifies whether the option is a call or a put.</param>
     /// <param name="strikePrice">The strike price.</param>
     /// <param name="averageStartDate">The date when averaging begins.</param>
     /// <param name="realizedAveragePrice">The realized average price up to the valuation date.</param>

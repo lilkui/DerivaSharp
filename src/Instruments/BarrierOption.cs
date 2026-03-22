@@ -11,12 +11,12 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     /// <summary>
     ///     Initializes a new instance of the <see cref="BarrierOption" /> class.
     /// </summary>
-    /// <param name="optionType">The option type (call or put).</param>
-    /// <param name="barrierType">The barrier type (up-and-in, down-and-in, up-and-out, or down-and-out).</param>
+    /// <param name="optionType">One of the <see cref="OptionType" /> enumeration values that specifies whether the option is a call or a put.</param>
+    /// <param name="barrierType">One of the <see cref="BarrierType" /> enumeration values that specifies the barrier type.</param>
     /// <param name="strikePrice">The strike price.</param>
     /// <param name="barrierPrice">The barrier price level.</param>
     /// <param name="rebate">The rebate paid if the option is not activated or is knocked out.</param>
-    /// <param name="rebatePaymentType">When the rebate is paid.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
     /// <param name="observationIntervalDays">The interval in days between barrier observations (0 for continuous).</param>
     /// <param name="effectiveDate">The date when the option becomes effective.</param>
     /// <param name="expirationDate">The date when the option expires.</param>
@@ -71,7 +71,7 @@ public sealed record BarrierOption : StrikedTypePayoffOption
     public double Rebate { get; init; }
 
     /// <summary>
-    ///     Gets when the rebate is paid.
+    ///     Gets the payment type that specifies when the rebate is paid.
     /// </summary>
     /// <value>One of the <see cref="PaymentType" /> values that specifies when the rebate is paid.</value>
     public PaymentType RebatePaymentType { get; init; }

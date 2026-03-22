@@ -17,7 +17,7 @@ public sealed record BinarySnowballOption : AutocallableNote
     /// <param name="upperStrikePrice">The upper strike price for payoff calculation.</param>
     /// <param name="lowerStrikePrice">The lower strike price for payoff calculation.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that indicates the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -73,7 +73,7 @@ public sealed record BinarySnowballOption : AutocallableNote
     /// <param name="maturityCouponRate">The annualized coupon rate paid at maturity if the note is not knocked out.</param>
     /// <param name="initialPrice">The initial price of the underlying asset.</param>
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>

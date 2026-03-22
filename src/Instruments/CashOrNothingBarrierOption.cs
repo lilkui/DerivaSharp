@@ -8,9 +8,9 @@ public record CashOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Initializes a new instance of the <see cref="CashOrNothingBarrierOption" /> class.
     /// </summary>
-    /// <param name="barrierType">The barrier type.</param>
-    /// <param name="rebatePaymentType">When the rebate is paid.</param>
-    /// <param name="optionType">The option type (null for one-touch/no-touch options).</param>
+    /// <param name="barrierType">One of the <see cref="BarrierType" /> enumeration values that specifies the barrier type.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="optionType">One of the <see cref="OptionType" /> enumeration values that specifies the option type, or <see langword="null" /> for one-touch and no-touch options.</param>
     /// <param name="strikePrice">The strike price.</param>
     /// <param name="barrierPrice">The barrier price level.</param>
     /// <param name="rebate">The fixed cash amount paid.</param>
@@ -34,7 +34,7 @@ public record CashOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Creates an up one-touch option that pays if the barrier is touched from below.
     /// </summary>
-    /// <param name="rebatePaymentType">One of the enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
     /// <param name="strikePrice">The strike price of the option.</param>
     /// <param name="barrierPrice">The upper barrier price level.</param>
     /// <param name="rebate">The fixed cash amount paid when the barrier is touched.</param>
@@ -62,7 +62,7 @@ public record CashOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Creates a down one-touch option that pays if the barrier is touched from above.
     /// </summary>
-    /// <param name="rebatePaymentType">One of the enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
     /// <param name="strikePrice">The strike price of the option.</param>
     /// <param name="barrierPrice">The lower barrier price level.</param>
     /// <param name="rebate">The fixed cash amount paid when the barrier is touched.</param>
@@ -90,7 +90,7 @@ public record CashOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Creates an up no-touch option that pays if the upper barrier is not touched.
     /// </summary>
-    /// <param name="rebatePaymentType">One of the enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
     /// <param name="strikePrice">The strike price of the option.</param>
     /// <param name="barrierPrice">The upper barrier price level.</param>
     /// <param name="rebate">The fixed cash amount paid at expiry if the barrier is not touched.</param>
@@ -118,7 +118,7 @@ public record CashOrNothingBarrierOption : BinaryBarrierOption
     /// <summary>
     ///     Creates a down no-touch option that pays if the lower barrier is not touched.
     /// </summary>
-    /// <param name="rebatePaymentType">One of the enumeration values that specifies when the rebate is paid.</param>
+    /// <param name="rebatePaymentType">One of the <see cref="PaymentType" /> enumeration values that specifies when the rebate is paid.</param>
     /// <param name="strikePrice">The strike price of the option.</param>
     /// <param name="barrierPrice">The lower barrier price level.</param>
     /// <param name="rebate">The fixed cash amount paid at expiry if the barrier is not touched.</param>

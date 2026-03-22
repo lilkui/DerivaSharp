@@ -9,7 +9,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 /// <typeparam name="TOption">The type of knock-in autocallable option.</typeparam>
 /// <param name="pathCount">The number of simulation paths.</param>
-/// <param name="useCuda">Whether to use CUDA for GPU acceleration.</param>
+/// <param name="useCuda"><see langword="true" /> to use CUDA for GPU acceleration; otherwise, <see langword="false" />.</param>
 /// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
 public abstract class McKiAutocallableEngine<TOption>(int pathCount, bool useCuda = false, int? seed = null)
     : McAutocallableEngine<TOption>(pathCount, useCuda, seed)
@@ -19,7 +19,7 @@ public abstract class McKiAutocallableEngine<TOption>(int pathCount, bool useCud
     ///     Builds knock-in state tensors shared by knock-in autocallable payoff implementations.
     /// </summary>
     /// <param name="option">The option being priced.</param>
-    /// <param name="priceMatrix">Simulated paths with shape [pathCount, stepCount].</param>
+    /// <param name="priceMatrix">The simulated paths with shape [pathCount, stepCount].</param>
     /// <returns>
     ///     A <see cref="KnockInState" /> containing terminal spot and final knock-in mask, including historical
     ///     barrier-touch override behavior.

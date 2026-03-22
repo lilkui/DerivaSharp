@@ -32,7 +32,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     /// <summary>
     ///     Initializes a new instance of the <see cref="BsmFiniteDifferenceEngine{TOption}" /> class.
     /// </summary>
-    /// <param name="scheme">The finite difference scheme to use.</param>
+    /// <param name="scheme">One of the <see cref="FiniteDifferenceScheme" /> enumeration values that specifies the scheme to use for advancing the PDE solution in time.</param>
     /// <param name="priceStepCount">The number of price steps in the grid.</param>
     /// <param name="timeStepCount">The target number of time steps in the grid.</param>
     protected BsmFiniteDifferenceEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
@@ -115,7 +115,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
     /// <summary>
-    ///     Gets a value indicating whether to use a trading day grid instead of a uniform time grid.
+    ///     Gets a value that indicates whether to use a trading day grid instead of a uniform time grid.
     /// </summary>
     /// <value><see langword="true" /> if a trading-day grid is used for time discretization; otherwise, <see langword="false" />. The default is <see langword="false" />.</value>
     protected virtual bool UseTradingDayGrid => false;

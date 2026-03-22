@@ -48,7 +48,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
     /// <summary>
     ///     Initializes a new instance of the <see cref="FdAccumulatorEngine" /> class.
     /// </summary>
-    /// <param name="scheme">The finite difference scheme to use.</param>
+    /// <param name="scheme">One of the <see cref="FiniteDifferenceScheme" /> enumeration values that specifies the scheme to use.</param>
     /// <param name="priceStepCount">The number of price steps in the grid.</param>
     /// <param name="timeStepCount">The number of time steps in the grid.</param>
     public FdAccumulatorEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)

@@ -18,10 +18,10 @@ public static class AutocallableEngineExtensions
         /// <param name="option">The snowball option.</param>
         /// <param name="context">The pricing context.</param>
         /// <param name="optionPrice">The target option price.</param>
-        /// <param name="alignMaturityCouponRate">Whether to align the maturity coupon rate with the final knock-out rate.</param>
-        /// <param name="lowerBound">Lower bound for the root-finding search.</param>
-        /// <param name="upperBound">Upper bound for the root-finding search.</param>
-        /// <param name="accuracy">Desired accuracy for the root-finding algorithm.</param>
+        /// <param name="alignMaturityCouponRate"><see langword="true" /> to align the maturity coupon rate with the final knock-out rate; otherwise, <see langword="false" />.</param>
+        /// <param name="lowerBound">The lower bound for the root-finding search.</param>
+        /// <param name="upperBound">The upper bound for the root-finding search.</param>
+        /// <param name="accuracy">The desired accuracy for the root-finding algorithm.</param>
         /// <returns>The implied coupon rate, or <see cref="double.NaN" /> if the algorithm does not converge.</returns>
         public double ImpliedCouponRate(
             SnowballOption option,
@@ -83,9 +83,9 @@ public static class AutocallableEngineExtensions
         /// <param name="option">The phoenix option.</param>
         /// <param name="context">The pricing context.</param>
         /// <param name="optionPrice">The target option price.</param>
-        /// <param name="lowerBound">Lower bound for the root-finding search.</param>
-        /// <param name="upperBound">Upper bound for the root-finding search.</param>
-        /// <param name="accuracy">Desired accuracy for the root-finding algorithm.</param>
+        /// <param name="lowerBound">The lower bound for the root-finding search.</param>
+        /// <param name="upperBound">The upper bound for the root-finding search.</param>
+        /// <param name="accuracy">The desired accuracy for the root-finding algorithm.</param>
         /// <returns>The implied coupon rate, or <see cref="double.NaN" /> if the algorithm does not converge.</returns>
         public double ImpliedCouponRate(
             PhoenixOption option,

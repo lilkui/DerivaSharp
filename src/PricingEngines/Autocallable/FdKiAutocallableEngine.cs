@@ -20,7 +20,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     private double[]? _knockInTimes;
 
     /// <summary>
-    ///     Gets a value indicating whether the current solve pass is for the knocked-in state.
+    ///     Gets a value that indicates whether the current solve pass is for the knocked-in state.
     /// </summary>
     protected bool IsSolvingKnockedIn { get; private set; }
 
@@ -128,7 +128,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     /// </summary>
     /// <param name="i">The time step index.</param>
     /// <param name="knockInPrice">The knock-in barrier price.</param>
-    /// <param name="apply">Whether to apply the substitution.</param>
+    /// <param name="apply"><see langword="true" /> to apply the knock-in substitution; otherwise, <see langword="false" />.</param>
     /// <param name="knockedInValues">The values to use when knocked in.</param>
     private void ApplyKnockInSubstitution(int i, double knockInPrice, bool apply, double[] knockedInValues)
     {

@@ -16,8 +16,8 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="upperStrikePrice">The upper strike price for payoff calculation.</param>
     /// <param name="lowerStrikePrice">The lower strike price for payoff calculation.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="knockInObservationFrequency">How frequently the knock-in barrier is observed.</param>
-    /// <param name="barrierTouchStatus">The current barrier touch status.</param>
+    /// <param name="knockInObservationFrequency">One of the <see cref="ObservationFrequency" /> enumeration values that specifies how frequently the knock-in barrier is observed.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that indicates the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -72,7 +72,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -114,7 +114,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutLevelStart">The initial knock-out level as a fraction of the initial price.</param>
     /// <param name="knockOutLevelStep">The amount by which the knock-out level decreases at each observation date.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -160,7 +160,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutLevelStart">The initial knock-out level as a fraction of the initial price.</param>
     /// <param name="knockOutLevelStep">The amount by which the knock-out level decreases at each observation date.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -212,7 +212,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -255,7 +255,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="finalKnockOutLevel">The knock-out level applied at the final observation date as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -300,7 +300,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="strikeLevel">The upper strike level as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -343,7 +343,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="floorLevel">The lower strike floor level as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
@@ -385,7 +385,7 @@ public sealed record SnowballOption : KiAutocallableNote
     /// <param name="knockInLevel">The knock-in level as a fraction of the initial price.</param>
     /// <param name="knockOutLevel">The knock-out level as a fraction of the initial price.</param>
     /// <param name="knockOutObservationDates">The dates when knock-out conditions are checked.</param>
-    /// <param name="barrierTouchStatus">One of the enumeration values that specifies the current barrier touch status.</param>
+    /// <param name="barrierTouchStatus">One of the <see cref="BarrierTouchStatus" /> enumeration values that specifies the current barrier touch status.</param>
     /// <param name="principalRatio">The ratio of nominal principal prepaid and returned by the note.</param>
     /// <param name="effectiveDate">The date when the note becomes effective.</param>
     /// <param name="expirationDate">The date when the note expires.</param>
