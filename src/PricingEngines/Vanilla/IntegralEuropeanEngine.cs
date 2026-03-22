@@ -11,6 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class IntegralEuropeanEngine : BsmPricingEngine<EuropeanOption>
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;

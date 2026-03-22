@@ -17,9 +17,11 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
     private double _principalPayoff;
     private double _lossAtZero;
 
+    /// <inheritdoc/>
     protected override bool RequiresTwoPass(PhoenixOption option) =>
         option.KnockInObservationFrequency == ObservationFrequency.Daily;
 
+    /// <inheritdoc/>
     protected override void InitializeParameters(PhoenixOption option, DateOnly valuationDate, ICalendar calendar)
     {
         IReadOnlyList<DateOnly> obsDates = option.KnockOutObservationDates;
@@ -49,6 +51,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         ComputeKnockInTimes(option, valuationDate, calendar);
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(PhoenixOption option)
     {
         double upperStrike = option.UpperStrikePrice;
@@ -79,6 +82,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(PhoenixOption option, BsmModelParameters parameters)
     {
         double r = parameters.RiskFreeRate;
@@ -111,6 +115,7 @@ public sealed class FdPhoenixEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, PhoenixOption option, BsmModelParameters parameters)
     {
         int obsIdx = StepToObservationIndex[i];

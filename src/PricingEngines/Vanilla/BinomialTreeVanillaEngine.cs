@@ -27,6 +27,7 @@ public sealed class BinomialTreeVanillaEngine : BsmPricingEngine<VanillaOption>
         _values = new double[stepCount + 1];
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(VanillaOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;

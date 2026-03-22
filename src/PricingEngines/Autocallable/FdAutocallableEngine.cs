@@ -24,8 +24,10 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     /// </summary>
     protected double[]? ObservationTimes { get; set; }
 
+    /// <inheritdoc/>
     protected override bool UseTradingDayGrid => true;
 
+    /// <inheritdoc/>
     public override double[] Values(TOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (IsUpTouched(option))
@@ -50,6 +52,7 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
         return values;
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         if (IsUpTouched(option))
@@ -80,6 +83,7 @@ public abstract class FdAutocallableEngine<TOption>(FiniteDifferenceScheme schem
     /// </summary>
     protected abstract void InitializeParameters(TOption option, DateOnly valuationDate, ICalendar calendar);
 
+    /// <inheritdoc/>
     protected override void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (ObservationTimes is null)

@@ -71,6 +71,7 @@ public sealed class McAmericanEngine(int pathCount, int stepCount, bool useCuda 
         return average * df;
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(AmericanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)

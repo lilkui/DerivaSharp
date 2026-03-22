@@ -126,6 +126,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     /// <value>The trading calendar used for date calculations; defaults to <see cref="NullCalendar.Shared" />.</value>
     protected ICalendar Calendar { get; private set; } = NullCalendar.Shared;
 
+    /// <inheritdoc/>
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         Calendar = context.Calendar;

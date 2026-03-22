@@ -12,6 +12,7 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
     : BsmFiniteDifferenceEngine<TOption>(scheme, priceStepCount, timeStepCount)
     where TOption : VanillaOption
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
@@ -23,6 +24,7 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
         return base.CalculateValue(option, context);
     }
 
+    /// <inheritdoc/>
     protected override void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
@@ -30,6 +32,7 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
         base.InitializeGrid(option, parameters, valuationDate);
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(TOption option)
     {
         double x = option.StrikePrice;
@@ -41,6 +44,7 @@ public abstract class FdVanillaEngine<TOption>(FiniteDifferenceScheme scheme, in
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(TOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;

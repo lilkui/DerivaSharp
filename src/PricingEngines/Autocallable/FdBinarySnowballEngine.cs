@@ -16,9 +16,11 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
     private double _principalPayoff;
     private double _maturityPayoff;
 
+    /// <inheritdoc/>
     protected override bool IsUpTouched(BinarySnowballOption option) =>
         option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 
+    /// <inheritdoc/>
     protected override void InitializeParameters(BinarySnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
         DateOnly effDate = option.EffectiveDate;
@@ -45,6 +47,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         MaxPrice = Math.Max(option.InitialPrice, maxBarrier) * 4.0;
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(BinarySnowballOption option)
     {
         for (int j = 0; j <= PriceStepCount; j++)
@@ -53,6 +56,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(BinarySnowballOption option, BsmModelParameters parameters)
     {
         double r = parameters.RiskFreeRate;
@@ -86,6 +90,7 @@ public sealed class FdBinarySnowballEngine(FiniteDifferenceScheme scheme, int pr
         }
     }
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, BinarySnowballOption option, BsmModelParameters parameters)
     {
         int obsIdx = StepToObservationIndex[i];

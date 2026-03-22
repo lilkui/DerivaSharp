@@ -16,6 +16,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false, int
 {
     private readonly torch.Device _device = TorchUtils.GetDevice(useCuda);
 
+    /// <inheritdoc/>
     public override double[] Values(Accumulator option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         int count = assetPrices.Length;
@@ -44,6 +45,7 @@ public sealed class McAccumulatorEngine(int pathCount, bool useCuda = false, int
         return values;
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         using DisposeScope scope = torch.NewDisposeScope();

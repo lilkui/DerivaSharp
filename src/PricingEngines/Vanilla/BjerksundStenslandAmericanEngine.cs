@@ -11,6 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class BjerksundStenslandAmericanEngine : BsmPricingEngine<AmericanOption>
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(AmericanOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;

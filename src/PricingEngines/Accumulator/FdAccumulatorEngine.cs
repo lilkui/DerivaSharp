@@ -55,6 +55,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         _timeStepCount = timeStepCount;
     }
 
+    /// <inheritdoc/>
     public override double[] Values(Accumulator option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         Guard.IsGreaterThanOrEqualTo(assetPrices.Length, 3);
@@ -93,6 +94,7 @@ public sealed class FdAccumulatorEngine : BsmPricingEngine<Accumulator>
         return values;
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(Accumulator option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)

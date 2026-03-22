@@ -13,6 +13,7 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : BsmFiniteDifferenceEngine<DigitalOption>(scheme, priceStepCount, timeStepCount)
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(DigitalOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
@@ -32,6 +33,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         return base.CalculateValue(option, context);
     }
 
+    /// <inheritdoc/>
     protected override void InitializeGrid(DigitalOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         MinPrice = 0;
@@ -45,6 +47,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         base.InitializeGrid(option, parameters, valuationDate);
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(DigitalOption option)
     {
         double x = option.StrikePrice;
@@ -76,6 +79,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(DigitalOption option, BsmModelParameters parameters)
     {
         double r = parameters.RiskFreeRate;
@@ -136,6 +140,7 @@ public sealed class FdDigitalEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, DigitalOption option, BsmModelParameters parameters)
     {
     }

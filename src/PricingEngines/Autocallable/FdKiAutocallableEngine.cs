@@ -24,9 +24,11 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     /// </summary>
     protected bool IsSolvingKnockedIn { get; private set; }
 
+    /// <inheritdoc/>
     protected override bool IsUpTouched(TOption option) =>
         option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 
+    /// <inheritdoc/>
     protected override double SolveGrid(TOption option, in PricingContext<BsmModelParameters> context)
     {
         if (!RequiresTwoPass(option))
@@ -57,6 +59,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     /// </summary>
     protected virtual bool RequiresTwoPass(TOption option) => true;
 
+    /// <inheritdoc/>
     protected override void InitializeGrid(TOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         base.InitializeGrid(option, parameters, valuationDate);

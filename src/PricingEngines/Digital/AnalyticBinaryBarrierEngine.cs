@@ -14,6 +14,7 @@ public sealed class AnalyticBinaryBarrierEngine : BsmPricingEngine<BinaryBarrier
 {
     private const double Beta = 0.5825971579390107; // Correction factor for discrete barriers
 
+    /// <inheritdoc/>
     protected override double CalculateValue(BinaryBarrierOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters parameters = context.ModelParameters;

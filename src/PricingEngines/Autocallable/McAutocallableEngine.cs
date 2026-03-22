@@ -21,6 +21,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
     /// </summary>
     protected torch.Device Device { get; } = TorchUtils.GetDevice(useCuda);
 
+    /// <inheritdoc/>
     public override double[] Values(TOption option, in PricingContext<BsmModelParameters> context, double[] assetPrices)
     {
         if (IsUpTouched(option))
@@ -75,6 +76,7 @@ public abstract class McAutocallableEngine<TOption>(int pathCount, bool useCuda 
         return new KnockOutState(obsPrices, koMatrix, hasKnockedOut, firstKoIdx, koStepIdx, timeToKo);
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(TOption option, in PricingContext<BsmModelParameters> context)
     {
         if (IsUpTouched(option))

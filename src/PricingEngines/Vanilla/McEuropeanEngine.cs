@@ -41,6 +41,7 @@ public sealed class McEuropeanEngine(int pathCount, int stepCount, bool useCuda 
         return averagePayoff * Math.Exp(-parameters.RiskFreeRate * tau);
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)

@@ -14,8 +14,10 @@ namespace DerivaSharp.PricingEngines;
 /// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
 public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? seed = null) : McKiAutocallableEngine<PhoenixOption>(pathCount, useCuda, seed)
 {
+    /// <inheritdoc/>
     protected override bool IsUpTouched(PhoenixOption option) => option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
 
+    /// <inheritdoc/>
     protected override Tensor BuildObservationAuxTensor(PhoenixOption option, ReadOnlySpan<int> futureScheduleIndices)
     {
         double[] couponBarriersArray = new double[futureScheduleIndices.Length];
@@ -27,6 +29,7 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? se
         return torch.tensor(couponBarriersArray, torch.float64, Device);
     }
 
+    /// <inheritdoc/>
     protected override double CalculateAveragePayoff(
         PhoenixOption option,
         in PricingContext<BsmModelParameters> context,
@@ -70,6 +73,7 @@ public sealed class McPhoenixEngine(int pathCount, bool useCuda = false, int? se
         return pathPayoffs.mean().item<double>();
     }
 
+    /// <inheritdoc/>
     protected override double CalculateTerminalPayoff(PhoenixOption option, in PricingContext<BsmModelParameters> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);

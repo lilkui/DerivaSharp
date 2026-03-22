@@ -14,11 +14,13 @@ namespace DerivaSharp.PricingEngines;
 /// <param name="seed">The optional random seed used to make generated samples deterministic.</param>
 public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? seed = null) : McKiAutocallableEngine<SnowballOption>(pathCount, useCuda, seed)
 {
+    /// <inheritdoc/>
     protected override bool IsUpTouched(SnowballOption option)
     {
         return option.BarrierTouchStatus == BarrierTouchStatus.UpTouch;
     }
 
+    /// <inheritdoc/>
     protected override Tensor BuildObservationAuxTensor(SnowballOption option, ReadOnlySpan<int> futureScheduleIndices)
     {
         double[] koCouponRatesArray = new double[futureScheduleIndices.Length];
@@ -30,6 +32,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? s
         return torch.tensor(koCouponRatesArray, torch.float64, Device);
     }
 
+    /// <inheritdoc/>
     protected override double CalculateAveragePayoff(
         SnowballOption option,
         in PricingContext<BsmModelParameters> context,
@@ -66,6 +69,7 @@ public sealed class McSnowballEngine(int pathCount, bool useCuda = false, int? s
         return pathPayoffs.mean().item<double>();
     }
 
+    /// <inheritdoc/>
     protected override double CalculateTerminalPayoff(SnowballOption option, in PricingContext<BsmModelParameters> context)
     {
         Guard.IsEqualTo(context.ValuationDate, option.ExpirationDate);

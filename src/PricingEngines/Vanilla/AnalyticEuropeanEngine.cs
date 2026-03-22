@@ -16,6 +16,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
     /// </summary>
     public bool UseNumericalGreeks { get; init; } = false;
 
+    /// <inheritdoc/>
     public override double Delta(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -38,6 +39,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return z * Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d1);
     }
 
+    /// <inheritdoc/>
     public override double Gamma(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);
@@ -59,6 +61,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Exp(-q * tau) * StandardNormalDistribution.Pdf(d1) / (s * vol * Sqrt(tau));
     }
 
+    /// <inheritdoc/>
     public override double Speed(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -80,6 +83,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Gamma(option, context) * (1 + d1 / (vol * Sqrt(tau))) / s;
     }
 
+    /// <inheritdoc/>
     public override double Theta(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -104,6 +108,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return theta / 365;
     }
 
+    /// <inheritdoc/>
     public override double Charm(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -126,6 +131,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Exp(-q * tau) * (StandardNormalDistribution.Pdf(d1) * ((r - q) / (vol * Sqrt(tau)) - 0.5 * d2 / tau) - z * q * StandardNormalDistribution.Cdf(z * d1)) / 365;
     }
 
+    /// <inheritdoc/>
     public override double Color(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -147,6 +153,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Gamma(option, context) * (q + (r - q) * d1 / (vol * Sqrt(tau)) + (1 - d1 * d2) / (2 * tau)) / 365;
     }
 
+    /// <inheritdoc/>
     public override double Vega(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -168,6 +175,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return s * Exp(-q * tau) * StandardNormalDistribution.Pdf(d1) * Sqrt(tau) / 100;
     }
 
+    /// <inheritdoc/>
     public override double Vanna(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -189,6 +197,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return -Exp(-q * tau) * d2 / vol * StandardNormalDistribution.Pdf(d1) / 100;
     }
 
+    /// <inheritdoc/>
     public override double Zomma(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -210,6 +219,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return Gamma(option, context) * (d1 * d2 - 1) / vol / 100;
     }
 
+    /// <inheritdoc/>
     public override double Rho(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -232,6 +242,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         return z * tau * x * Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d2) / 100;
     }
 
+    /// <inheritdoc/>
     public override PricingResult ValueAndGreeks(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         if (UseNumericalGreeks)
@@ -297,6 +308,7 @@ public sealed class AnalyticEuropeanEngine : BsmPricingEngine<EuropeanOption>
         };
     }
 
+    /// <inheritdoc/>
     protected override double CalculateValue(EuropeanOption option, in PricingContext<BsmModelParameters> context)
     {
         ValidateArguments(option, context);

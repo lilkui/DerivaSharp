@@ -12,9 +12,11 @@ namespace DerivaSharp.PricingEngines;
 public sealed class FdAmericanEngine(FiniteDifferenceScheme scheme, int priceStepCount, int timeStepCount)
     : FdVanillaEngine<AmericanOption>(scheme, priceStepCount, timeStepCount)
 {
+    /// <inheritdoc/>
     protected override double GetPutLowerBoundary(AmericanOption option, double minPrice, double dfq, double dfr) =>
         option.StrikePrice;
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, AmericanOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;

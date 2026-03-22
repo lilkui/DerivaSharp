@@ -20,6 +20,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
     private double _maturityPayoff;
     private double _lossAtZero;
 
+    /// <inheritdoc/>
     protected override void InitializeParameters(SnowballOption option, DateOnly valuationDate, ICalendar calendar)
     {
         DateOnly effDate = option.EffectiveDate;
@@ -49,6 +50,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         ComputeKnockInTimes(option, valuationDate, calendar);
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(SnowballOption option)
     {
         double upperStrike = option.UpperStrikePrice;
@@ -72,6 +74,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(SnowballOption option, BsmModelParameters parameters)
     {
         double r = parameters.RiskFreeRate;
@@ -106,6 +109,7 @@ public sealed class FdSnowballEngine(FiniteDifferenceScheme scheme, int priceSte
         }
     }
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, SnowballOption option, BsmModelParameters parameters)
     {
         int obsIdx = StepToObservationIndex[i];

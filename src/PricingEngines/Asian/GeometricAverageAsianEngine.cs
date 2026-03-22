@@ -11,6 +11,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class GeometricAverageAsianEngine : BsmPricingEngine<GeometricAverageOption>
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(GeometricAverageOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters model = context.ModelParameters;

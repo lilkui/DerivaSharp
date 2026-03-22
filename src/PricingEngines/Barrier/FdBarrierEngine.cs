@@ -17,8 +17,10 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
     private bool[]? _isObservationTime;
     private double[]? _observationTimes;
 
+    /// <inheritdoc/>
     protected override bool UseTradingDayGrid => true;
 
+    /// <inheritdoc/>
     protected override double CalculateValue(BarrierOption option, in PricingContext<BsmModelParameters> context)
     {
         if (context.ValuationDate == option.ExpirationDate)
@@ -43,6 +45,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         return base.CalculateValue(option, context);
     }
 
+    /// <inheritdoc/>
     protected override void InitializeGrid(BarrierOption option, BsmModelParameters parameters, DateOnly valuationDate)
     {
         if (option.ObservationInterval == 0)
@@ -89,6 +92,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetTerminalCondition(BarrierOption option)
     {
         double x = option.StrikePrice;
@@ -112,6 +116,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void SetBoundaryConditions(BarrierOption option, BsmModelParameters parameters)
     {
         double x = option.StrikePrice;
@@ -186,6 +191,7 @@ public sealed class FdBarrierEngine(FiniteDifferenceScheme scheme, int priceStep
         }
     }
 
+    /// <inheritdoc/>
     protected override void ApplyStepConditions(int i, BarrierOption option, BsmModelParameters parameters)
     {
         // Continuous observation: nothing to do (already handled by boundary conditions)

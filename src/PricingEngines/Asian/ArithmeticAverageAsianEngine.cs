@@ -10,6 +10,7 @@ namespace DerivaSharp.PricingEngines;
 /// </summary>
 public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAverageOption>
 {
+    /// <inheritdoc/>
     protected override double CalculateValue(ArithmeticAverageOption option, in PricingContext<BsmModelParameters> context)
     {
         BsmModelParameters model = context.ModelParameters;
