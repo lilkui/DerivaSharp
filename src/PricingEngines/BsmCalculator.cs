@@ -26,12 +26,6 @@ internal static class BsmCalculator
             return Max(z * (spot - strike), 0);
         }
 
-        if (vol == 0)
-        {
-            double forward = spot * Exp((r - q) * tau);
-            return Max(z * (forward - strike), 0) * Exp(-r * tau);
-        }
-
         (double d1, double d2) = D1D2(spot, strike, tau, vol, r, q);
 
         return z * (spot * Exp(-q * tau) * StandardNormalDistribution.Cdf(z * d1) - strike * Exp(-r * tau) * StandardNormalDistribution.Cdf(z * d2));

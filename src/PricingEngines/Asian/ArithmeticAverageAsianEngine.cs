@@ -58,17 +58,8 @@ public sealed class ArithmeticAverageAsianEngine : BsmPricingEngine<ArithmeticAv
         }
 
         double bA = Log(m1) / tau;
-        double vA;
-
-        if (vol == 0)
-        {
-            vA = 0;
-        }
-        else
-        {
-            double m2 = CalculateAverageSecondMoment(b, vol, tau, t1);
-            vA = Sqrt(Log(m2) / tau - 2 * bA);
-        }
+        double m2 = CalculateAverageSecondMoment(b, vol, tau, t1);
+        double vA = Sqrt(Log(m2) / tau - 2 * bA);
 
         double adjustedStrike = strike;
         double scale = 1.0;
