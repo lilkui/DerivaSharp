@@ -115,7 +115,7 @@ public abstract class BsmFiniteDifferenceEngine<TOption> : BsmPricingEngine<TOpt
     protected Span2D<double> ValueMatrixSpan => new(_valueMatrixBuffer, TimeStepCount + 1, PriceStepCount + 1);
 
     /// <summary>
-    ///     Gets a value that indicates whether to use a trading day grid instead of a uniform time grid.
+    ///     Gets a value indicating whether to use a trading day grid instead of a uniform time grid.
     /// </summary>
     /// <value><see langword="true" /> if a trading-day grid is used for time discretization; otherwise, <see langword="false" />. The default is <see langword="false" />.</value>
     protected virtual bool UseTradingDayGrid => false;

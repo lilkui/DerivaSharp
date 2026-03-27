@@ -20,7 +20,7 @@ public abstract class FdKiAutocallableEngine<TOption>(FiniteDifferenceScheme sch
     private double[]? _knockInTimes;
 
     /// <summary>
-    ///     Gets a value that indicates whether the current solve pass is for the knocked-in state.
+    ///     Gets a value indicating whether the current solve pass is for the knocked-in state.
     /// </summary>
     protected bool IsSolvingKnockedIn { get; private set; }
 
