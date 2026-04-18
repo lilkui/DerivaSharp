@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.AmericanOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class BjerksundStenslandAmericanEngineTest
+[Trait("Category", "Vanilla")]
+public sealed class BjerksundStenslandAmericanEngineTest
 {
     private readonly BjerksundStenslandAmericanEngine _engine = new();
 

@@ -5,7 +5,8 @@ using MathNet.Numerics.Integration;
 
 namespace DerivaSharp.Tests;
 
-public class GaussLegendreQuadratureTest
+[Trait("Category", "Numerics")]
+public sealed class GaussLegendreQuadratureTest
 {
     public enum TestFunction
     {

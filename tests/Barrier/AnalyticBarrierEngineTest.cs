@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.BarrierOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class AnalyticBarrierEngineTest
+[Trait("Category", "Barrier")]
+public sealed class AnalyticBarrierEngineTest
 {
     private readonly AnalyticBarrierEngine _engine = new();
 

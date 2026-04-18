@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.AmericanOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class FdAmericanEngineTest
+[Trait("Category", "Vanilla")]
+public sealed class FdAmericanEngineTest
 {
     private readonly FdAmericanEngine _expFdEngine = new(FiniteDifferenceScheme.ExplicitEuler, 200, 4000);
     private readonly FdAmericanEngine _impFdEngine = new(FiniteDifferenceScheme.ImplicitEuler, 1000, 1000);

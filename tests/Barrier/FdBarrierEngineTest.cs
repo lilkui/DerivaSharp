@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.BarrierOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class FdBarrierEngineTest
+[Trait("Category", "Barrier")]
+public sealed class FdBarrierEngineTest
 {
     private readonly FdBarrierEngine _fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
     private readonly AnalyticBarrierEngine _analyticEngine = new();

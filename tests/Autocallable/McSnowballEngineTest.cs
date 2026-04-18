@@ -6,7 +6,8 @@ using TorchSharp;
 
 namespace DerivaSharp.Tests;
 
-public class McSnowballEngineTest
+[Trait("Category", "Autocallable")]
+public sealed class McSnowballEngineTest
 {
     private const double DefaultTolerance = 0.003;
     private static readonly bool s_useCuda = torch.cuda.is_available();

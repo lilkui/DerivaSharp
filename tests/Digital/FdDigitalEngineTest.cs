@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.DigitalOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class FdDigitalEngineTest
+[Trait("Category", "Digital")]
+public sealed class FdDigitalEngineTest
 {
     private readonly FdDigitalEngine _fdEngine = new(FiniteDifferenceScheme.CrankNicolson, 1000, 1000);
 

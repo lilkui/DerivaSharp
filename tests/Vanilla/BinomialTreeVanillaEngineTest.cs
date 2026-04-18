@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.EuropeanOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class BinomialTreeVanillaEngineTest
+[Trait("Category", "Vanilla")]
+public sealed class BinomialTreeVanillaEngineTest
 {
     private readonly BinomialTreeVanillaEngine _engine = new(1000);
 

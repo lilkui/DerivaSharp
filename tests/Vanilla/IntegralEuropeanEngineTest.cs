@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.EuropeanOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class IntegralEuropeanEngineTest
+[Trait("Category", "Vanilla")]
+public sealed class IntegralEuropeanEngineTest
 {
     private readonly IntegralEuropeanEngine _engine = new();
 

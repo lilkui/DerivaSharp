@@ -3,7 +3,8 @@ using DerivaSharp.Numerics;
 
 namespace DerivaSharp.Tests;
 
-public class TridiagonalMatrixTest
+[Trait("Category", "Numerics")]
+public sealed class TridiagonalMatrixTest
 {
     [Fact]
     public void Multiply_WithSimdAndScalarRemainder_ReturnsExpectedValues()

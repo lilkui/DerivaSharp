@@ -6,7 +6,8 @@ using TorchSharp;
 
 namespace DerivaSharp.Tests;
 
-public class FdAccumulatorEngineTest
+[Trait("Category", "Accumulator")]
+public sealed class FdAccumulatorEngineTest
 {
     private static readonly bool s_useCuda = torch.cuda.is_available();
 

@@ -5,7 +5,8 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.Tests;
 
-public class GeometricAverageAsianEngineTest
+[Trait("Category", "Asian")]
+public sealed class GeometricAverageAsianEngineTest
 {
     [Fact]
     public void Value_IsAccurate()

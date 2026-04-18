@@ -5,7 +5,8 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.Tests;
 
-public class FdPhoenixEngineTest
+[Trait("Category", "Autocallable")]
+public sealed class FdPhoenixEngineTest
 {
     private const double DefaultTolerance = 0.0005;
     private readonly DateOnly _effectiveDate;

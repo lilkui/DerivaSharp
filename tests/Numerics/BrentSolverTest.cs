@@ -2,7 +2,8 @@ using DerivaSharp.Numerics;
 
 namespace DerivaSharp.Tests;
 
-public class BrentSolverTest
+[Trait("Category", "Numerics")]
+public sealed class BrentSolverTest
 {
     [Fact]
     public void TryFindRoot_ReturnsExpectedValue_ForBracketedRoot()

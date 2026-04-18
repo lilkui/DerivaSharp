@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.AsianOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class ArithmeticAverageAsianEngineTest
+[Trait("Category", "Asian")]
+public sealed class ArithmeticAverageAsianEngineTest
 {
     private readonly ArithmeticAverageAsianEngine _engine = new();
 

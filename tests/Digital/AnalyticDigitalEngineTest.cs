@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.DigitalOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class AnalyticDigitalEngineTest
+[Trait("Category", "Digital")]
+public sealed class AnalyticDigitalEngineTest
 {
     private readonly AnalyticDigitalEngine _engine = new();
 

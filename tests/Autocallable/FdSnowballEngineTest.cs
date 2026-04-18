@@ -5,7 +5,8 @@ using DerivaSharp.Time;
 
 namespace DerivaSharp.Tests;
 
-public class FdSnowballEngineTest
+[Trait("Category", "Autocallable")]
+public sealed class FdSnowballEngineTest
 {
     private const double DefaultTolerance = 0.0005;
     private readonly DateOnly _effectiveDate;

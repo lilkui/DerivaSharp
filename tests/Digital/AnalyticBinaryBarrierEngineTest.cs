@@ -6,7 +6,8 @@ using static DerivaSharp.Tests.BinaryBarrierOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class AnalyticBinaryBarrierEngineTest
+[Trait("Category", "Digital")]
+public sealed class AnalyticBinaryBarrierEngineTest
 {
     private readonly AnalyticBinaryBarrierEngine _engine = new();
 

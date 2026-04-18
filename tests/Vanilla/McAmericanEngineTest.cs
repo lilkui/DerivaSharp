@@ -7,7 +7,8 @@ using static DerivaSharp.Tests.AmericanOptionTestData;
 
 namespace DerivaSharp.Tests;
 
-public class McAmericanEngineTest
+[Trait("Category", "Vanilla")]
+public sealed class McAmericanEngineTest
 {
     private static readonly bool s_useCuda = torch.cuda.is_available();
     private readonly McAmericanEngine _engine = new(200000, 250, s_useCuda, 42);

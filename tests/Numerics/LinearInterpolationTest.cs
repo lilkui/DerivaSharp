@@ -3,7 +3,8 @@ using MathNet.Numerics.Interpolation;
 
 namespace DerivaSharp.Tests;
 
-public class LinearInterpolationTest
+[Trait("Category", "Numerics")]
+public sealed class LinearInterpolationTest
 {
     [Fact]
     public void InterpolateSorted_MatchesMathNetLinearSpline_ForFixedQueries()

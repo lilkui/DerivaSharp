@@ -3,7 +3,8 @@ using StandardNormalDistribution = DerivaSharp.Numerics.StandardNormalDistributi
 
 namespace DerivaSharp.Tests;
 
-public class StandardNormalDistributionTest
+[Trait("Category", "Numerics")]
+public sealed class StandardNormalDistributionTest
 {
     [Theory]
     [InlineData(-10)]

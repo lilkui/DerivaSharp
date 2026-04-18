@@ -4,7 +4,8 @@ using SpecialFunctions = DerivaSharp.Numerics.SpecialFunctions;
 
 namespace DerivaSharp.Tests;
 
-public class SpecialFunctionsTest
+[Trait("Category", "Numerics")]
+public sealed class SpecialFunctionsTest
 {
     [Theory]
     [InlineData(-30)]
@@ -31,7 +32,7 @@ public class SpecialFunctionsTest
     [Fact]
     public void Erfc_MatchesRuntimeReference_AcrossWideRange()
     {
-        Random random = new();
+        Random random = new(42);
 
         for (int i = 0; i < 2000; i++)
         {
