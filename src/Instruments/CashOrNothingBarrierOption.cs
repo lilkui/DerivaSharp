@@ -3,7 +3,7 @@
 /// <summary>
 ///     Represents a binary barrier option that pays a fixed cash amount if barrier conditions are met.
 /// </summary>
-public record CashOrNothingBarrierOption : BinaryBarrierOption
+public sealed record CashOrNothingBarrierOption : BinaryBarrierOption
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="CashOrNothingBarrierOption" /> class.
