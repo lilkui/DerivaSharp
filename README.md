@@ -1,26 +1,63 @@
 # DerivaSharp
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Stage: Experimental](https://img.shields.io/badge/stage-experimental-orange)
+DerivaSharp is a modern C# library for pricing financial derivatives under the Black-Scholes-Merton model. It covers vanilla and exotic instruments with analytic, integral, finite-difference, binomial-tree, and Monte Carlo engines, including optional CUDA acceleration through TorchSharp.
 
-DerivaSharp is a modern, performance-oriented C# library for financial derivatives pricing. It provides a comprehensive suite of instruments and sophisticated pricing algorithms.
+## Features
 
-> [!NOTE]
-> This project is currently in an experimental stage. Expect frequent breaking changes and API instability.
+- Prices European and American vanilla options, barriers, digitals, Asian options, autocallables, and accumulators.
+- Offers closed-form formulas, Gauss-Legendre integration, PDE solvers, Cox-Ross-Rubinstein trees, and path simulation.
+- Computes value and Greeks through a common pricing-engine API, with analytic Greeks where available and numerical Greeks otherwise.
+- Runs Monte Carlo workloads on CPU by default or NVIDIA GPUs when CUDA is enabled.
+- Includes calendar-aware trading-day grids, Actual/365 day counting, and Shanghai Stock Exchange holidays.
+- Supports nullable reference types, Native AOT, and .NET 10.
 
-## Quick Start
+## Supported instruments
+
+| Category | Instruments | Pricing engines |
+| --- | --- | --- |
+| Vanilla | European and American calls and puts | Black-Scholes-Merton, Bjerksund-Stensland 2002, numerical integration, finite difference, Monte Carlo/Longstaff-Schwartz, binomial tree |
+| Barrier | Up/down and in/out options with rebates and discrete observations | Closed form with discrete-barrier adjustment, finite difference |
+| Digital | Cash-or-nothing, asset-or-nothing, and binary barrier options | Closed form, numerical integration, finite difference |
+| Asian | Arithmetic- and geometric-average options | Turnbull-Wakeman approximation, geometric closed form |
+| Autocallable | Snowball, Phoenix, binary snowball, and ternary snowball notes | Finite difference, Monte Carlo |
+| Accumulator | Accumulator contracts with knock-out and gearing features | Finite difference, Monte Carlo |
+
+The library also contains reusable numerical routines for root finding, quadrature, interpolation, normal distributions, and tridiagonal systems.
+
+## Getting started
 
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- An NVIDIA GPU and compatible CUDA driver only when GPU acceleration is required
 
-### Basic Usage
+Clone and build the repository:
 
-The following example demonstrates how to price a European Call option using the analytic engine:
+```bash
+git clone https://github.com/lilkui/DerivaSharp.git
+cd DerivaSharp
+dotnet restore
+dotnet build --no-restore
+```
+
+> [!NOTE]
+> Restore downloads the platform-specific LibTorch CUDA package for Windows or Linux, so the first restore can be large. CUDA is optional at runtime; Monte Carlo engines use the CPU unless `useCuda` is set to `true`.
+
+DerivaSharp is currently consumed as a project reference. From another .NET project, add the cloned library with:
+
+```bash
+dotnet add MyApp.csproj reference ../DerivaSharp/src/DerivaSharp.csproj
+```
+
+## Quick start
+
+The following example prices a one-year European call and returns its value and Greeks:
 
 ```csharp
+using System;
 using DerivaSharp.Instruments;
 using DerivaSharp.Models;
 using DerivaSharp.PricingEngines;
@@ -29,75 +66,95 @@ using DerivaSharp.Time;
 DateOnly valuationDate = new(2025, 1, 6);
 DateOnly expirationDate = valuationDate.AddYears(1);
 
-// 1. Define the instrument
 EuropeanOption option = new(
     OptionType.Call,
-    100.0,
+    strikePrice: 100.0,
     valuationDate,
     expirationDate);
 
-// 2. Set up the model parameters
-BsmModelParameters modelParameters = new(0.3, 0.04, 0.01);
+BsmModelParameters model = new(
+    volatility: 0.30,
+    riskFreeRate: 0.04,
+    dividendYield: 0.01);
 
-// 3. Create the pricing context
 PricingContext<BsmModelParameters> context = new(
-    modelParameters,
-    assetPrice: 100.0,
+    model,
+    AssetPrice: 100.0,
     valuationDate,
     NullCalendar.Shared);
 
-// 4. Price the option
 AnalyticEuropeanEngine engine = new();
-double price = engine.Value(option, context);
-double delta = engine.Delta(option, context);
+PricingResult result = engine.ValueAndGreeks(option, context);
 
-Console.WriteLine($"Price: {price:F4}");
-Console.WriteLine($"Delta: {delta:F4}");
+Console.WriteLine($"Value: {result.Value:F4}");
+Console.WriteLine($"Delta: {result.Delta:F4}");
+Console.WriteLine($"Gamma: {result.Gamma:F4}");
+Console.WriteLine($"Vega:  {result.Vega:F4}");
 ```
 
-### Interactive Notebooks
+Model inputs such as volatility, rates, yields, barrier levels, and coupon rates use decimal form: `0.30` means 30%.
 
-Explore the [notebooks/](notebooks/) folder for interactive examples. These notebooks demonstrate how to use the library within Jupyter using Python via [Python.NET](https://pythonnet.github.io/).
+Every BSM engine exposes `Value`, `Delta`, `Gamma`, `Speed`, `Theta`, `Charm`, `Color`, `Vega`, `Vanna`, `Zomma`, `Rho`, and `ValueAndGreeks`. Engines can also evaluate value, delta, and gamma across an array of spot prices with `Values`, `Deltas`, and `Gammas`.
 
-Before using the notebooks, build the library for your target platform to generate the required binaries. For example, on Windows:
+### GPU-accelerated Monte Carlo
+
+Pass `useCuda: true` to a Monte Carlo engine to run path generation on the GPU:
+
+```csharp
+McEuropeanEngine engine = new(
+    pathCount: 500_000,
+    stepCount: 252,
+    useCuda: true,
+    seed: 42);
+```
+
+Use a fixed seed when reproducibility matters. Leave `useCuda` at its default value of `false` for CPU execution.
+
+## Notebooks
+
+The [`notebooks`](notebooks/) directory contains Python.NET notebooks for European options, snowballs, and accumulators. They provide interactive validation and plots using NumPy, pandas, and Matplotlib.
+
+The notebooks currently expect a Windows x64 publish output. Build it before opening them with a Python 3.10-3.13 Jupyter environment:
 
 ```bash
-dotnet publish -c Release -r win-x64
+dotnet publish src/DerivaSharp.csproj -c Release -r win-x64
 ```
 
-## Supported Instruments and Pricing Algorithms
+## Development
 
-| Instrument Category | Sub-category | Pricing Algorithms |
-| :--- | :--- | :--- |
-| **Vanilla Option** | European, American | Analytical, Finite Difference, Monte Carlo, Binomial Tree, Numerical Integration |
-| **Barrier Option** | Standard | Analytical, Finite Difference |
-| **Digital Option** | Cash-or-Nothing, Asset-or-Nothing, Binary Barrier | Analytical, Finite Difference, Numerical Integration |
-| **Asian Option** | Geometric Average, Arithmetic Average | Analytical |
-| **Autocallable Note** | Snowball, Phoenix, FCN, DCN | Finite Difference, Monte Carlo |
-| **Accumulator** | KODA | Finite Difference, Monte Carlo |
+Run the same restore, build, and test sequence used by CI:
 
-## Performance Benchmarks
+```bash
+dotnet restore
+dotnet build --no-restore
+dotnet test --no-build
+```
 
-**Environment Specifications:**
+Run a focused test class:
 
-- **CPU**: AMD Ryzen 9 5900X @ 3.70GHz
-- **GPU**: NVIDIA GeForce RTX 3090
-- **OS**: Windows 11 (25H2)
-- **Runtime**: .NET 10.0.2
+```bash
+dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest"
+```
 
-| Instrument | Pricing Algorithm | Parameters | Time (JIT) | Time (AOT) |
-| :--- | :--- | :--- | ---: | ---: |
-| **Vanilla European** | Analytical | - | 28.3 ns | 41.2 ns |
-| | Finite Difference | 1000×1000 grid (CN) | 11.15 ms | 11.25 ms |
-| | Monte Carlo | 500000 paths | 6.16 ms | 6.94 ms |
-| | Binomial Tree | 1000 steps | 444 μs | 549 μs |
-| | Numerical Integration | - | 335 ns | 462 ns |
-| **Vanilla American** | Bjerksund-Stensland | - | 5.41 μs | 6.47 μs |
-| | Finite Difference | 1000×1000 grid (CN) | 12.24 ms | 12.54 ms |
-| | Monte Carlo | 100000 paths, 250 steps | 913 ms | 968 ms |
-| | Monte Carlo | 100000 paths, 250 steps, GPU-accelerated | 628 ms | 628 ms |
-| **Snowball** | Finite Difference | 1000×1000 grid (CN) | 25.96 ms | 27.07 ms |
-| | Monte Carlo | 500000 paths | 1.78 s | 2.00 s |
-| | Monte Carlo | 500000 paths, GPU-accelerated | 40.86 ms | 40.73 ms |
+Run all benchmarks or select a benchmark class:
 
-*CN = Crank-Nicolson scheme*
+```bash
+dotnet run --project benchmarks -c Release
+dotnet run --project benchmarks -c Release -- --filter "*EuropeanEngine*"
+```
+
+BenchmarkDotNet exercises both the .NET 10 JIT and Native AOT jobs. CPU and CUDA results depend heavily on grid sizes, path counts, hardware, and driver versions.
+
+## Project structure
+
+```text
+src/
+  Instruments/       Contract definitions and payoff terms
+  Models/            Black-Scholes-Merton model parameters
+  Numerics/          Solvers, quadrature, interpolation, and distributions
+  PricingEngines/    Analytic, integral, FD, tree, and Monte Carlo engines
+  Time/              Day counting and trading calendars
+tests/                xUnit v3 tests mirroring the engine categories
+benchmarks/           BenchmarkDotNet JIT and Native AOT benchmarks
+notebooks/            Python.NET validation notebooks
+```
