@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Reflection;
 using DerivaSharp.Numerics;
 using MathNet.Numerics.Integration;
@@ -49,7 +48,7 @@ public sealed class GaussLegendreQuadratureTest
     {
         Random random = new(42);
         Func<double, double> f = x => Math.Exp(-x * x) + 0.25 * x * x * x - 0.5 * x;
-        int[] orders = [3, 8, 19, 64, 129];
+        int[] orders = [1, 3, 8, 19, 64, 129, 130];
 
         for (int i = 0; i < 200; i++)
         {
@@ -65,36 +64,20 @@ public sealed class GaussLegendreQuadratureTest
         }
     }
 
-    [Fact]
-    public void LookupTable_Values_MatchExpectedFormula()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public void Integrate_NonPositiveOrder_ThrowsArgumentOutOfRangeException(int order)
     {
-        // Expected values: (n-1)/n for n >= 1, with index 0 and 1 being 0
-        // The lookup table has indices 0 to 128
-        double[] expected = new double[129];
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => GaussLegendreQuadrature.Integrate(static x => x, -1.0, 1.0, order));
+    }
 
-        expected[0] = 0.0; // Not used (n=0 doesn't make sense)
-        expected[1] = 0.0; // (1-1)/1 = 0
-
-        for (int n = 2; n <= 128; n++)
-        {
-            expected[n] = (n - 1.0) / n; // = 1 - 1/n
-        }
-
-        // Access the private lookup table via reflection
-        double[] lookupTable = GetPrivateLookupTable();
-
-        Assert.NotNull(lookupTable);
-        Assert.Equal(expected.Length, lookupTable.Length);
-
-        for (int i = 0; i < expected.Length; i++)
-        {
-            double expectedValue = expected[i];
-            double actualValue = lookupTable[i];
-            const double tolerance = 1e-15;
-            Assert.True(
-                Math.Abs(expectedValue - actualValue) < tolerance,
-                $"Lookup table mismatch at index {i}: expected {expectedValue}, got {actualValue}");
-        }
+    [Fact]
+    public void Integrate_NullFunction_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => GaussLegendreQuadrature.Integrate(null!, -1.0, 1.0, 2));
     }
 
     [Fact]
@@ -217,24 +200,19 @@ public sealed class GaussLegendreQuadratureTest
             _ => throw new ArgumentOutOfRangeException(nameof(function), function, null),
         };
 
-    private static double[] GetPrivateLookupTable()
-    {
-        FieldInfo? field = typeof(GaussLegendreQuadrature).GetField(
-            "s_legendreLookupTable",
-            BindingFlags.NonPublic | BindingFlags.Static);
-        return (double[])field!.GetValue(null)!;
-    }
-
     private static IEnumerable<KeyValuePair<int, object>> GetPrivatePrecomputedPoints()
     {
         FieldInfo? field = typeof(GaussLegendreQuadrature).GetField(
             "s_precomputedPoints",
             BindingFlags.NonPublic | BindingFlags.Static);
-        IDictionary? dictionary = field!.GetValue(null) as IDictionary;
+        object?[] points = (object?[])field!.GetValue(null)!;
 
-        foreach (DictionaryEntry entry in dictionary!)
+        for (int order = 0; order < points.Length; order++)
         {
-            yield return new KeyValuePair<int, object>((int)entry.Key, entry.Value!);
+            if (points[order] is { } point)
+            {
+                yield return new KeyValuePair<int, object>(order, point);
+            }
         }
     }
 

@@ -1,5 +1,3 @@
-using System.Collections.Frozen;
-
 namespace DerivaSharp.Numerics;
 
 /// <summary>
@@ -7,7 +5,11 @@ namespace DerivaSharp.Numerics;
 /// </summary>
 public static class GaussLegendreQuadrature
 {
-    private static readonly FrozenDictionary<int, Point> s_precomputedPoints = new Dictionary<int, Point>
+    private const int MaximumPrecomputedOrder = 128;
+    private const int MaximumCachedGeneratedOrder = 1024;
+    private const double ConvergenceTolerance = 1e-10;
+
+    private static readonly Point?[] s_precomputedPoints = CreatePrecomputedPoints(new Dictionary<int, Point>
     {
         // Even
         {
@@ -766,140 +768,9 @@ public static class GaussLegendreQuadrature
                     0.0194617882297264770363120,
                 ])
         },
-    }.ToFrozenDictionary();
+    });
 
-    private static readonly double[] s_legendreLookupTable =
-    [
-        0.0000000000000000,
-        0.0000000000000000,
-        0.5000000000000000,
-        0.6666666666666667,
-        0.7500000000000000,
-        0.8000000000000000,
-        0.8333333333333333,
-        0.8571428571428571,
-        0.8750000000000000,
-        0.8888888888888890,
-        0.9000000000000000,
-        0.9090909090909091,
-        0.9166666666666667,
-        0.9230769230769231,
-        0.9285714285714286,
-        0.9333333333333333,
-        0.9375000000000000,
-        0.9411764705882353,
-        0.9444444444444444,
-        0.9473684210526316,
-        0.9500000000000000,
-        0.9523809523809524,
-        0.9545454545454545,
-        0.9565217391304348,
-        0.9583333333333333,
-        0.9600000000000000,
-        0.9615384615384615,
-        0.9629629629629630,
-        0.9642857142857143,
-        0.9655172413793103,
-        0.9666666666666667,
-        0.9677419354838710,
-        0.9687500000000000,
-        0.9696969696969697,
-        0.9705882352941176,
-        0.9714285714285714,
-        0.9722222222222222,
-        0.9729729729729730,
-        0.9736842105263158,
-        0.9743589743589745,
-        0.9750000000000000,
-        0.9756097560975610,
-        0.9761904761904762,
-        0.9767441860465116,
-        0.9772727272727273,
-        0.9777777777777777,
-        0.9782608695652174,
-        0.9787234042553191,
-        0.9791666666666667,
-        0.9795918367346939,
-        0.9800000000000000,
-        0.9803921568627451,
-        0.9807692307692308,
-        0.9811320754716981,
-        0.9814814814814815,
-        0.9818181818181818,
-        0.9821428571428571,
-        0.9824561403508772,
-        0.9827586206896552,
-        0.9830508474576271,
-        0.9833333333333333,
-        0.9836065573770492,
-        0.9838709677419355,
-        0.9841269841269841,
-        0.9843750000000000,
-        0.9846153846153846,
-        0.9848484848484848,
-        0.9850746268656716,
-        0.9852941176470588,
-        0.9855072463768116,
-        0.9857142857142857,
-        0.9859154929577465,
-        0.9861111111111110,
-        0.9863013698630138,
-        0.9864864864864865,
-        0.9866666666666667,
-        0.9868421052631579,
-        0.9870129870129870,
-        0.9871794871794872,
-        0.9873417721518987,
-        0.9875000000000000,
-        0.9876543209876543,
-        0.9878048780487805,
-        0.9879518072289157,
-        0.9880952380952381,
-        0.9882352941176471,
-        0.9883720930232558,
-        0.9885057471264368,
-        0.9886363636363636,
-        0.9887640449438202,
-        0.9888888888888889,
-        0.9890109890109891,
-        0.9891304347826086,
-        0.9892473118279570,
-        0.9893617021276596,
-        0.9894736842105263,
-        0.9895833333333333,
-        0.9896907216494845,
-        0.9897959183673469,
-        0.9898989898989899,
-        0.9900000000000000,
-        0.9900990099009901,
-        0.9901960784313725,
-        0.9902912621359223,
-        0.9903846153846154,
-        0.9904761904761905,
-        0.9905660377358491,
-        0.9906542056074766,
-        0.9907407407407407,
-        0.9908256880733946,
-        0.9909090909090909,
-        0.9909909909909910,
-        0.9910714285714286,
-        0.9911504424778761,
-        0.9912280701754386,
-        0.9913043478260870,
-        0.9913793103448276,
-        0.9914529914529915,
-        0.9915254237288136,
-        0.9915966386554622,
-        0.9916666666666667,
-        0.9917355371900826,
-        0.9918032786885246,
-        0.9918699186991869,
-        0.9919354838709677,
-        0.9920000000000000,
-        0.9920634920634921,
-        0.9921259842519685,
-        0.9921875000000000,
-    ];
+    private static readonly Point?[] s_generatedPoints = new Point?[MaximumCachedGeneratedOrder + 1];
 
     [ThreadStatic]
     private static Point? s_cachedPoint;
@@ -912,68 +783,108 @@ public static class GaussLegendreQuadrature
     /// <param name="intervalEnd">The end of the integration interval.</param>
     /// <param name="order">The quadrature order (number of evaluation points).</param>
     /// <returns>The approximate integral value.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="f" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="order" /> is less than one.</exception>
     public static double Integrate(Func<double, double> f, double intervalBegin, double intervalEnd, int order)
     {
+        ArgumentNullException.ThrowIfNull(f);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(order);
+
         Point point = GetPoint(order);
 
-        int m = (order + 1) >> 1;
-        double a = 0.5 * (intervalEnd - intervalBegin);
-        double b = 0.5 * (intervalEnd + intervalBegin);
+        double halfLength = 0.5 * (intervalEnd - intervalBegin);
+        double midpoint = 0.5 * (intervalEnd + intervalBegin);
 
         double[] weights = point.Weights;
         double[] abscissas = point.Abscissas;
 
         double sum;
-        if ((order & 1) != 0)
+        if ((order & 1) == 0)
         {
-            sum = weights[0] * f(b);
-            for (int i = 1; i < m; i++)
+            sum = 0.0;
+            for (int i = 0; i < weights.Length; i++)
             {
-                double ax = a * abscissas[i];
-                sum += weights[i] * (f(b + ax) + f(b - ax));
+                double offset = halfLength * abscissas[i];
+                sum += weights[i] * (f(midpoint + offset) + f(midpoint - offset));
             }
         }
         else
         {
-            sum = 0.0;
-            for (int i = 0; i < m; i++)
+            sum = weights[0] * f(midpoint);
+            for (int i = 1; i < weights.Length; i++)
             {
-                double ax = a * abscissas[i];
-                sum += weights[i] * (f(b + ax) + f(b - ax));
+                double offset = halfLength * abscissas[i];
+                sum += weights[i] * (f(midpoint + offset) + f(midpoint - offset));
             }
         }
 
-        return a * sum;
+        return halfLength * sum;
+    }
+
+    private static Point?[] CreatePrecomputedPoints(Dictionary<int, Point> points)
+    {
+        Point?[] pointLookup = new Point?[MaximumPrecomputedOrder + 1];
+        foreach ((int order, Point point) in points)
+        {
+            pointLookup[order] = point;
+        }
+
+        return pointLookup;
     }
 
     private static Point GetPoint(int order)
     {
-        bool isCached = s_cachedPoint is { } cachedPoint && cachedPoint.Order == order;
-        if (!isCached)
+        if (s_cachedPoint is { } cachedPoint && cachedPoint.Order == order)
         {
-            if (!s_precomputedPoints.TryGetValue(order, out Point? point))
-            {
-                point = GeneratePoint(order, 1e-10);
-            }
-
-            s_cachedPoint = point;
+            return cachedPoint;
         }
 
-        return s_cachedPoint!;
+        Point? point = order < s_precomputedPoints.Length ? s_precomputedPoints[order] : null;
+        if (point is null)
+        {
+            point = GetGeneratedPoint(order);
+        }
+
+        s_cachedPoint = point;
+        return point;
     }
 
-    private static Point GeneratePoint(int order, double eps)
+    private static Point GetGeneratedPoint(int order)
     {
-        double w0 = 0;
-        int m = (order + 1) >> 1;
-        double[] abscissas = new double[m];
-        double[] weights = new double[m];
+        if (order > MaximumCachedGeneratedOrder)
+        {
+            return GeneratePoint(order);
+        }
+
+        Point? point = Volatile.Read(ref s_generatedPoints[order]);
+        if (point is not null)
+        {
+            return point;
+        }
+
+        Point generatedPoint = GeneratePoint(order);
+        return Interlocked.CompareExchange(ref s_generatedPoints[order], generatedPoint, null) ?? generatedPoint;
+    }
+
+    private static Point GeneratePoint(int order)
+    {
+        int pointCount = (order >> 1) + (order & 1);
+        double[] abscissas = new double[pointCount];
+        double[] weights = new double[pointCount];
+        double[] recurrenceCoefficients = GC.AllocateUninitializedArray<double>(order - 1);
+
+        for (int degree = 2; degree <= order; degree++)
+        {
+            recurrenceCoefficients[degree - 2] = (degree - 1.0) / degree;
+        }
+
         double t0 = 1.0 - (1.0 - 1.0 / order) / (8.0 * order * order);
         double t1 = 1.0 / (4.0 * order + 2.0);
 
-        for (int i = 1; i <= m; i++)
+        for (int i = 1; i <= pointCount; i++)
         {
             int j = 0;
+            double w0 = 0.0;
             double x0 = Math.Cos(Math.PI * ((i << 2) - 1) * t1) * t0;
             double x1;
             double dx;
@@ -985,40 +896,14 @@ public static class GaussLegendreQuadrature
                 double p1 = 1.0;
                 double p0 = x0;
                 double p2;
-                int k;
                 double t2;
 
-                if (order < s_legendreLookupTable.Length)
+                for (int degree = 2; degree <= order; degree++)
                 {
-                    for (k = 2; k <= order; k++)
-                    {
-                        p2 = p1;
-                        p1 = p0;
-                        t2 = x0 * p1;
-
-                        p0 = t2 + s_legendreLookupTable[k] * (t2 - p2);
-                    }
-                }
-                else
-                {
-                    for (k = 2; k < s_legendreLookupTable.Length; k++)
-                    {
-                        p2 = p1;
-                        p1 = p0;
-                        t2 = x0 * p1;
-
-                        p0 = t2 + s_legendreLookupTable[k] * (t2 - p2);
-                    }
-
-                    for (k = s_legendreLookupTable.Length; k <= order; k++)
-                    {
-                        p2 = p1;
-                        p1 = p0;
-                        t2 = x0 * p1;
-                        double t3 = (k - 1.0) / k;
-
-                        p0 = t2 + t3 * (t2 - p2);
-                    }
+                    p2 = p1;
+                    p1 = p0;
+                    t2 = x0 * p1;
+                    p0 = t2 + recurrenceCoefficients[degree - 2] * (t2 - p2);
                 }
 
                 double dpdx = (x0 * p0 - p1) * order / (x0 * x0 - 1.0);
@@ -1038,9 +923,9 @@ public static class GaussLegendreQuadrature
                 w0 = w1;
                 j++;
             }
-            while ((Math.Abs(dx) > eps || Math.Abs(dw) > eps) && j < 100);
+            while ((Math.Abs(dx) > ConvergenceTolerance || Math.Abs(dw) > ConvergenceTolerance) && j < 100);
 
-            int index = m - 1 - (i - 1);
+            int index = pointCount - i;
 
             abscissas[index] = x1;
             weights[index] = w1;
@@ -1049,5 +934,12 @@ public static class GaussLegendreQuadrature
         return new Point(order, abscissas, weights);
     }
 
-    private sealed record Point(int Order, double[] Abscissas, double[] Weights);
+    private sealed class Point(int order, double[] abscissas, double[] weights)
+    {
+        public int Order { get; } = order;
+
+        public double[] Abscissas { get; } = abscissas;
+
+        public double[] Weights { get; } = weights;
+    }
 }
