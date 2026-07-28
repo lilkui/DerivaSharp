@@ -41,79 +41,82 @@ public static class BrentSolver
         Guard.IsGreaterThan(accuracy, 0d);
         Guard.IsGreaterThan(maxIterations, 0);
 
-        double fmin = f(lowerBound);
-        if (fmin == 0)
-        {
-            root = lowerBound;
-            return true;
-        }
-
-        double fmax = f(upperBound);
-        root = upperBound;
-        if (fmax == 0)
+        root = lowerBound;
+        double fPrevious = f(root);
+        if (fPrevious == 0)
         {
             return true;
         }
 
-        if (double.IsNaN(fmin) || double.IsNaN(fmax) || Math.Sign(fmin) == Math.Sign(fmax))
+        if (double.IsNaN(fPrevious))
         {
             return false;
         }
 
-        double froot = fmax;
-        double d = 0;
-        double e = 0;
-        double xMid = double.NaN;
-
-        for (int i = 0; i <= maxIterations; i++)
+        root = upperBound;
+        double fRoot = f(root);
+        if (fRoot == 0)
         {
-            if (Math.Sign(froot) == Math.Sign(fmax))
+            return true;
+        }
+
+        if (double.IsNaN(fRoot) || HaveSameSign(fPrevious, fRoot))
+        {
+            return false;
+        }
+
+        double previous = lowerBound;
+        double bracket = root;
+        double fBracket = fRoot;
+        double step = 0;
+        double previousStep = 0;
+
+        for (int iteration = 0; iteration < maxIterations; iteration++)
+        {
+            if (HaveSameSign(fRoot, fBracket))
             {
-                upperBound = lowerBound;
-                fmax = fmin;
-                e = d = root - lowerBound;
+                bracket = previous;
+                fBracket = fPrevious;
+                previousStep = step = root - previous;
             }
 
-            if (Math.Abs(fmax) < Math.Abs(froot))
+            double absFRoot = Math.Abs(fRoot);
+            double absFBracket = Math.Abs(fBracket);
+            if (absFBracket < absFRoot)
             {
-                lowerBound = root;
-                root = upperBound;
-                upperBound = lowerBound;
-                fmin = froot;
-                froot = fmax;
-                fmax = fmin;
+                previous = root;
+                root = bracket;
+                bracket = previous;
+                fPrevious = fRoot;
+                fRoot = fBracket;
+                fBracket = fPrevious;
+                absFRoot = absFBracket;
             }
 
-            double xAcc = PositiveDoublePrecision * Math.Abs(root) + 0.5 * accuracy;
-            double prevXMid = xMid;
-            xMid = (upperBound - root) * 0.5;
+            double tolerance = PositiveDoublePrecision * Math.Abs(root) + 0.5 * accuracy;
+            double halfInterval = (bracket - root) * 0.5;
 
-            if (Math.Abs(xMid) <= xAcc || Math.Abs(froot) <= accuracy)
+            if (Math.Abs(halfInterval) <= tolerance || absFRoot <= accuracy)
             {
                 return true;
             }
 
-            if (Math.Abs(xMid - prevXMid) < 1e-14)
+            if (Math.Abs(previousStep) >= tolerance && Math.Abs(fPrevious) > absFRoot)
             {
-                return false;
-            }
-
-            if (Math.Abs(e) >= xAcc && Math.Abs(fmin) > Math.Abs(froot))
-            {
-                double s = froot / fmin;
+                double s = fRoot / fPrevious;
                 double p;
                 double q;
 
-                if (lowerBound.AlmostEquals(upperBound))
+                if (previous == bracket)
                 {
-                    p = 2 * xMid * s;
+                    p = 2 * halfInterval * s;
                     q = 1 - s;
                 }
                 else
                 {
-                    q = fmin / fmax;
-                    double r = froot / fmax;
-                    p = s * (2 * xMid * q * (q - r) - (root - lowerBound) * (r - 1));
+                    q = fPrevious / fBracket;
+                    double r = fRoot / fBracket;
+                    p = s * (2 * halfInterval * q * (q - r) - (root - previous) * (r - 1));
                     q = (q - 1) * (r - 1) * (s - 1);
                 }
 
@@ -123,28 +126,31 @@ public static class BrentSolver
                 }
 
                 p = Math.Abs(p);
-                if (2 * p < Math.Min(3 * xMid * q - Math.Abs(xAcc * q), Math.Abs(e * q)))
+                if (2 * p < Math.Min(3 * halfInterval * q - Math.Abs(tolerance * q), Math.Abs(previousStep * q)))
                 {
-                    e = d;
-                    d = p / q;
+                    previousStep = step;
+                    step = p / q;
                 }
                 else
                 {
-                    d = xMid;
-                    e = d;
+                    previousStep = step = halfInterval;
                 }
             }
             else
             {
-                d = xMid;
-                e = d;
+                previousStep = step = halfInterval;
             }
 
-            lowerBound = root;
-            fmin = froot;
-            root += Math.Abs(d) > xAcc ? d : Math.CopySign(xAcc, xMid);
-            froot = f(root);
-            if (double.IsNaN(froot))
+            previous = root;
+            fPrevious = fRoot;
+            root += Math.Abs(step) > tolerance ? step : Math.CopySign(tolerance, halfInterval);
+            fRoot = f(root);
+            if (fRoot == 0)
+            {
+                return true;
+            }
+
+            if (double.IsNaN(fRoot))
             {
                 return false;
             }
@@ -152,4 +158,6 @@ public static class BrentSolver
 
         return false;
     }
+
+    private static bool HaveSameSign(double x, double y) => (x < 0) == (y < 0);
 }
