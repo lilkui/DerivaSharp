@@ -130,10 +130,16 @@ dotnet build --no-restore
 dotnet test --no-build
 ```
 
-Run a focused test class:
+Run a focused test class with the Microsoft.Testing.Platform/xUnit v3 filter options:
 
 ```bash
-dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest"
+dotnet test --filter-class "DerivaSharp.Tests.AnalyticEuropeanEngineTest"
+```
+
+Run a single test method:
+
+```bash
+dotnet test --filter-method "DerivaSharp.Tests.AnalyticEuropeanEngineTest.Value_IsAccurate"
 ```
 
 Run all benchmarks or select a benchmark class:

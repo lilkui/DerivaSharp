@@ -55,11 +55,11 @@ Tests use **xunit v3** with `Microsoft.Testing.Platform` as the runner (configur
 # Run all tests
 dotnet test
 
-# Run tests for a specific test class
-dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest"
+# Run tests for a specific test class (Microsoft.Testing.Platform/xUnit v3)
+dotnet test --filter-class "DerivaSharp.Tests.AnalyticEuropeanEngineTest"
 
 # Run a single test method
-dotnet test --filter "FullyQualifiedName~AnalyticEuropeanEngineTest.Value_IsAccurate"
+dotnet test --filter-method "DerivaSharp.Tests.AnalyticEuropeanEngineTest.Value_IsAccurate"
 ```
 
 ### Test organisation
